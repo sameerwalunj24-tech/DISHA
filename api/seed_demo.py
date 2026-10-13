@@ -240,6 +240,7 @@ def seed_demo_data(db=None):
             description="[DEMO] ग्रामीण भागात शेतीसाठी सोलर पंप बसवणे, वायरिंग आणि नियमित देखभाल प्रात्यक्षिक कोर्स.",
             language="mr",
             price_type="ONE_TIME",
+            price_paise=20000,
             price_inr=200.0,
             steps_json=json.dumps([
                 {
@@ -271,6 +272,9 @@ def seed_demo_data(db=None):
             id="demo-enroll-001",
             module_id="demo-module-001",
             student_id="demo-student-003",
+            amount_paid_paise=20000,
+            platform_fee_paise=2400,       # 12%
+            facilitator_share_paise=17600, # 88%
             amount_paid=200.0,
             platform_fee_inr=24.0,       # 12%
             facilitator_share_inr=176.0,  # 88%

@@ -138,3 +138,72 @@ def test_free_module_enrollment():
         assert e_data["facilitator_share_inr"] == 0.0
     finally:
         db.close()
+
+
+def test_deterministic_money_paise_rounding_split():
+    """
+    Tests that all money amounts are handled as integer paise and split with
+    deterministic floor/remainder rounding where platform + facilitator always equals total.
+    """
+    from api.app.marketplace.router import split_revenue_paise
+
+    # Test cases: (total_paise, expected_platform, expected_facilitator)
+    cases = [
+        (0, 0, 0),
+        (1, 0, 1),
+        (8, 0, 8),
+        (9, 1, 8),          # 9 * 12 // 100 = 1, remainder = 8
+        (9900, 1188, 8712), # ₹99.00
+        (19900, 2388, 17512), # ₹199.00
+        (25000, 3000, 22000), # ₹250.00
+        (50000, 6000, 44000), # ₹500.00
+    ]
+
+    for total, exp_plat, exp_fac in cases:
+        plat, fac = split_revenue_paise(total)
+        assert plat == exp_plat
+        assert fac == exp_fac
+        assert plat + fac == total, f"Total mismatch for {total}: {plat} + {fac} != {total}"
+
+    # Fuzz test 1000 arbitrary paise amounts
+    for val in range(1, 1001):
+        plat, fac = split_revenue_paise(val)
+        assert plat + fac == val
+        assert plat == (val * 12) // 100
+        assert fac == val - plat
+
+    # Test via API: create a module with ₹199 and verify paise fields in enrollment response
+    phone = f"98765{uuid.uuid4().hex[:5]}"
+    r_otp = client.post("/api/v1/facilitator/auth/request-otp", json={"phone_number": phone, "name": "Paise Guru"}).json()
+    token = client.post("/api/v1/facilitator/auth/verify-otp", json={"phone_number": phone, "otp": r_otp["demo_otp"]}).json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    res_mod = client.post("/api/v1/facilitator/modules", json={
+        "title": "पायथन कोडिंग कौशल्य (Python Skills)",
+        "price_type": "ONE_TIME",
+        "price_inr": 199.0
+    }, headers=headers)
+    assert res_mod.status_code == 200
+    mod_info = res_mod.json()
+    assert mod_info["price_paise"] == 19900
+    assert mod_info["price_inr"] == 199.0
+
+    db = SessionLocal()
+    try:
+        s = Student(name="परीक्षित पाटील", grade=10, guardian_consent=True)
+        db.add(s)
+        db.commit()
+        db.refresh(s)
+
+        enroll_res = client.post(f"/api/v1/modules/{mod_info['id']}/enroll", json={
+            "student_id": s.id
+        })
+        assert enroll_res.status_code == 200
+        en_data = enroll_res.json()
+        assert en_data["amount_paid_paise"] == 19900
+        assert en_data["platform_fee_paise"] == 2388
+        assert en_data["facilitator_share_paise"] == 17512
+        assert en_data["platform_fee_paise"] + en_data["facilitator_share_paise"] == 19900
+    finally:
+        db.close()
+

@@ -23,6 +23,20 @@ class ModuleStep(BaseModel):
     practical_task: Optional[str] = None
 
 
+def split_revenue_paise(total_paise: int) -> tuple[int, int]:
+    """
+    Deterministic 12/88 revenue split rule in integer paise:
+    - Platform fee gets integer floor: (total_paise * 12) // 100
+    - Facilitator share gets the exact remainder: total_paise - platform_fee_paise
+    Guarantees: platform_fee_paise + facilitator_share_paise == total_paise ALWAYS.
+    """
+    if total_paise <= 0:
+        return 0, 0
+    platform_fee_paise = (total_paise * 12) // 100
+    facilitator_share_paise = total_paise - platform_fee_paise
+    return platform_fee_paise, facilitator_share_paise
+
+
 class ModuleCreateIn(BaseModel):
     title: str = Field(..., min_length=3, max_length=200, json_schema_extra={"example": "सौर ऊर्जा तंत्रज्ञ मूलभूत कौशल्ये (Solar Technician Fundamentals)"})
     description: Optional[str] = Field(None, json_schema_extra={"example": "सौर पॅनल जोडणी आणि देखभाल प्रात्यक्षिक कोर्स"})
@@ -40,6 +54,7 @@ class ModuleOut(BaseModel):
     description: Optional[str]
     language: str
     price_type: str
+    price_paise: int = 0
     price_inr: float
     steps_count: int
     steps: List[dict]
@@ -57,6 +72,9 @@ class EnrollmentOut(BaseModel):
     module_title: str
     student_id: str
     payment_status: str
+    amount_paid_paise: int = 0
+    platform_fee_paise: int = 0
+    facilitator_share_paise: int = 0
     amount_paid: float
     platform_fee_inr: float       # Platform 12%
     facilitator_share_inr: float   # Facilitator 88%
@@ -69,10 +87,14 @@ class ModuleRevenueBreakdown(BaseModel):
     module_id: str
     title: str
     price_type: str
+    price_paise: int = 0
     price_inr: float
     enrollments_count: int
+    gross_sales_paise: int = 0
     gross_sales_inr: float
+    platform_share_paise: int = 0
     platform_share_12pct_inr: float
+    facilitator_share_paise: int = 0
     facilitator_share_88pct_inr: float
 
 
@@ -81,8 +103,11 @@ class FacilitatorEarningsOut(BaseModel):
     facilitator_name: str
     total_modules: int
     total_enrollments: int
+    gross_revenue_paise: int = 0
     gross_revenue_inr: float
+    platform_share_paise: int = 0
     platform_share_12pct_inr: float      # Platform 12%
+    facilitator_share_paise: int = 0
     facilitator_share_88pct_inr: float   # Facilitator 88%
     modules_breakdown: List[ModuleRevenueBreakdown]
 
@@ -111,13 +136,17 @@ def create_training_module(
             "practical_task": "साधनांची ओळख करून घेणे."
         }]
 
+    price_paise = int(round(module_in.price_inr * 100)) if module_in.price_type.upper() != "FREE" else 0
+    price_inr = price_paise / 100.0
+
     mod = TrainingModule(
         facilitator_id=facilitator.id,
         title=module_in.title.strip(),
         description=module_in.description.strip() if module_in.description else "",
         language=module_in.language,
         price_type=module_in.price_type.upper(),
-        price_inr=0.0 if module_in.price_type.upper() == "FREE" else float(module_in.price_inr),
+        price_paise=price_paise,
+        price_inr=price_inr,
         steps_json=json.dumps(steps_data, ensure_ascii=False),
         is_published=True
     )
@@ -133,6 +162,7 @@ def create_training_module(
         description=mod.description,
         language=mod.language,
         price_type=mod.price_type,
+        price_paise=mod.price_paise,
         price_inr=mod.price_inr,
         steps_count=len(steps_data),
         steps=steps_data,
@@ -173,6 +203,7 @@ def list_training_modules(
             description=m.description,
             language=m.language,
             price_type=m.price_type,
+            price_paise=m.price_paise if m.price_paise is not None else int(round(m.price_inr * 100)),
             price_inr=m.price_inr,
             steps_count=len(steps_data),
             steps=steps_data,
@@ -202,6 +233,7 @@ def get_module_details(module_id: str, db: Session = Depends(get_db)):
         description=m.description,
         language=m.language,
         price_type=m.price_type,
+        price_paise=m.price_paise if m.price_paise is not None else int(round(m.price_inr * 100)),
         price_inr=m.price_inr,
         steps_count=len(steps_data),
         steps=steps_data,
@@ -217,9 +249,10 @@ def enroll_module_mock_payment(
 ):
     """
     Student enrolls / buys a training module using mock payment.
-    Calculates exact revenue split:
-    - Platform share: 12%
-    - Facilitator payout: 88%
+    Calculates exact revenue split in integer paise:
+    - Platform share: 12% (floor)
+    - Facilitator payout: 88% (remainder)
+    Guarantees platform_fee + facilitator_share == total amount ALWAYS.
     """
     mod = db.query(TrainingModule).filter(TrainingModule.id == module_id).first()
     if not mod:
@@ -247,6 +280,9 @@ def enroll_module_mock_payment(
             module_title=mod.title,
             student_id=student.id,
             payment_status=existing.payment_status,
+            amount_paid_paise=existing.amount_paid_paise if existing.amount_paid_paise is not None else int(round(existing.amount_paid * 100)),
+            platform_fee_paise=existing.platform_fee_paise if existing.platform_fee_paise is not None else int(round(existing.platform_fee_inr * 100)),
+            facilitator_share_paise=existing.facilitator_share_paise if existing.facilitator_share_paise is not None else int(round(existing.facilitator_share_inr * 100)),
             amount_paid=existing.amount_paid,
             platform_fee_inr=existing.platform_fee_inr,
             facilitator_share_inr=existing.facilitator_share_inr,
@@ -255,20 +291,25 @@ def enroll_module_mock_payment(
             module_content={"title": mod.title, "steps": steps_data}
         )
 
-    # Calculate 12% / 88% revenue split
-    amount = float(mod.price_inr) if mod.price_type != "FREE" else 0.0
-    platform_fee = round(amount * 0.12, 2)
-    facilitator_share = round(amount - platform_fee, 2)
+    # Calculate 12% / 88% revenue split in integer paise with deterministic floor/remainder
+    amount_paise = mod.price_paise if mod.price_type != "FREE" else 0
+    platform_fee_paise, facilitator_share_paise = split_revenue_paise(amount_paise)
+    amount_inr = amount_paise / 100.0
+    platform_fee_inr = platform_fee_paise / 100.0
+    facilitator_share_inr = facilitator_share_paise / 100.0
 
-    payment_status = "FREE" if amount == 0.0 else "PAID_MOCK"
+    payment_status = "FREE" if amount_paise == 0 else "PAID_MOCK"
 
     enrollment = ModuleEnrollment(
         student_id=student.id,
         module_id=mod.id,
         payment_status=payment_status,
-        amount_paid=amount,
-        platform_fee_inr=platform_fee,
-        facilitator_share_inr=facilitator_share,
+        amount_paid_paise=amount_paise,
+        platform_fee_paise=platform_fee_paise,
+        facilitator_share_paise=facilitator_share_paise,
+        amount_paid=amount_inr,
+        platform_fee_inr=platform_fee_inr,
+        facilitator_share_inr=facilitator_share_inr,
         enrolled_at=datetime.now(timezone.utc)
     )
     db.add(enrollment)
@@ -286,9 +327,12 @@ def enroll_module_mock_payment(
         module_title=mod.title,
         student_id=student.id,
         payment_status=payment_status,
-        amount_paid=amount,
-        platform_fee_inr=platform_fee,
-        facilitator_share_inr=facilitator_share,
+        amount_paid_paise=amount_paise,
+        platform_fee_paise=platform_fee_paise,
+        facilitator_share_paise=facilitator_share_paise,
+        amount_paid=amount_inr,
+        platform_fee_inr=platform_fee_inr,
+        facilitator_share_inr=facilitator_share_inr,
         enrolled_at=enrollment.enrolled_at.isoformat(),
         access_granted=True,
         module_content={"title": mod.title, "steps": steps_data}
@@ -302,37 +346,41 @@ def get_facilitator_earnings(
 ):
     """
     Facilitator Earnings & Revenue Split Dashboard:
-    Displays gross earnings, platform fee (12%), and net facilitator earnings (88%).
+    Displays gross earnings, platform fee (12%), and net facilitator earnings (88%) in paise & INR.
     """
     modules = db.query(TrainingModule).filter(TrainingModule.facilitator_id == facilitator.id).all()
 
     total_enrollments = 0
-    gross_revenue = 0.0
-    platform_share = 0.0
-    facilitator_share = 0.0
+    gross_revenue_paise = 0
+    platform_share_paise = 0
+    facilitator_share_paise = 0
     breakdown: List[ModuleRevenueBreakdown] = []
 
     for m in modules:
         m_enrolls = db.query(ModuleEnrollment).filter(ModuleEnrollment.module_id == m.id).all()
         m_count = len(m_enrolls)
-        m_gross = sum(e.amount_paid for e in m_enrolls)
-        m_plat = sum(e.platform_fee_inr for e in m_enrolls)
-        m_fac = sum(e.facilitator_share_inr for e in m_enrolls)
+        m_gross_paise = sum(e.amount_paid_paise if e.amount_paid_paise is not None else int(round(e.amount_paid * 100)) for e in m_enrolls)
+        m_plat_paise = sum(e.platform_fee_paise if e.platform_fee_paise is not None else int(round(e.platform_fee_inr * 100)) for e in m_enrolls)
+        m_fac_paise = sum(e.facilitator_share_paise if e.facilitator_share_paise is not None else int(round(e.facilitator_share_inr * 100)) for e in m_enrolls)
 
         total_enrollments += m_count
-        gross_revenue += m_gross
-        platform_share += m_plat
-        facilitator_share += m_fac
+        gross_revenue_paise += m_gross_paise
+        platform_share_paise += m_plat_paise
+        facilitator_share_paise += m_fac_paise
 
         breakdown.append(ModuleRevenueBreakdown(
             module_id=m.id,
             title=m.title,
             price_type=m.price_type,
+            price_paise=m.price_paise if m.price_paise is not None else int(round(m.price_inr * 100)),
             price_inr=m.price_inr,
             enrollments_count=m_count,
-            gross_sales_inr=round(m_gross, 2),
-            platform_share_12pct_inr=round(m_plat, 2),
-            facilitator_share_88pct_inr=round(m_fac, 2)
+            gross_sales_paise=m_gross_paise,
+            gross_sales_inr=round(m_gross_paise / 100.0, 2),
+            platform_share_paise=m_plat_paise,
+            platform_share_12pct_inr=round(m_plat_paise / 100.0, 2),
+            facilitator_share_paise=m_fac_paise,
+            facilitator_share_88pct_inr=round(m_fac_paise / 100.0, 2)
         ))
 
     return FacilitatorEarningsOut(
@@ -340,9 +388,12 @@ def get_facilitator_earnings(
         facilitator_name=facilitator.name,
         total_modules=len(modules),
         total_enrollments=total_enrollments,
-        gross_revenue_inr=round(gross_revenue, 2),
-        platform_share_12pct_inr=round(platform_share, 2),
-        facilitator_share_88pct_inr=round(facilitator_share, 2),
+        gross_revenue_paise=gross_revenue_paise,
+        gross_revenue_inr=round(gross_revenue_paise / 100.0, 2),
+        platform_share_paise=platform_share_paise,
+        platform_share_12pct_inr=round(platform_share_paise / 100.0, 2),
+        facilitator_share_paise=facilitator_share_paise,
+        facilitator_share_88pct_inr=round(facilitator_share_paise / 100.0, 2),
         modules_breakdown=breakdown
     )
 

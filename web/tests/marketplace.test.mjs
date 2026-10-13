@@ -19,21 +19,36 @@ class MockStorage {
   }
 }
 
-// Revenue split logic helper (platform 12%, facilitator 88%)
+// Revenue split logic helper in integer paise (platform 12% floor, facilitator 88% remainder)
+function splitRevenuePaise(totalPaise) {
+  if (totalPaise <= 0) {
+    return { platformFeePaise: 0, facilitatorSharePaise: 0 };
+  }
+  const platformFeePaise = Math.floor((totalPaise * 12) / 100);
+  const facilitatorSharePaise = totalPaise - platformFeePaise;
+  return { platformFeePaise, facilitatorSharePaise };
+}
+
 function calculateRevenueSplit(priceType, priceInr) {
   if (priceType === "free" || priceInr <= 0) {
     return {
       total: 0,
+      totalPaise: 0,
       platformFee: 0,
-      facilitatorPayout: 0
+      platformFeePaise: 0,
+      facilitatorPayout: 0,
+      facilitatorSharePaise: 0
     };
   }
-  const platformFee = Math.round(priceInr * 0.12 * 100) / 100;
-  const facilitatorPayout = Math.round((priceInr - platformFee) * 100) / 100;
+  const totalPaise = Math.round(priceInr * 100);
+  const { platformFeePaise, facilitatorSharePaise } = splitRevenuePaise(totalPaise);
   return {
     total: priceInr,
-    platformFee,
-    facilitatorPayout
+    totalPaise,
+    platformFee: platformFeePaise / 100,
+    platformFeePaise,
+    facilitatorPayout: facilitatorSharePaise / 100,
+    facilitatorSharePaise
   };
 }
 
@@ -101,5 +116,16 @@ describe("Marketplace & Revenue Split Tests", () => {
     assert.equal(cached.steps.length, 2);
     assert.equal(cached.steps[0].step_number, 1);
     assert.ok(cached.cachedAt);
+  });
+
+  test("deterministic integer paise rounding guarantees platform_paise + facilitator_paise == total_paise", () => {
+    // Check multiple edge-case paise amounts
+    const edgeCases = [1, 7, 8, 9, 99, 100, 199, 500, 9999, 19900, 25000, 50000];
+    for (const totalPaise of edgeCases) {
+      const { platformFeePaise, facilitatorSharePaise } = splitRevenuePaise(totalPaise);
+      assert.equal(platformFeePaise, Math.floor((totalPaise * 12) / 100));
+      assert.equal(facilitatorSharePaise, totalPaise - platformFeePaise);
+      assert.equal(platformFeePaise + facilitatorSharePaise, totalPaise, `Mismatch for ${totalPaise}`);
+    }
   });
 });

@@ -177,6 +177,7 @@ class TrainingModule(Base):
     description = Column(Text, nullable=True)
     language = Column(String(10), default="mr", nullable=False)  # mr, hi, en
     price_type = Column(String(20), default="FREE", nullable=False)  # FREE, ONE_TIME, MONTHLY
+    price_paise = Column(Integer, default=0, nullable=False)  # Amount in integer paise (1 INR = 100 paise)
     price_inr = Column(Float, default=0.0, nullable=False)
     steps_json = Column(Text, default="[]", nullable=False)  # JSON array of lessons/steps
     is_published = Column(Boolean, default=True, nullable=False)
@@ -193,6 +194,9 @@ class ModuleEnrollment(Base):
     student_id = Column(String(36), ForeignKey("students.id"), nullable=False)
     module_id = Column(String(36), ForeignKey("training_modules.id"), nullable=False)
     payment_status = Column(String(20), default="PAID_MOCK", nullable=False)  # FREE, PAID_MOCK
+    amount_paid_paise = Column(Integer, default=0, nullable=False)  # Integer paise paid
+    platform_fee_paise = Column(Integer, default=0, nullable=False)  # Platform 12% (floor) in paise
+    facilitator_share_paise = Column(Integer, default=0, nullable=False)  # Facilitator 88% (remainder) in paise
     amount_paid = Column(Float, default=0.0, nullable=False)
     platform_fee_inr = Column(Float, default=0.0, nullable=False)  # Platform share: 12%
     facilitator_share_inr = Column(Float, default=0.0, nullable=False)  # Facilitator share: 88%
