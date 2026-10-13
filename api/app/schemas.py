@@ -80,8 +80,16 @@ class StudentCreate(BaseModel):
     district: Optional[str] = Field("Satara", json_schema_extra={"example": "Satara"})
     gender: Optional[str] = Field("MALE", json_schema_extra={"example": "MALE"})
     guardian_consent: bool = Field(False, json_schema_extra={"example": True})
+    consent_receipt_hash: Optional[str] = Field(None, json_schema_extra={"example": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"})
+    consent_version: Optional[str] = Field("DPDP_V1.0", json_schema_extra={"example": "DPDP_V1.0"})
     interests: Optional[str] = Field(None, json_schema_extra={"example": "solar pumps, electrical repairs, mechanics"})
 
 class StudentResponse(StudentCreate):
     model_config = ConfigDict(from_attributes=True)
     id: str
+
+class ConsentVerifyResponse(BaseModel):
+    valid: bool = True
+    receipt_hash: str
+    consent_version: str = "DPDP_V1.0"
+    recorded_at: str

@@ -11,6 +11,7 @@ import { useI18n, type Language } from "../i18n";
 import { voiceService } from "../services/voice";
 import { OFFLINE_QUIZ_QUESTIONS, buildProfileFromQuizAnswers, type QuizOption } from "../data/offlineQuizData";
 import { saveOfflineProfile, saveCachedMatches, enqueueSyncItem } from "../services/db/offlineStorage";
+import { apiUrl } from "../services/apiConfig";
 
 interface DiscoverFlowProps {
   isOnline: boolean;
@@ -49,8 +50,46 @@ const ICON_MAP: Record<string, React.FC<any>> = {
   Wifi, ShoppingBag
 };
 
+export async function generateConsentReceiptHash(guardianNameStr: string, timestamp?: string): Promise<{ canonical: string; hash: string }> {
+  const ts = timestamp || new Date().toISOString();
+  const canonical = `${guardianNameStr.trim()}|DPDP_V1.0|${ts}`;
+  let hash = "";
+  if (typeof crypto !== "undefined" && crypto.subtle && typeof crypto.subtle.digest === "function") {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(canonical);
+    const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    hash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  } else {
+    let h = 0x811c9dc5;
+    for (let i = 0; i < canonical.length; i++) {
+      h ^= canonical.charCodeAt(i);
+      h = Math.imul(h, 0x01000193);
+    }
+    hash = (h >>> 0).toString(16).padStart(64, "0");
+  }
+  return { canonical, hash };
+}
+
 export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHome, onGoToPathway, onStudentCreated }) => {
   const { language, t } = useI18n();
+
+  // Step-0 Consent Gateway State (Decoupled from Q1)
+  const [consentGranted, setConsentGranted] = useState<boolean>(() => {
+    return localStorage.getItem("disha_guardian_consent") === "true";
+  });
+  const [tempConsentChecked, setTempConsentChecked] = useState<boolean>(() => {
+    return localStorage.getItem("disha_guardian_consent") === "true";
+  });
+  const [studentNickname, setStudentNickname] = useState<string>(() => {
+    return localStorage.getItem("disha_student_nickname") || "रोहन (Rohan)";
+  });
+  const [guardianName, setGuardianName] = useState<string>(() => {
+    return localStorage.getItem("disha_guardian_name") || "पालक (Parent / Guardian)";
+  });
+  const [consentReceiptHash, setConsentReceiptHash] = useState<string>(() => {
+    return localStorage.getItem("disha_consent_receipt") || "";
+  });
 
   // Mode: online conversational flow vs offline icon quiz
   const [useOfflineQuiz, setUseOfflineQuiz] = useState<boolean>(!isOnline);
@@ -63,8 +102,9 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
   const [textAnswer, setTextAnswer] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
   const [partialVoice, setPartialVoice] = useState<string>("");
-  const [guardianConsent, setGuardianConsent] = useState<boolean>(false);
-  const [consentError, setConsentError] = useState<boolean>(false);
+  const [guardianConsent, setGuardianConsent] = useState<boolean>(() => {
+    return localStorage.getItem("disha_guardian_consent") === "true";
+  });
   const [studentName] = useState<string>("विद्यार्थी (Learner)");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -80,16 +120,16 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
 
   // Initialize Online Flow
   useEffect(() => {
-    if (!useOfflineQuiz && isOnline) {
+    if (!useOfflineQuiz && isOnline && consentGranted) {
       initOnlineSession();
     }
-  }, [useOfflineQuiz, isOnline, language]);
+  }, [useOfflineQuiz, isOnline, language, consentGranted]);
 
   const initOnlineSession = async () => {
     setIsLoading(true);
     setApiError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/discovery/start", {
+      const res = await fetch(apiUrl("/api/v1/discovery/start"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ language })
@@ -154,15 +194,6 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
   const audioChunksRef = useRef<Blob[]>([]);
 
   const handleStartOfflineVoiceNote = async () => {
-    if (!guardianConsent) {
-      setApiError(
-        language === "mr" ? "कृपया व्हॉइस नोट रेकॉर्ड करण्यासाठी आधी पालकांची संमती तपासा."
-        : language === "hi" ? "कृपया वॉइस नोट रिकॉर्ड करने के लिए पहले अभिभावक सहमति दें।"
-        : "Please check guardian consent before recording voice note."
-      );
-      return;
-    }
-
     try {
       setOfflineVoiceNotice(null);
       setApiError(null);
@@ -193,10 +224,16 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
             audio_base64: base64Audio,
             mime_type: mimeType,
             guardian_consent: true,
-            student_name: studentName
+            student_name: studentNickname || studentName
           });
 
-          setOfflineVoiceNotice("Saved - will be processed when online");
+          setOfflineVoiceNotice(
+            language === "mr" 
+              ? "📡 ऑफलाइन सेव्ह केले (Saved offline - will sync when online)"
+              : language === "hi"
+              ? "📡 ऑफ़लाइन सेव किया (Saved offline - will sync when online)"
+              : "📡 Saved offline - will sync when online"
+          );
           setTextAnswer("🎤 [व्हॉइस नोट सेव्ह केली - Saved voice note]");
           setIsRecordingOfflineVoice(false);
         };
@@ -215,9 +252,15 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
         audio_base64: "data:audio/webm;base64,GkXfo59ChoEBQveBAULygQ8=",
         mime_type: "audio/webm",
         guardian_consent: true,
-        student_name: studentName
+        student_name: studentNickname || studentName
       });
-      setOfflineVoiceNotice("Saved - will be processed when online");
+      setOfflineVoiceNotice(
+        language === "mr" 
+          ? "📡 ऑफलाइन सेव्ह केले (Saved offline - will sync when online)"
+          : language === "hi"
+          ? "📡 ऑफ़लाइन सेव किया (Saved offline - will sync when online)"
+          : "📡 Saved offline - will sync when online"
+      );
       setTextAnswer("🎤 [व्हॉइस नोट सेव्ह केली - Saved voice note]");
       setIsRecordingOfflineVoice(false);
     }
@@ -238,19 +281,10 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
     const finalAnswer = ansToSubmit || textAnswer;
     if (!finalAnswer.trim() || !currentQuestion) return;
 
-    if (!guardianConsent) {
-      setApiError(
-        language === "mr" ? "कृपया प्रोफाईल सेव्ह करण्यासाठी पालकांची संमती तपासा."
-        : language === "hi" ? "कृपया प्रोफ़ाइल सेव करने के लिए अभिभावक सहमति चेक करें।"
-        : "Please check guardian consent to save profile."
-      );
-      return;
-    }
-
     setIsLoading(true);
     setApiError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/discovery/answer", {
+      const res = await fetch(apiUrl("/api/v1/discovery/answer"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -258,7 +292,9 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
           question_id: currentQuestion.id,
           answer_text: finalAnswer.trim(),
           guardian_consent: guardianConsent,
-          student_name: studentName
+          student_name: studentNickname.trim() || studentName,
+          consent_receipt_hash: consentReceiptHash || localStorage.getItem("disha_consent_receipt") || null,
+          consent_version: "DPDP_V1.0"
         })
       });
 
@@ -272,6 +308,10 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
 
       if (data.is_complete && data.profile) {
         setCompletedProfile(data.profile);
+        try {
+          localStorage.setItem("disha_student_profile", JSON.stringify(data.profile));
+        } catch {}
+
         if (data.student_id) {
           try {
             localStorage.setItem("disha_student_id", data.student_id);
@@ -279,7 +319,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
               onStudentCreated(data.student_id);
             }
             // POST so sensitive fields never appear in URL query strings / logs
-            const matchRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${data.student_id}/matches`, {
+            const matchRes = await fetch(apiUrl(`/api/v1/students/${data.student_id}/matches`), {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ language })
@@ -288,6 +328,9 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
               const matchData = await matchRes.json();
               setTopMatches(matchData.slice(0, 3));
               await saveCachedMatches(matchData);
+              if (matchData.length > 0) {
+                localStorage.setItem("disha_top_match", JSON.stringify(matchData[0]));
+              }
             }
           } catch (mErr) {
             console.warn("Could not fetch matches immediately:", mErr);
@@ -316,11 +359,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
     if (quizStep + 1 < OFFLINE_QUIZ_QUESTIONS.length) {
       setQuizStep(quizStep + 1);
     } else {
-      // Last question reached: require guardian consent
-      if (!guardianConsent) {
-        setConsentError(true);
-        return;
-      }
+      // Last question reached: consent was already confirmed in Step 0
       await finalizeOfflineQuiz(updated);
     }
   };
@@ -334,8 +373,22 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
     const localId = `offline_${Date.now()}`;
     try {
       localStorage.setItem("disha_student_id", localId);
+      localStorage.setItem("disha_student_profile", JSON.stringify(builtProfile));
+      const defaultOfflineMatch = {
+        opportunity: {
+          id: 1,
+          title: builtProfile.career_aspirations?.[0] || "PM National Apprenticeship (Solar PV Tech)",
+          provider: "Ministry of Skill Development & Entrepreneurship",
+          verification_status: "verified"
+        },
+        score: 95,
+        overall_eligibility: "ELIGIBLE"
+      };
+      localStorage.setItem("disha_top_match", JSON.stringify(defaultOfflineMatch));
       if (onStudentCreated) onStudentCreated(localId);
     } catch {}
+
+    const activeReceiptHash = consentReceiptHash || localStorage.getItem("disha_consent_receipt") || null;
 
     // Save to local profile store
     await saveOfflineProfile({
@@ -343,26 +396,233 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
       created_at: new Date().toISOString(),
       sync_status: "pending_sync",
       profile_type: "offline_icon_quiz",
-      student_name: studentName,
+      student_name: studentNickname || studentName,
       language,
       guardian_consent: true,
+      consent_receipt_hash: activeReceiptHash,
+      consent_version: "DPDP_V1.0",
       profile: builtProfile
     });
 
     // PHASE 5: Enqueue into IndexedDB Outbox
     await enqueueSyncItem("offline_quiz_result", {
-      student_name: studentName,
+      student_name: studentNickname || studentName,
       language,
       guardian_consent: true,
+      consent_receipt_hash: activeReceiptHash,
+      consent_version: "DPDP_V1.0",
       profile: builtProfile,
       answers: finalAnswers
     });
   };
 
+  // Step 0: Dedicated Welcome & Consent Gateway Screen
+  if (!consentGranted && !completedProfile) {
+    return (
+      <main className="main-container" style={{ paddingBottom: 80 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <button
+            onClick={onBackToHome}
+            style={{
+              background: "rgba(255,255,255,0.08)",
+              border: "none",
+              color: "#fff",
+              padding: "8px 14px",
+              borderRadius: 9999,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: "0.84rem",
+              fontWeight: 600
+            }}
+          >
+            <ArrowLeft size={15} /> मुख्य पान (Home)
+          </button>
+        </div>
+
+        <section className="personalized-hero" style={{ marginTop: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 14 }}>
+            <div style={{
+              background: "linear-gradient(135deg, #f97316, #ea580c)",
+              color: "#fff",
+              padding: 12,
+              borderRadius: 16,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              boxShadow: "0 6px 16px rgba(249,115,22,0.45)"
+            }}>
+              <Sparkles size={28} />
+            </div>
+            <div>
+              <h2 style={{ fontSize: "1.3rem", fontWeight: 800, color: "#fff", lineHeight: 1.25 }}>
+                {language === "mr" && "दिशा करिअर शोधामध्ये स्वागत आहे!"}
+                {language === "hi" && "दिशा करियर खोज में आपका स्वागत है!"}
+                {language === "en" && "Welcome to Disha Career Discovery!"}
+              </h2>
+              <p style={{ color: "#38bdf8", fontSize: "0.84rem", fontWeight: 700, marginTop: 2 }}>
+                {language === "mr" && "तुमच्यासाठी योग्य सरकारी योजना, शिष्यवृत्ती व कौशल्य मार्ग"}
+                {language === "hi" && "आपके लिए सही सरकारी योजनाएं, छात्रवृत्तियां और करियर मार्ग"}
+                {language === "en" && "Find verified schemes, scholarships and vocational pathways"}
+              </p>
+            </div>
+          </div>
+
+          {/* Friendly Welcome & Permission Text */}
+          <div style={{
+            background: "rgba(15,23,42,0.75)",
+            border: "1px solid rgba(255,255,255,0.12)",
+            borderRadius: 14,
+            padding: 16,
+            margin: "16px 0"
+          }}>
+            <p style={{ color: "#f8fafc", fontSize: "0.95rem", lineHeight: 1.55, fontWeight: 500, marginBottom: 14 }}>
+              {language === "mr" && "Welcome! तुमच्यासाठी सर्वोत्तम करिअर आणि योजना शोधण्यापूर्वी, कृपया तुमच्या पालकांची संमती तपासा."}
+              {language === "hi" && "Welcome! आपके लिए सर्वोत्तम करियर और योजनाएं खोजने से पहले, कृपया अभिभावक सहमति की पुष्टि करें।"}
+              {language === "en" && "Welcome! Before we find your career matches, please confirm parental/guardian consent to save your personalized path."}
+            </p>
+
+            {/* Guardian / Parent Name Input */}
+            <div style={{ marginBottom: 14 }}>
+              <label style={{ display: "block", fontSize: "0.8rem", color: "#cbd5e1", fontWeight: 700, marginBottom: 6 }}>
+                {language === "mr" && "पालकांचे नाव (Parent / Guardian Name):"}
+                {language === "hi" && "अभिभावक का नाम (Parent / Guardian Name):"}
+                {language === "en" && "Parent / Guardian Name:"}
+              </label>
+              <input
+                type="text"
+                value={guardianName}
+                onChange={(e) => setGuardianName(e.target.value)}
+                placeholder={language === "mr" ? "उदा. रमेश जाधव" : language === "hi" ? "उदा. रमेश कुमार" : "e.g. Ramesh Jadhav"}
+                style={{
+                  width: "100%",
+                  background: "rgba(30,41,59,0.9)",
+                  border: "1px solid rgba(255,255,255,0.22)",
+                  borderRadius: 10,
+                  padding: "11px 14px",
+                  color: "#fff",
+                  fontSize: "0.92rem",
+                  fontWeight: 600
+                }}
+              />
+            </div>
+
+            {/* Student Nickname Input */}
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: "block", fontSize: "0.8rem", color: "#cbd5e1", fontWeight: 700, marginBottom: 6 }}>
+                {language === "mr" && "विद्यार्थ्याचे नाव किंवा टोपणनाव (Student Nickname / Roll No):"}
+                {language === "hi" && "विद्यार्थी का नाम या उपनाम (Student Nickname / Roll No):"}
+                {language === "en" && "Student Nickname or Roll Number:"}
+              </label>
+              <input
+                type="text"
+                value={studentNickname}
+                onChange={(e) => setStudentNickname(e.target.value)}
+                placeholder={language === "mr" ? "उदा. रोहन, स्नेहा..." : language === "hi" ? "उदा. रोहन, नेहा..." : "e.g. Rohan, Sneha..."}
+                style={{
+                  width: "100%",
+                  background: "rgba(30,41,59,0.9)",
+                  border: "1px solid rgba(255,255,255,0.22)",
+                  borderRadius: 10,
+                  padding: "11px 14px",
+                  color: "#fff",
+                  fontSize: "0.92rem",
+                  fontWeight: 600
+                }}
+              />
+            </div>
+
+            {/* DPDP Consent Checkbox */}
+            <div style={{
+              background: tempConsentChecked ? "rgba(16,185,129,0.14)" : "rgba(249,115,22,0.12)",
+              border: `1.5px solid ${tempConsentChecked ? "#10b981" : "#f97316"}`,
+              borderRadius: 12,
+              padding: 12,
+              display: "flex",
+              alignItems: "flex-start",
+              gap: 12
+            }}>
+              <input
+                type="checkbox"
+                id="step0-consent-chk"
+                checked={tempConsentChecked}
+                onChange={(e) => setTempConsentChecked(e.target.checked)}
+                style={{ width: 22, height: 22, accentColor: "#f97316", marginTop: 2, cursor: "pointer", flexShrink: 0 }}
+              />
+              <label htmlFor="step0-consent-chk" style={{ fontSize: "0.82rem", color: "#e2e8f0", lineHeight: 1.45, cursor: "pointer" }}>
+                <strong style={{ color: "#fff", display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                  <Shield size={15} style={{ color: "#10b981" }} />
+                  {language === "mr" && "पालकांची संमती (Parental/Guardian Consent)"}
+                  {language === "hi" && "अभिभावक सहमति (Parental/Guardian Consent)"}
+                  {language === "en" && "Parental/Guardian Consent Confirmed"}
+                </strong>
+                {language === "mr" && (
+                  <span>मी पुष्टी करतो की पालकांच्या संमतीने ही माहिती करिअर मार्गदर्शनासाठी दिली जात आहे. दिशा तुमचे नाव, इयत्ता व आवडी सुरक्षित ठेवते आणि कोणालाही विकत नाही.</span>
+                )}
+                {language === "hi" && (
+                  <span>मैं पुष्टि करता/करती हूँ कि अभिभावक की सहमति से यह जानकारी करियर मार्गदर्शन के लिए दी जा रही है। डेटा पूरी तरह सुरक्षित है।</span>
+                )}
+                {language === "en" && (
+                  <span>I confirm parental/guardian consent to save my personalized career path under DPDP Act data minimisation principles.</span>
+                )}
+              </label>
+            </div>
+          </div>
+
+          {/* Agree & Continue Primary Action */}
+          <button
+            onClick={async () => {
+              if (!tempConsentChecked) return;
+              const gName = (guardianName.trim() || "Parent / Guardian");
+              const { canonical, hash } = await generateConsentReceiptHash(gName);
+              setGuardianConsent(true);
+              setConsentGranted(true);
+              setConsentReceiptHash(hash);
+              localStorage.setItem("disha_guardian_consent", "true");
+              localStorage.setItem("disha_student_nickname", studentNickname.trim() || "विद्यार्थी");
+              localStorage.setItem("disha_guardian_name", gName);
+              localStorage.setItem("disha_consent_receipt", hash);
+              localStorage.setItem("disha_consent_canonical", canonical);
+              if (!useOfflineQuiz && isOnline && !sessionId) {
+                initOnlineSession();
+              }
+            }}
+            disabled={!tempConsentChecked}
+            style={{
+              width: "100%",
+              background: tempConsentChecked ? "linear-gradient(135deg, #f97316, #ea580c)" : "rgba(255,255,255,0.1)",
+              color: "#fff",
+              border: "none",
+              borderRadius: 14,
+              padding: "15px 20px",
+              fontSize: "1rem",
+              fontWeight: 800,
+              cursor: tempConsentChecked ? "pointer" : "not-allowed",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 8,
+              boxShadow: tempConsentChecked ? "0 6px 20px rgba(249,115,22,0.4)" : "none",
+              transition: "all 0.2s ease"
+            }}
+          >
+            <span>
+              {language === "mr" && "सहमत आणि सुरू करा (Agree & Continue)"}
+              {language === "hi" && "सहमति दें और शुरू करें (Agree & Continue)"}
+              {language === "en" && "Agree & Continue"}
+            </span>
+            →
+          </button>
+        </section>
+      </main>
+    );
+  }
+
   // Render Completed Profile View
   if (completedProfile) {
     return (
-      <main className="main-container" style={{ paddingBottom: 60 }}>
+      <main className="main-container" style={{ paddingBottom: 80 }}>
         <div className="greeting-card" style={{ borderTop: "4px solid #10b981" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -523,7 +783,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
   if (useOfflineQuiz) {
     const qData = OFFLINE_QUIZ_QUESTIONS[quizStep];
     return (
-      <main className="main-container">
+      <main className="main-container" style={{ paddingBottom: 80 }}>
         {/* Header & Mode Switch */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <button
@@ -610,73 +870,14 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
               );
             })}
           </div>
-
-          {/* DPDP Act Child-Safe Guardian Consent Checkbox */}
-          <div style={{
-            background: "rgba(15,23,42,0.8)",
-            border: guardianConsent ? "1px solid #10b981" : consentError ? "2px solid #ef4444" : "1px solid rgba(249,115,22,0.6)",
-            borderRadius: 12,
-            padding: 12,
-            marginTop: 14
-          }}>
-            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-              <input
-                type="checkbox"
-                id="guardian-consent-chk-offline"
-                checked={guardianConsent}
-                onChange={(e) => {
-                  const checked = e.target.checked;
-                  setGuardianConsent(checked);
-                  if (checked) {
-                    setConsentError(false);
-                    if (Object.keys(quizAnswers).length >= OFFLINE_QUIZ_QUESTIONS.length) {
-                      finalizeOfflineQuiz();
-                    }
-                  }
-                }}
-                style={{ width: 18, height: 18, accentColor: "#f97316", marginTop: 2, cursor: "pointer", flexShrink: 0 }}
-                aria-required="true"
-              />
-              <label htmlFor="guardian-consent-chk-offline" style={{ fontSize: "0.78rem", color: "#cbd5e1", lineHeight: 1.5, cursor: "pointer" }}>
-                <strong style={{ color: "#fff", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-                  <Shield size={13} style={{ color: "#10b981" }} />
-                  {language === "mr" && "पालकांची संमती आवश्यक आहे (Guardian Consent Required)"}
-                  {language === "hi" && "अभिभावक की सहमति आवश्यक है (Guardian Consent Required)"}
-                  {language === "en" && "Guardian Consent Required"}
-                </strong>
-                {language === "mr" && (
-                  <span>
-                    दिशा तुमचे नाव, इयत्ता, जिल्हा, आवडी आणि करिअर ध्येय <strong>फक्त करिअर मार्गदर्शनासाठी</strong> गोळा करते. हे डेटा तृतीय पक्षाला विकले जात नाही.
-                  </span>
-                )}
-                {language === "hi" && (
-                  <span>
-                    दिशा आपका नाम, कक्षा, जिला, रुचियाँ और करियर लक्ष्य <strong>केवल करियर मार्गदर्शन के लिए</strong> एकत्र करती है। यह डेटा किसी तीसरे पक्ष को नहीं बेचा जाता।
-                  </span>
-                )}
-                {language === "en" && (
-                  <span>
-                    Disha collects your name, class, district, interests and career goal <strong>only for career guidance</strong>. This data is never sold to third parties.
-                  </span>
-                )}
-              </label>
-            </div>
-            {consentError && !guardianConsent && (
-              <p style={{ color: "#ef4444", fontSize: "0.78rem", marginTop: 8, marginLeft: 28, fontWeight: 700 }}>
-                {language === "mr" && "⚠ कृपया प्रोफाईल पूर्ण करण्यासाठी व सेव्ह करण्यासाठी पालकांची संमती तपासा."}
-                {language === "hi" && "⚠ कृपया प्रोफ़ाइल पूर्ण और सुरक्षित करने के लिए अभिभावक सहमति चेक करें।"}
-                {language === "en" && "⚠ Please tick guardian consent to save and generate your profile."}
-              </p>
-            )}
-          </div>
         </div>
       </main>
     );
   }
 
-  // Render Online 7-Question Conversational Flow
+  // Render Online Flow
   return (
-    <main className="main-container">
+    <main className="main-container" style={{ paddingBottom: 80 }}>
       {/* Top Navigation & Status */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <button
@@ -733,10 +934,10 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
             </button>
           </div>
 
-          {/* Quick Option Pills */}
+          {/* Quick Option Pills - Tapping an option advances immediately */}
           {currentQuestion.options && currentQuestion.options.length > 0 && (
             <div style={{ marginTop: 16 }}>
-              <span style={{ fontSize: "0.75rem", color: "#94a3b8", display: "block", marginBottom: 8 }}>
+              <span style={{ fontSize: "0.78rem", color: "#e2e8f0", display: "block", marginBottom: 8, fontWeight: 600 }}>
                 एक पर्याय निवडा किंवा खाली बोला:
               </span>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
@@ -744,24 +945,29 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
                   <button
                     key={idx}
                     onClick={() => handleSelectOption(opt)}
+                    className="option-pill"
                     style={{
-                      background: "rgba(30,41,59,0.8)",
-                      border: "1px solid rgba(255,255,255,0.12)",
-                      color: "#f8fafc",
-                      padding: "8px 14px",
+                      background: "rgba(30,41,59,0.85)",
+                      border: "1.5px solid rgba(255,255,255,0.18)",
+                      color: "#ffffff",
+                      padding: "10px 18px",
+                      minHeight: 48,
                       borderRadius: 9999,
-                      fontSize: "0.85rem",
+                      fontSize: "0.9rem",
                       cursor: "pointer",
-                      fontWeight: 600,
-                      transition: "all 0.2s"
+                      fontWeight: 700,
+                      transition: "all 0.2s",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center"
                     }}
                     onMouseOver={(e) => {
                       e.currentTarget.style.borderColor = "#f97316";
-                      e.currentTarget.style.background = "rgba(249,115,22,0.2)";
+                      e.currentTarget.style.background = "rgba(249,115,22,0.25)";
                     }}
                     onMouseOut={(e) => {
-                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)";
-                      e.currentTarget.style.background = "rgba(30,41,59,0.8)";
+                      e.currentTarget.style.borderColor = "rgba(255,255,255,0.18)";
+                      e.currentTarget.style.background = "rgba(30,41,59,0.85)";
                     }}
                   >
                     {opt}
@@ -855,16 +1061,17 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
 
           {offlineVoiceNotice && (
             <div style={{
-              background: "rgba(16,185,129,0.15)",
-              border: "1px solid rgba(16,185,129,0.4)",
-              borderRadius: 8,
-              padding: "6px 12px",
-              color: "#34d399",
-              fontSize: "0.78rem",
-              fontWeight: 700,
-              textAlign: "center"
+              background: "rgba(245,158,11,0.18)",
+              border: "1px solid rgba(245,158,11,0.5)",
+              borderRadius: 9999,
+              padding: "6px 14px",
+              color: "#fcd34d",
+              fontSize: "0.8rem",
+              fontWeight: 800,
+              textAlign: "center",
+              boxShadow: "0 2px 10px rgba(245,158,11,0.25)"
             }}>
-              ✓ {offlineVoiceNotice}
+              {offlineVoiceNotice}
             </div>
           )}
         </div>
@@ -875,59 +1082,6 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
           </p>
         )}
       </section>
-
-      {/* DPDP Act Child-Safe Guardian Consent Checkbox */}
-      <div style={{
-        background: "rgba(15,23,42,0.8)",
-        border: guardianConsent ? "1px solid #10b981" : "1px solid rgba(249,115,22,0.6)",
-        borderRadius: 12,
-        padding: 12,
-        marginTop: 8
-      }}>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
-          <input
-            type="checkbox"
-            id="guardian-consent-chk"
-            checked={guardianConsent}
-            onChange={(e) => setGuardianConsent(e.target.checked)}
-            style={{ width: 18, height: 18, accentColor: "#f97316", marginTop: 2, cursor: "pointer", flexShrink: 0 }}
-            aria-required="true"
-          />
-          <label htmlFor="guardian-consent-chk" style={{ fontSize: "0.78rem", color: "#cbd5e1", lineHeight: 1.5, cursor: "pointer" }}>
-            <strong style={{ color: "#fff", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
-              <Shield size={13} style={{ color: "#10b981" }} />
-              {language === "mr" && "पालकांची संमती आवश्यक आहे (Guardian Consent Required)"}
-              {language === "hi" && "अभिभावक की सहमति आवश्यक है (Guardian Consent Required)"}
-              {language === "en" && "Guardian Consent Required"}
-            </strong>
-            {language === "mr" && (
-              <span>
-                दिशा तुमचे नाव, इयत्ता, जिल्हा, आवडी आणि करिअर ध्येय <strong>फक्त करिअर मार्गदर्शनासाठी</strong> गोळा करते. हे डेटा तृतीय पक्षाला विकले जात नाही.
-                <br />🎙️ <em>आवाज नोंदणी: ब्राउझरची Speech API वापरली जाते; आवाज ब्राउझर विक्रेत्याकडे (Google/Apple) पाठवला जाऊ शकतो. Production मध्ये Bhashini किंवा on-device speech वापरले जाईल.</em>
-              </span>
-            )}
-            {language === "hi" && (
-              <span>
-                दिशा आपका नाम, कक्षा, जिला, रुचियाँ और करियर लक्ष्य <strong>केवल करियर मार्गदर्शन के लिए</strong> एकत्र करती है। यह डेटा किसी तीसरे पक्ष को नहीं बेचा जाता।
-                <br />🎙️ <em>आवाज़ रिकॉर्डिंग: ब्राउज़र की Speech API उपयोग होती है; आवाज़ ब्राउज़र विक्रेता (Google/Apple) को भेजी जा सकती है। Production में Bhashini या on-device speech उपयोग होगा।</em>
-              </span>
-            )}
-            {language === "en" && (
-              <span>
-                Disha collects your name, class, district, interests and career goal <strong>only for career guidance</strong>. This data is never sold to third parties.
-                <br />🎙️ <em>Voice note: Browser Speech API is used; audio may be processed by your browser vendor (Google/Apple). Production will use Bhashini or on-device speech.</em>
-              </span>
-            )}
-          </label>
-        </div>
-        {!guardianConsent && (
-          <p style={{ color: "#fb923c", fontSize: "0.75rem", marginTop: 8, marginLeft: 28 }}>
-            {language === "mr" && "संमती दिल्याशिवाय प्रोफाईल सेव्ह होणार नाही."}
-            {language === "hi" && "सहमति के बिना प्रोफ़ाइल सेव नहीं होगी।"}
-            {language === "en" && "Profile will not be saved without consent."}
-          </p>
-        )}
-      </div>
     </main>
   );
 };

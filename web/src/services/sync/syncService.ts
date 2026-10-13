@@ -3,6 +3,7 @@ import {
   getPendingSyncCount,
   updateSyncItemsStatus
 } from "../db/offlineStorage";
+import { apiUrl } from "../apiConfig";
 
 export interface SyncState {
   isOnline: boolean;
@@ -30,6 +31,10 @@ class SyncService {
     if (typeof window !== "undefined") {
       try {
         this.isDemoOffline = localStorage.getItem("disha_demo_offline") === "true";
+        const savedSync = localStorage.getItem("disha_last_synced_at");
+        if (savedSync) {
+          this.lastSyncTime = new Date(savedSync);
+        }
       } catch {
         this.isDemoOffline = false;
       }
@@ -132,6 +137,10 @@ class SyncService {
     return this.isDemoOffline;
   }
 
+  public async flushOutbox(): Promise<void> {
+    return this.triggerSync();
+  }
+
   /**
    * Triggers batch sync against POST /api/v1/sync.
    * Never blocks UI; retries with backoff on failure.
@@ -152,7 +161,7 @@ class SyncService {
     this.notify();
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/sync", {
+      const response = await fetch(apiUrl("/api/v1/sync"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items: pendingItems })
@@ -192,9 +201,18 @@ class SyncService {
 
       if (statusUpdates.length > 0) {
         await updateSyncItemsStatus(statusUpdates);
+        const syncedCount = statusUpdates.filter((s) => s.status === "synced").length;
+        if (syncedCount > 0 && typeof window !== "undefined") {
+          window.dispatchEvent(
+            new CustomEvent("disha_sync_completed", { detail: { syncedCount } })
+          );
+        }
       }
 
       this.lastSyncTime = new Date();
+      try {
+        localStorage.setItem("disha_last_synced_at", this.lastSyncTime.toISOString());
+      } catch {}
       this.backoffDelayMs = 2000; // Reset backoff on success
       await this.refreshCount();
     } catch (err: any) {

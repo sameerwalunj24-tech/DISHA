@@ -27,6 +27,8 @@ class DiscoverySession:
         self.current_index = 0
         self.answers: Dict[str, str] = {}
         self.guardian_consent = False
+        self.consent_receipt_hash: Optional[str] = None
+        self.consent_version: Optional[str] = "DPDP_V1.0"
         self.student_name = "विद्यार्थी (Learner)"
         self.is_complete = False
         self.profile: Optional[StructuredProfile] = None
@@ -74,8 +76,10 @@ async def submit_discovery_answer(
     question_id: str,
     answer_text: str,
     guardian_consent: bool,
-    student_name: Optional[str],
-    db: Session
+    student_name: Optional[str] = None,
+    consent_receipt_hash: Optional[str] = None,
+    consent_version: Optional[str] = "DPDP_V1.0",
+    db: Session = None
 ) -> Dict[str, Any]:
     session = SESSIONS.get(session_id)
     questions = load_questions_data()
@@ -91,6 +95,12 @@ async def submit_discovery_answer(
 
     if student_name:
         session.student_name = student_name
+
+    if consent_receipt_hash:
+        session.consent_receipt_hash = consent_receipt_hash
+
+    if consent_version:
+        session.consent_version = consent_version
 
     # Record answer
     session.answers[question_id] = answer_text
@@ -148,6 +158,8 @@ async def submit_discovery_answer(
         state=profile.state,
         district=profile.district,
         guardian_consent=True,
+        consent_receipt_hash=session.consent_receipt_hash,
+        consent_version=session.consent_version or "DPDP_V1.0",
         interests=", ".join(profile.primary_interests),
         skills=", ".join(profile.practical_skills),
         aspirations=", ".join(profile.career_aspirations)
@@ -155,6 +167,21 @@ async def submit_discovery_answer(
     db.add(student)
     db.commit()
     db.refresh(student)
+
+    if session.consent_receipt_hash:
+        try:
+            from api.app.models import ConsentReceipt
+            existing_receipt = db.query(ConsentReceipt).filter(ConsentReceipt.receipt_hash == session.consent_receipt_hash).first()
+            if not existing_receipt:
+                cr = ConsentReceipt(
+                    receipt_hash=session.consent_receipt_hash,
+                    consent_version=session.consent_version or "DPDP_V1.0",
+                    student_id=student.id
+                )
+                db.add(cr)
+                db.commit()
+        except Exception:
+            pass
 
     # Privacy-safe impact event tracking (no student names or IDs)
     try:

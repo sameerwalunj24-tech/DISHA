@@ -1,0 +1,68 @@
+{
+  "1": {
+    "source_url": "https://www.apprenticeshipindia.gov.in",
+    "content_hash": "11d5e0d2948c668efb1c7ba142387e07a3f5a9b70367eb736c2cfdb00e844a47",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "2": {
+    "source_url": "https://mahadbt.maharashtra.gov.in",
+    "content_hash": "22e6f1d3959c779f0c2d8cb253498f18b4f6b0c81478fc847d3deec11f955b58",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "3": {
+    "source_url": "https://scholarships.gov.in",
+    "content_hash": "33f7a2e4060d88a01d3e9dc3645a9029c5a7c1d925890d958e4effd22a066c69",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "4": {
+    "source_url": "https://www.nsdcindia.org",
+    "content_hash": "44a8b3f5171e99b12e4faed4756ba13ad6b8d2ea369a1ea69f5f00e33b177d7a",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "5": {
+    "source_url": "https://www.nabard.org",
+    "content_hash": "55b9c4a6282fa0c23f50bfe5867cb24be7c9e3fb470b2fb70a6a11f44c288e8b",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "6": {
+    "source_url": "https://nhm.gov.in",
+    "content_hash": "66cad5b73930b1d34061c0f6978dc35cf8da040c581c30c81b7b22055d399f9c",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "7": {
+    "source_url": "https://pmvishwakarma.gov.in",
+    "content_hash": "77dbe6c84041c2e45172d1a7089ed46d09eb151d692d41d92c8c33166e4a00ad",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "8": {
+    "source_url": "https://www.iba.org.in",
+    "content_hash": "88ecf7d95152d3f56283e2b819afe57e1afc262e7a3e52ea3d9d44277f5b11be",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "9": {
+    "source_url": "https://indianrailways.gov.in",
+    "content_hash": "99fd08ea6263e4067394f3c92a00f68f2b0d373f8b4f63fb4e0e5538806c22cf",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "10": {
+    "source_url": "https://www.karmasandhan.com/navy-tradesman-mate-recruitment-2026/",
+    "content_hash": "aa0e19fb7374f51784a504da3b1107903c1e48409c50740c5f1f6649917d33d0",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  },
+  "11": {
+    "source_url": "https://agricoop.nic.in",
+    "content_hash": "bb1f20ac8485062895b615eb4c2218a14d2f5951ad61851d6020775aa28e44e1",
+    "last_checked": "2026-10-13T12:00:00+00:00",
+    "status": "VERIFIED"
+  }
+}

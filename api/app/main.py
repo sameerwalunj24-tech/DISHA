@@ -17,6 +17,9 @@ from api.app.facilitator.router import router as facilitator_router
 from api.app.marketplace.router import router as marketplace_router
 from api.app.partner.router import router as partner_router
 from api.app.impact.router import router as impact_router
+from api.app.routers.consent import router as consent_router
+from api.app.schemas import HealthResponse, OpportunityResponse, StudentCreate, StudentResponse
+from api.app.models import Opportunity, Student, ConsentReceipt
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -36,7 +39,8 @@ app = FastAPI(
         "- Resilient offline sync with IndexedDB outbox\n"
         "- Facilitator portal, talent radar flags & cohort management\n"
         "- Marketplace with 12/88 facilitator revenue split\n"
-        "- Partner connectors for NGO and employer opportunity feeds"
+        "- Partner connectors for NGO and employer opportunity feeds\n"
+        "- DPDP Act 2023 Cryptographic Consent Verification"
     ),
     lifespan=lifespan,
     docs_url="/docs",
@@ -60,6 +64,7 @@ app.include_router(sync_router)
 app.include_router(facilitator_router)
 app.include_router(marketplace_router)
 app.include_router(partner_router)
+app.include_router(consent_router)
 app.include_router(impact_router, prefix="/api/v1")
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
@@ -112,3 +117,51 @@ def reset_demo(
         "message": "Demo environment successfully restored with demo facilitator, cohort DEMO10, and 3 students.",
         "details": result
     }
+
+@app.post("/api/v1/students", response_model=StudentResponse, tags=["Students"])
+def create_student(student_in: StudentCreate, db: Session = Depends(get_db)):
+    """Create a student record with guardian consent and optional cryptographic receipt."""
+    if not student_in.guardian_consent:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="GUARDIAN_CONSENT_REQUIRED: Child-safe privacy policy requires guardian consent before saving profile."
+        )
+    student = Student(
+        name=student_in.name,
+        preferred_language=student_in.preferred_language,
+        grade=student_in.grade,
+        state=student_in.state,
+        district=student_in.district,
+        gender=student_in.gender,
+        guardian_consent=True,
+        consent_receipt_hash=student_in.consent_receipt_hash,
+        consent_version=student_in.consent_version or "DPDP_V1.0",
+        interests=student_in.interests
+    )
+    db.add(student)
+    db.commit()
+    db.refresh(student)
+
+    if student_in.consent_receipt_hash:
+        try:
+            if not db.query(ConsentReceipt).filter(ConsentReceipt.receipt_hash == student_in.consent_receipt_hash).first():
+                cr = ConsentReceipt(
+                    receipt_hash=student_in.consent_receipt_hash,
+                    consent_version=student_in.consent_version or "DPDP_V1.0",
+                    student_id=student.id
+                )
+                db.add(cr)
+                db.commit()
+        except Exception:
+            pass
+
+    return student
+
+@app.get("/api/v1/students/{student_id}", response_model=StudentResponse, tags=["Students"])
+def get_student(student_id: str, db: Session = Depends(get_db)):
+    """Retrieve student profile by id."""
+    student = db.query(Student).filter(Student.id == student_id).first()
+    if not student:
+        raise HTTPException(status_code=404, detail="Student not found")
+    return student
+

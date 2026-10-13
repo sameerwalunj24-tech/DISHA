@@ -14,4 +14,6 @@ export interface VoiceAdapter {
   stopListening(): void;
   speak(text: string, language: string): Promise<void>;
   cancelSpeech(): void;
+  stop(): void;
 }
+

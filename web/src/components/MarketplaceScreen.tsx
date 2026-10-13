@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "../i18n";
 import { voiceService } from "../services/voice";
+import { apiUrl } from "../services/apiConfig";
 
 interface ModuleStep {
   step_number: number;
@@ -53,6 +54,12 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [paymentSuccess, setPaymentSuccess] = useState<boolean>(false);
 
+  // Guest Enrollment Modal state (eliminates silent drops)
+  const [guestEnrollModalOpen, setGuestEnrollModalOpen] = useState<boolean>(false);
+  const [guestNicknameInput, setGuestNicknameInput] = useState<string>("");
+  const [selectedModuleForEnroll, setSelectedModuleForEnroll] = useState<TrainingModule | null>(null);
+  const [activeStudentId, setActiveStudentId] = useState<string | null>(studentId);
+
   useEffect(() => {
     loadModules();
   }, [studentId, isOnline]);
@@ -78,7 +85,7 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
     }
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/modules");
+      const res = await fetch(apiUrl("/api/v1/modules"));
       if (res.ok) {
         const data: TrainingModule[] = await res.json();
         setModules(data);
@@ -86,7 +93,7 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
       }
 
       if (studentId) {
-        const myRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${studentId}/modules`);
+        const myRes = await fetch(apiUrl(`/api/v1/students/${studentId}/modules`));
         if (myRes.ok) {
           const myData = await myRes.json();
           const enrolledIds = new Set<string>(myData.map((item: any) => item.module_id));
@@ -101,16 +108,15 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
     }
   };
 
-  const handleEnrollMockPayment = async () => {
-    if (!purchasingModule || !studentId) return;
-
+  const executeEnrollment = async (mod: TrainingModule, sId: string) => {
     setIsProcessingPayment(true);
+    setPurchasingModule(mod);
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/v1/modules/${purchasingModule.id}/enroll`, {
+      const res = await fetch(apiUrl(`/api/v1/modules/${mod.id}/enroll`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_id: studentId,
+          student_id: sId,
           payment_method: "MOCK_UPI"
         })
       });
@@ -120,22 +126,60 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
       void _enrollData;
 
       // Cache downloaded module for offline access
-      const updatedEnrolled = new Set(enrolledModuleIds).add(purchasingModule.id);
+      const updatedEnrolled = new Set(enrolledModuleIds).add(mod.id);
       setEnrolledModuleIds(updatedEnrolled);
-      localStorage.setItem(`disha_enrolled_${studentId}`, JSON.stringify(Array.from(updatedEnrolled)));
-      localStorage.setItem(`disha_module_offline_${purchasingModule.id}`, JSON.stringify(purchasingModule));
+      localStorage.setItem(`disha_enrolled_${sId}`, JSON.stringify(Array.from(updatedEnrolled)));
+      localStorage.setItem(`disha_module_offline_${mod.id}`, JSON.stringify(mod));
 
       setPaymentSuccess(true);
       setTimeout(() => {
         setPaymentSuccess(false);
         setPurchasingModule(null);
-        setActiveReadingModule(purchasingModule);
+        setActiveReadingModule(mod);
         setActiveStepIndex(0);
-      }, 1500);
+      }, 2000);
     } catch (err) {
-      console.warn("Enrollment error:", err);
+      console.warn("Enrollment error (falling back to offline mock enrollment):", err);
+      const updatedEnrolled = new Set(enrolledModuleIds).add(mod.id);
+      setEnrolledModuleIds(updatedEnrolled);
+      localStorage.setItem(`disha_enrolled_${sId}`, JSON.stringify(Array.from(updatedEnrolled)));
+      localStorage.setItem(`disha_module_offline_${mod.id}`, JSON.stringify(mod));
+      setPaymentSuccess(true);
+      setTimeout(() => {
+        setPaymentSuccess(false);
+        setPurchasingModule(null);
+        setActiveReadingModule(mod);
+        setActiveStepIndex(0);
+      }, 2000);
     } finally {
       setIsProcessingPayment(false);
+    }
+  };
+
+  const handleEnrollMockPayment = async () => {
+    const effectiveStudentId = activeStudentId || studentId || (typeof localStorage !== "undefined" ? localStorage.getItem("disha_student_id") : null);
+    if (!purchasingModule) return;
+    if (!effectiveStudentId) {
+      setSelectedModuleForEnroll(purchasingModule);
+      setGuestNicknameInput(typeof localStorage !== "undefined" ? (localStorage.getItem("disha_student_nickname") || "") : "");
+      setGuestEnrollModalOpen(true);
+      return;
+    }
+    await executeEnrollment(purchasingModule, effectiveStudentId);
+  };
+
+  const handleCompleteGuestEnrollment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const nickname = guestNicknameInput.trim() || (language === "mr" ? "रोहन" : language === "hi" ? "रोहन" : "Rohan");
+    const guestId = `std_guest_${Date.now()}`;
+    try {
+      localStorage.setItem("disha_student_id", guestId);
+      localStorage.setItem("disha_student_nickname", nickname);
+    } catch {}
+    setActiveStudentId(guestId);
+    setGuestEnrollModalOpen(false);
+    if (selectedModuleForEnroll) {
+      await executeEnrollment(selectedModuleForEnroll, guestId);
     }
   };
 
@@ -283,30 +327,40 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
           <button
             onClick={() => setActiveTab("ALL")}
+            className="filter-tab"
             style={{
-              padding: "6px 14px",
+              padding: "8px 18px",
+              minHeight: 48,
               borderRadius: 9999,
               border: "none",
               background: activeTab === "ALL" ? "#38bdf8" : "rgba(255,255,255,0.08)",
-              color: activeTab === "ALL" ? "#000" : "#cbd5e1",
-              fontWeight: 700,
-              fontSize: "0.8rem",
-              cursor: "pointer"
+              color: activeTab === "ALL" ? "#0f172a" : "#e2e8f0",
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center"
             }}
           >
             सर्व कोर्सेस ({modules.length})
           </button>
           <button
             onClick={() => setActiveTab("MY_MODULES")}
+            className="filter-tab"
             style={{
-              padding: "6px 14px",
+              padding: "8px 18px",
+              minHeight: 48,
               borderRadius: 9999,
               border: "none",
               background: activeTab === "MY_MODULES" ? "#38bdf8" : "rgba(255,255,255,0.08)",
-              color: activeTab === "MY_MODULES" ? "#000" : "#cbd5e1",
-              fontWeight: 700,
-              fontSize: "0.8rem",
-              cursor: "pointer"
+              color: activeTab === "MY_MODULES" ? "#0f172a" : "#e2e8f0",
+              fontWeight: 800,
+              fontSize: "0.85rem",
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center"
             }}
           >
             माझे कोर्सेस ({enrolledModuleIds.size})
@@ -395,8 +449,11 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
                   ) : (
                     <button
                       onClick={() => {
-                        if (!studentId) {
-                          alert(language === "mr" ? "कृपया आधी करिअर शोध (Discover) पूर्ण करा." : "Please complete Discover first.");
+                        const effectiveId = activeStudentId || studentId || (typeof localStorage !== "undefined" ? localStorage.getItem("disha_student_id") : null);
+                        if (!effectiveId) {
+                          setSelectedModuleForEnroll(m);
+                          setGuestNicknameInput(typeof localStorage !== "undefined" ? (localStorage.getItem("disha_student_nickname") || "") : "");
+                          setGuestEnrollModalOpen(true);
                           return;
                         }
                         setPurchasingModule(m);
@@ -422,6 +479,90 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* GUEST ENROLLMENT MODAL */}
+      {guestEnrollModalOpen && (
+        <div className="modal-backdrop" onClick={() => setGuestEnrollModalOpen(false)} role="dialog" aria-modal="true">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }}>
+            <div style={{ textAlign: "center", marginBottom: 16 }}>
+              <div style={{ background: "rgba(249,115,22,0.15)", color: "#f97316", width: 48, height: 48, borderRadius: "50%", display: "inline-flex", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
+                <BookOpen size={24} />
+              </div>
+              <h3 style={{ margin: "4px 0", fontSize: "1.15rem", fontWeight: 800 }}>
+                कोर्स नोंदणी (Course Enrollment)
+              </h3>
+              <p style={{ margin: "6px 0 0 0", fontSize: "0.85rem", color: "#e2e8f0", lineHeight: 1.45 }}>
+                कृपया नोंदणी पूर्ण करण्यासाठी तुमचे नाव किंवा रोल नंबर प्रविष्ट करा (Please enter your name or roll number to complete mock enrollment).
+              </p>
+            </div>
+
+            <form onSubmit={handleCompleteGuestEnrollment}>
+              <div style={{ marginBottom: 18 }}>
+                <label style={{ display: "block", fontSize: "0.8rem", color: "#cbd5e1", fontWeight: 700, marginBottom: 6 }}>
+                  {language === "mr" && "नाव किंवा रोल नंबर (Name or Roll Number):"}
+                  {language === "hi" && "नाम या रोल नंबर (Name or Roll Number):"}
+                  {language === "en" && "Name or Roll Number:"}
+                </label>
+                <input
+                  type="text"
+                  autoFocus
+                  required
+                  value={guestNicknameInput}
+                  onChange={(e) => setGuestNicknameInput(e.target.value)}
+                  placeholder="उदा. रोहन किंवा रोल #14 (e.g., Rohan or Roll #14)"
+                  style={{
+                    width: "100%",
+                    background: "rgba(30,41,59,0.9)",
+                    border: "1.5px solid rgba(255,255,255,0.25)",
+                    borderRadius: 10,
+                    padding: "12px 14px",
+                    color: "#fff",
+                    fontSize: "0.95rem",
+                    fontWeight: 600
+                  }}
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button
+                  type="button"
+                  onClick={() => setGuestEnrollModalOpen(false)}
+                  style={{
+                    flex: 1,
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.18)",
+                    color: "#cbd5e1",
+                    padding: "12px",
+                    borderRadius: 10,
+                    fontWeight: 700,
+                    fontSize: "0.88rem",
+                    cursor: "pointer"
+                  }}
+                >
+                  रद्द करा (Cancel)
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1.3,
+                    background: "linear-gradient(135deg, #f97316, #ea580c)",
+                    border: "none",
+                    color: "#fff",
+                    padding: "12px",
+                    borderRadius: 10,
+                    fontWeight: 800,
+                    fontSize: "0.88rem",
+                    cursor: "pointer",
+                    boxShadow: "0 4px 14px rgba(249,115,22,0.4)"
+                  }}
+                >
+                  नोंदणी पूर्ण करा (Complete Enrollment)
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
 

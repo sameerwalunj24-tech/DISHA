@@ -61,3 +61,10 @@ r[1-5]_*.png
 phrase_*.png
 table_cropped.png
 slide1_full_table.png
+
+# Tools & Local runtime files
+cloudflared.exe
+*.db-shm
+*.db-wal
+*.db-journal
+.tools/

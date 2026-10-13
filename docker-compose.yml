@@ -1,39 +1,59 @@
 version: '3.8'
 
 services:
-  api:
+  db:
+    image: postgres:16-alpine
+    container_name: disha-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: disha
+      POSTGRES_PASSWORD: disha_secure_password_2026
+      POSTGRES_DB: disha
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U disha -d disha"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
     build:
-      context: .
-      dockerfile: Dockerfile.api
-    container_name: disha-api
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: disha-backend
     restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
       - ENVIRONMENT=development
+      - DATABASE_URL=postgresql://disha:disha_secure_password_2026@db:5432/disha
       - JWT_SECRET=disha_dev_insecure_default_secret_2026
       - CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173,http://localhost:80,http://localhost
       - PARTNER_API_KEYS=disha_partner_test_key_secret_2026,partner_key_demo_ngo
-      - DATABASE_URL=sqlite:////app/disha.db
-    volumes:
-      - disha-db-data:/app
+    depends_on:
+      db:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
       interval: 10s
       timeout: 5s
       retries: 3
 
-  web:
+  frontend:
     build:
-      context: .
-      dockerfile: Dockerfile.web
-    container_name: disha-web
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: disha-frontend
     restart: unless-stopped
     ports:
+      - "80:80"
       - "5173:80"
     depends_on:
-      api:
+      backend:
         condition: service_healthy
 
 volumes:
-  disha-db-data:
+  postgres-data:

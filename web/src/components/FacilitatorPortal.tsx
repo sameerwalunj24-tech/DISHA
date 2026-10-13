@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { useI18n } from "../i18n";
 import { enqueueSyncItem } from "../services/db/offlineStorage";
+import { apiUrl } from "../services/apiConfig";
 
 interface FacilitatorPortalProps {
   isOpen: boolean;
@@ -146,7 +147,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
     if (!token) return;
     setIsLoadingEarnings(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/earnings", {
+      const res = await fetch(apiUrl("/api/v1/facilitator/earnings"), {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -163,7 +164,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
   const loadImpactSummary = async () => {
     setIsLoadingImpact(true);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/impact/summary");
+      const res = await fetch(apiUrl("/api/v1/impact/summary"));
       if (res.ok) {
         const data = await res.json();
         setImpactSummary(data);
@@ -180,7 +181,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
     if (!modTitle.trim() || !token) return;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/modules", {
+      const res = await fetch(apiUrl("/api/v1/facilitator/modules"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -237,7 +238,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
     setIsSubmitting(true);
     setAuthError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/auth/request-otp", {
+      const res = await fetch(apiUrl("/api/v1/facilitator/auth/request-otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -268,7 +269,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
     setIsSubmitting(true);
     setAuthError(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/auth/verify-otp", {
+      const res = await fetch(apiUrl("/api/v1/facilitator/auth/verify-otp"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -303,7 +304,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
   const loadCohorts = async () => {
     if (!token) return;
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/cohorts", {
+      const res = await fetch(apiUrl("/api/v1/facilitator/cohorts"), {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
@@ -326,7 +327,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
     if (!newCohortName.trim() || !token) return;
 
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/cohorts", {
+      const res = await fetch(apiUrl("/api/v1/facilitator/cohorts"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -356,10 +357,10 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
     setIsLoadingCohort(true);
     try {
       const [rosterRes, summaryRes] = await Promise.all([
-        fetch(`http://127.0.0.1:8000/api/v1/facilitator/cohorts/${cohort.id}/roster?language=${language}`, {
+        fetch(apiUrl(`/api/v1/facilitator/cohorts/${cohort.id}/roster?language=${language}`), {
           headers: { Authorization: `Bearer ${token}` }
         }),
-        fetch(`http://127.0.0.1:8000/api/v1/facilitator/cohorts/${cohort.id}/summary`, {
+        fetch(apiUrl(`/api/v1/facilitator/cohorts/${cohort.id}/summary`), {
           headers: { Authorization: `Bearer ${token}` }
         })
       ]);
@@ -389,7 +390,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
 
     try {
       if (isOnline) {
-        const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/recommend", {
+        const res = await fetch(apiUrl("/api/v1/facilitator/recommend"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -624,7 +625,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
 
                 {/* CSV Download Link */}
                 <a
-                  href={`http://127.0.0.1:8000/api/v1/facilitator/cohorts/${selectedCohort.id}/export.csv`}
+                  href={apiUrl(`/api/v1/facilitator/cohorts/${selectedCohort.id}/export.csv`)}
                   target="_blank"
                   rel="noreferrer"
                   style={{

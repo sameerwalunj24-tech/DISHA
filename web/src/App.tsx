@@ -9,10 +9,15 @@ import { OpportunitiesScreen } from "./components/OpportunitiesScreen";
 import { MyPathScreen } from "./components/MyPathScreen";
 import { MarketplaceScreen } from "./components/MarketplaceScreen";
 import { AboutModal } from "./components/AboutModal";
+import { BottomNav } from "./components/BottomNav";
+import { OutboxDrawer } from "./components/OutboxDrawer";
 import { Download, X, RefreshCw } from "lucide-react";
 
 import { useSyncStatus } from "./services/sync/useSyncStatus";
+import { syncService } from "./services/sync/syncService";
 import { clearStudentBrowserSession } from "./services/db/offlineStorage";
+import { voiceService } from "./services/voice";
+import { apiUrl } from "./services/apiConfig";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -20,8 +25,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 const DishaMain: React.FC = () => {
-  const { t } = useI18n();
-  const { isOnline } = useSyncStatus();
+  const { language, t } = useI18n();
+  const { isOnline, isSyncing, pendingCount } = useSyncStatus();
   const [isFacilitatorPortalOpen, setIsFacilitatorPortalOpen] = useState(false);
   const [isJoinCohortOpen, setIsJoinCohortOpen] = useState(false);
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
@@ -30,6 +35,53 @@ const DishaMain: React.FC = () => {
   const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [selectedScreen, setSelectedScreen] = useState<"home" | "discover" | "pathway" | "opportunities" | "marketplace">("home");
+  const [syncToast, setSyncToast] = useState<string | null>(null);
+  const [isSpeaking, setIsSpeaking] = useState<boolean>(false);
+  const [isOutboxDrawerOpen, setIsOutboxDrawerOpen] = useState<boolean>(false);
+
+  // Active Speech State Event Listeners
+  useEffect(() => {
+    const handleSpeechStart = () => setIsSpeaking(true);
+    const handleSpeechEnd = () => setIsSpeaking(false);
+
+    window.addEventListener("disha_speech_start", handleSpeechStart);
+    window.addEventListener("disha_speech_end", handleSpeechEnd);
+
+    return () => {
+      window.removeEventListener("disha_speech_start", handleSpeechStart);
+      window.removeEventListener("disha_speech_end", handleSpeechEnd);
+    };
+  }, []);
+
+  const handleStopSpeech = () => {
+    voiceService.cancelSpeech();
+    setIsSpeaking(false);
+  };
+
+  // Outdoor Sunlight Mode Theme State
+  const [theme, setTheme] = useState<"dark" | "sunlight">(() => {
+    try {
+      const saved = localStorage.getItem("disha_theme");
+      return saved === "sunlight" ? "sunlight" : "dark";
+    } catch {
+      return "dark";
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("disha_theme", theme);
+    } catch {}
+    if (theme === "sunlight") {
+      document.body.classList.add("theme-sunlight");
+    } else {
+      document.body.classList.remove("theme-sunlight");
+    }
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "dark" ? "sunlight" : "dark"));
+  };
 
   // Shared-Device Mode State
   const [sharedDeviceCohort, setSharedDeviceCohort] = useState<{ id: string; name: string; joinCode: string } | null>(() => {
@@ -68,6 +120,27 @@ const DishaMain: React.FC = () => {
     window.addEventListener("disha_student_id_updated", handleStudentIdUpdate);
     return () => window.removeEventListener("disha_student_id_updated", handleStudentIdUpdate);
   }, []);
+
+  // Listen for outbox sync completion event
+  useEffect(() => {
+    let timer: number | null = null;
+    const handleSyncCompleted = () => {
+      const msg = language === "mr"
+        ? "✓ माहिती सिंक झाली (Synced with server)"
+        : language === "hi"
+        ? "✓ जानकारी सिंक हो गई (Synced with server)"
+        : "✓ Synced with server";
+      setSyncToast(msg);
+      if (timer) window.clearTimeout(timer);
+      timer = window.setTimeout(() => setSyncToast(null), 3500);
+    };
+
+    window.addEventListener("disha_sync_completed", handleSyncCompleted);
+    return () => {
+      window.removeEventListener("disha_sync_completed", handleSyncCompleted);
+      if (timer) window.clearTimeout(timer);
+    };
+  }, [language]);
 
   // Capture PWA installation prompt
   useEffect(() => {
@@ -149,7 +222,7 @@ const DishaMain: React.FC = () => {
     setStudentId(newId);
     if (sharedDeviceCohort) {
       try {
-        await fetch("http://127.0.0.1:8000/api/v1/cohorts/join", {
+        await fetch(apiUrl("/api/v1/cohorts/join"), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -165,13 +238,37 @@ const DishaMain: React.FC = () => {
   };
 
   return (
-    <>
+    <div className={`disha-app-root ${theme === "sunlight" ? "theme-sunlight" : ""}`} style={{ minHeight: "100vh" }}>
       <Header
         isOnline={isOnline}
+        theme={theme}
+        onToggleTheme={toggleTheme}
+        onOpenOutboxDrawer={() => setIsOutboxDrawerOpen(true)}
         onOpenFacilitatorModal={() => setIsFacilitatorPortalOpen(true)}
         onOpenJoinCohortModal={() => setIsJoinCohortOpen(true)}
         onOpenAboutModal={() => setIsAboutModalOpen(true)}
       />
+
+      {/* Outbox Sync Success Confirmation Banner */}
+      {syncToast && (
+        <div style={{
+          position: "sticky",
+          top: 56,
+          zIndex: 999,
+          background: "#16a34a",
+          color: "#ffffff",
+          padding: "10px 16px",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 8,
+          fontSize: "0.9rem",
+          fontWeight: 700,
+          boxShadow: "0 4px 12px rgba(22, 163, 74, 0.4)"
+        }}>
+          <span>{syncToast}</span>
+        </div>
+      )}
 
       {/* Shared-Device Mode Active Banner */}
       {sharedDeviceCohort && (
@@ -369,7 +466,85 @@ const DishaMain: React.FC = () => {
         isOpen={isAboutModalOpen}
         onClose={() => setIsAboutModalOpen(false)}
       />
-    </>
+
+      {/* Floating Active Speech Waveform Indicator */}
+      {isSpeaking && (
+        <div
+          className="active-speech-indicator"
+          role="status"
+          aria-live="polite"
+          style={{
+            position: "fixed",
+            bottom: 74,
+            left: "50%",
+            transform: "translateX(-50%)",
+            zIndex: 90,
+            background: "var(--bg-card)",
+            border: "1.5px solid var(--primary-saffron)",
+            borderRadius: 9999,
+            padding: "8px 14px 8px 18px",
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+            boxShadow: "0 6px 20px rgba(0, 0, 0, 0.4), var(--shadow-glow)",
+            maxWidth: "92vw"
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <div className="audio-waveform-bars" aria-hidden="true">
+              <span className="wave-bar bar-1" />
+              <span className="wave-bar bar-2" />
+              <span className="wave-bar bar-3" />
+              <span className="wave-bar bar-4" />
+            </div>
+            <span style={{ fontSize: "0.86rem", fontWeight: 700, color: "var(--text-main)", whiteSpace: "nowrap" }}>
+              {language === "mr" ? "🔊 बोलत आहे..." : language === "hi" ? "🔊 बोल रहा है..." : "🔊 Speaking..."}
+            </span>
+          </div>
+
+          <button
+            onClick={handleStopSpeech}
+            style={{
+              minWidth: 44,
+              minHeight: 44,
+              padding: "6px 14px",
+              borderRadius: 9999,
+              backgroundColor: "rgba(239, 68, 68, 0.18)",
+              border: "1.5px solid #ef4444",
+              color: "#f87171",
+              fontSize: "0.82rem",
+              fontWeight: 800,
+              cursor: "pointer",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 4,
+              touchAction: "manipulation",
+              transition: "all 0.15s ease"
+            }}
+            title={language === "mr" ? "आवाज थांबवा" : language === "hi" ? "आवाज़ रोकें" : "Stop Speaking"}
+            aria-label="Stop audio speech playback"
+          >
+            <span>{language === "mr" ? "थांबवा (Stop)" : language === "hi" ? "रोकें (Stop)" : "Stop"}</span>
+          </button>
+        </div>
+      )}
+
+      {/* Interactive Outbox Sync Status Drawer */}
+      <OutboxDrawer
+        isOpen={isOutboxDrawerOpen}
+        onClose={() => setIsOutboxDrawerOpen(false)}
+        isOnline={isOnline}
+        isSyncing={isSyncing}
+        pendingCount={pendingCount}
+        onTriggerSync={() => syncService.triggerSync()}
+      />
+
+      <BottomNav
+        activeScreen={selectedScreen}
+        onSelectScreen={(screen) => setSelectedScreen(screen)}
+      />
+    </div>
   );
 };
 

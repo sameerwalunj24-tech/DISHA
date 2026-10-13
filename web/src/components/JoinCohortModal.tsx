@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Users, Shield, CheckCircle2, Send, AlertTriangle } from "lucide-react";
 import { useI18n } from "../i18n";
+import { apiUrl } from "../services/apiConfig";
 
 interface JoinCohortModalProps {
   isOpen: boolean;
@@ -40,7 +41,7 @@ export const JoinCohortModal: React.FC<JoinCohortModalProps> = ({
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
-      const res = await fetch("http://127.0.0.1:8000/api/v1/cohorts/join", {
+      const res = await fetch(apiUrl("/api/v1/cohorts/join"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

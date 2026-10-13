@@ -339,3 +339,94 @@ def test_sync_offline_quiz_plus_three_ticks_batch():
     finally:
         db.close()
 
+
+def test_sync_monotonic_client_sequencing_causal_order():
+    """Client actions sent out-of-order in the array are processed deterministically by (client_id, client_seq)."""
+    # 1. Create a student first
+    quiz_id = str(uuid.uuid4())
+    client_id = f"device_{uuid.uuid4().hex[:8]}"
+    quiz_batch = {
+        "items": [
+            {
+                "id": quiz_id,
+                "type": "offline_quiz_result",
+                "client_id": client_id,
+                "client_seq": 1,
+                "payload": {
+                    "student_name": "रोहिणी पाटील",
+                    "language": "mr",
+                    "guardian_consent": True,
+                    "answers": {"1": "opt_1_solar"}
+                },
+                "updated_at": "2026-10-13T10:00:00Z"
+            }
+        ]
+    }
+    quiz_res = client.post("/api/v1/sync", json=quiz_batch)
+    assert quiz_res.status_code == 200
+    student_id = quiz_res.json()["results"][0]["student_id"]
+
+    # 2. Submit outbox batch where client_seq=3 is listed BEFORE client_seq=2
+    seq3_id = str(uuid.uuid4())
+    seq2_id = str(uuid.uuid4())
+
+    out_of_order_batch = {
+        "items": [
+            {
+                "id": seq3_id,
+                "type": "pathway_progress",
+                "client_id": client_id,
+                "client_seq": 3,
+                "payload": {
+                    "student_id": student_id,
+                    "completed_step_ids": ["step_1", "step_2", "step_3"]
+                },
+                "updated_at": "2026-10-13T10:05:00Z"
+            },
+            {
+                "id": seq2_id,
+                "type": "pathway_progress",
+                "client_id": client_id,
+                "client_seq": 2,
+                "payload": {
+                    "student_id": student_id,
+                    "completed_step_ids": ["step_1", "step_2"]
+                },
+                "updated_at": "2026-10-13T10:02:00Z"
+            }
+        ]
+    }
+
+    resp = client.post("/api/v1/sync", json=out_of_order_batch)
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["processed_count"] == 2
+    assert data["failed_count"] == 0
+
+    # Verify both succeeded
+    res_map = {r["id"]: r for r in data["results"]}
+    assert res_map[seq2_id]["status"] == "synced"
+    assert res_map[seq3_id]["status"] == "synced"
+
+    # Verify database logs accurately captured client_id and client_seq
+    db = SessionLocal()
+    try:
+        log_quiz = db.query(SyncLog).filter(SyncLog.id == quiz_id).first()
+        assert log_quiz.client_id == client_id
+        assert log_quiz.client_seq == 1
+
+        log_seq2 = db.query(SyncLog).filter(SyncLog.id == seq2_id).first()
+        assert log_seq2.client_id == client_id
+        assert log_seq2.client_seq == 2
+
+        log_seq3 = db.query(SyncLog).filter(SyncLog.id == seq3_id).first()
+        assert log_seq3.client_id == client_id
+        assert log_seq3.client_seq == 3
+
+        # Final pathway progress must reflect client_seq=3 (latest)
+        pw = db.query(Pathway).filter(Pathway.student_id == student_id).first()
+        assert "step_3" in pw.micro_steps_json
+    finally:
+        db.close()
+
+

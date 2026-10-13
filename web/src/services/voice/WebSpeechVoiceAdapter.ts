@@ -127,7 +127,7 @@ export class WebSpeechVoiceAdapter implements VoiceAdapter {
   async speak(text: string, language: string): Promise<void> {
     this.cancelSpeech();
 
-    if ("speechSynthesis" in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language || "mr-IN";
       utterance.rate = 0.95; // comfortable cadence for rural listeners
@@ -139,13 +139,31 @@ export class WebSpeechVoiceAdapter implements VoiceAdapter {
         utterance.voice = matchVoice;
       }
 
+      utterance.onstart = () => {
+        window.dispatchEvent(new CustomEvent("disha_speech_start", { detail: { text, language } }));
+      };
+
+      utterance.onend = () => {
+        window.dispatchEvent(new CustomEvent("disha_speech_end", { detail: { text, language } }));
+      };
+
+      utterance.onerror = () => {
+        window.dispatchEvent(new CustomEvent("disha_speech_end", { detail: { text, language } }));
+      };
+
       window.speechSynthesis.speak(utterance);
     }
   }
 
   cancelSpeech(): void {
-    if ("speechSynthesis" in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
+      window.dispatchEvent(new CustomEvent("disha_speech_end"));
     }
+  }
+
+  stop(): void {
+    this.cancelSpeech();
+    this.stopListening();
   }
 }

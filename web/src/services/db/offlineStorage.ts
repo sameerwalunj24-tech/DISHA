@@ -14,6 +14,31 @@ export interface SyncQueueItem {
   updated_at: string;
   attempts: number;
   status: "pending" | "synced" | "failed";
+  client_id?: string;
+  client_seq?: number;
+}
+
+export function getClientId(): string {
+  if (typeof localStorage === "undefined") {
+    return "client_fallback";
+  }
+  let id = localStorage.getItem("disha_client_id");
+  if (!id) {
+    id = `client_${generateUUID()}`;
+    localStorage.setItem("disha_client_id", id);
+  }
+  return id;
+}
+
+export function getNextClientSeq(): number {
+  if (typeof localStorage === "undefined") {
+    return 1;
+  }
+  const raw = localStorage.getItem("disha_client_seq");
+  const current = raw ? parseInt(raw, 10) : 0;
+  const next = (isNaN(current) ? 0 : current) + 1;
+  localStorage.setItem("disha_client_seq", String(next));
+  return next;
 }
 
 export interface OfflineProfileRecord {
@@ -24,6 +49,8 @@ export interface OfflineProfileRecord {
   student_name: string;
   language: string;
   guardian_consent: boolean;
+  consent_receipt_hash?: string | null;
+  consent_version?: string | null;
   profile: {
     grade_level: number;
     state: string;
@@ -55,7 +82,7 @@ function generateUUID(): string {
   });
 }
 
-function sanitizePayload(raw: Record<string, any>): Record<string, any> {
+export function sanitizePayload(raw: Record<string, any>): Record<string, any> {
   const sanitized = { ...raw };
   const sensitiveKeys = [
     "family_income", "social_category", "income", "caste",
@@ -335,10 +362,21 @@ export async function enqueueSyncItem(
   type: SyncQueueItem["type"],
   payload: Record<string, any>
 ): Promise<SyncQueueItem> {
+  const client_id = payload.client_id || getClientId();
+  const client_seq = payload.client_seq !== undefined ? payload.client_seq : getNextClientSeq();
+
+  const enrichedPayload = {
+    ...payload,
+    client_id,
+    client_seq
+  };
+
   const item: SyncQueueItem = {
     id: generateUUID(),
     type,
-    payload: sanitizePayload(payload),
+    client_id,
+    client_seq,
+    payload: sanitizePayload(enrichedPayload),
     updated_at: new Date().toISOString(),
     attempts: 0,
     status: "pending"
@@ -495,6 +533,13 @@ export async function clearStudentBrowserSession(_studentId?: string | null): Pr
   // 2. Clear localStorage keys associated with the student session
   try {
     localStorage.removeItem("disha_student_id");
+    localStorage.removeItem("disha_student_nickname");
+    localStorage.removeItem("disha_student_profile");
+    localStorage.removeItem("disha_top_match");
+    localStorage.removeItem("disha_consent_receipt");
+    localStorage.removeItem("disha_consent_canonical");
+    localStorage.removeItem("disha_guardian_consent");
+    localStorage.removeItem("disha_guardian_name");
     localStorage.removeItem("disha_joined_cohort");
     localStorage.removeItem("disha_cached_matches");
 
@@ -517,6 +562,9 @@ export async function clearStudentBrowserSession(_studentId?: string | null): Pr
     console.warn("[Storage] localStorage session clear error:", err);
   }
 }
+
+export const clearStudentSession = clearStudentBrowserSession;
+
 
 
 

@@ -1,17 +1,24 @@
 import React, { useState, useRef } from "react";
-import { Compass, Users, WifiOff, RefreshCw, Check, RotateCcw, Info } from "lucide-react";
+import { Compass, Users, WifiOff, RefreshCw, Check, RotateCcw, Info, Sun, Moon } from "lucide-react";
 import { useI18n, LANGUAGE_NAMES } from "../i18n";
 import type { Language } from "../i18n";
 import { useSyncStatus } from "../services/sync/useSyncStatus";
+import { apiUrl } from "../services/apiConfig";
 
 interface HeaderProps {
   isOnline: boolean;
+  theme?: "dark" | "sunlight";
+  onToggleTheme?: () => void;
+  onOpenOutboxDrawer?: () => void;
   onOpenFacilitatorModal: () => void;
   onOpenJoinCohortModal?: () => void;
   onOpenAboutModal?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  theme = "dark",
+  onToggleTheme,
+  onOpenOutboxDrawer,
   onOpenFacilitatorModal,
   onOpenJoinCohortModal,
   onOpenAboutModal
@@ -122,7 +129,7 @@ export const Header: React.FC<HeaderProps> = ({
 
     try {
       setIsResettingDemo(true);
-      const res = await fetch("http://127.0.0.1:8000/api/v1/demo/reset", { method: "POST" });
+      const res = await fetch(apiUrl("/api/v1/demo/reset"), { method: "POST" });
       if (res.ok) {
         setDemoToast(
           language === "mr" ? "✅ डेमो डेटा रिसेट झाला! (Demo Environment Restored)" :
@@ -159,33 +166,52 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="header-actions">
-          {/* Offline / N pending / Synced Status Chip */}
-          <div
-            className={chip.className}
-            title={chip.clickable ? "Tap to sync pending outbox now" : isOnline ? "Synced to server" : "Offline mode"}
-            onClick={chip.clickable ? () => triggerSync() : undefined}
-            role={chip.clickable ? "button" : undefined}
-            tabIndex={chip.clickable ? 0 : undefined}
-            style={{ cursor: chip.clickable ? "pointer" : "default" }}
+          {/* Offline / N pending / Synced Status Chip - Accessible Clickable Drawer Button */}
+          <button
+            type="button"
+            className={`${chip.className} status-pill-btn`}
+            title={
+              language === "mr"
+                ? "सिंक स्थिती व आऊटबॉक्स पाहण्यासाठी टॅप करा (View Outbox)"
+                : language === "hi"
+                ? "सिंक स्थिति देखने के लिए टैप करें"
+                : "Tap to view sync status and outbox"
+            }
+            onClick={() => {
+              if (onOpenOutboxDrawer) {
+                onOpenOutboxDrawer();
+              } else if (chip.clickable) {
+                triggerSync();
+              }
+            }}
+            aria-label="View sync status outbox"
+            style={{
+              cursor: "pointer",
+              border: "none",
+              outline: "none"
+            }}
           >
             <span className="status-dot"></span>
             {chip.icon}
             <span>{chip.label}</span>
-          </div>
+          </button>
 
           {/* Trilingual Switcher (Marathi / Hindi / English) */}
           <div className="lang-selector-group" role="group" aria-label="Language Selector">
-            {(["mr", "hi", "en"] as Language[]).map((lang) => (
-              <button
-                key={lang}
-                className={`lang-btn ${language === lang ? "active" : ""}`}
-                onClick={() => setLanguage(lang)}
-                aria-pressed={language === lang}
-                title={LANGUAGE_NAMES[lang].label}
-              >
-                {LANGUAGE_NAMES[lang].nativeName}
-              </button>
-            ))}
+            {(["mr", "hi", "en"] as Language[]).map((lang) => {
+              const displayName = lang === "mr" ? "मराठी" : lang === "hi" ? "हिंदी" : "EN";
+              return (
+                <button
+                  key={lang}
+                  className={`lang-btn ${language === lang ? "active" : ""}`}
+                  onClick={() => setLanguage(lang)}
+                  aria-pressed={language === lang}
+                  title={LANGUAGE_NAMES[lang].label}
+                >
+                  {displayName}
+                </button>
+              );
+            })}
           </div>
 
           {/* Student Join Cohort Button */}
@@ -237,6 +263,36 @@ export const Header: React.FC<HeaderProps> = ({
             <RotateCcw size={12} className={isResettingDemo ? "spin" : ""} />
             <span>{language === "mr" ? "डेमो रिसेट" : language === "hi" ? "डेमो रीसेट" : "Reset Demo"}</span>
           </button>
+
+          {/* Outdoor Sunlight High-Contrast Mode Toggle */}
+          {onToggleTheme && (
+            <button
+              onClick={onToggleTheme}
+              title={
+                theme === "sunlight"
+                  ? (language === "mr" ? "गडद मोड (Dark Mode)" : language === "hi" ? "डार्क मोड" : "Switch to Night Mode")
+                  : (language === "mr" ? "सूर्यप्रकाश उच्च-कॉन्ट्रास्ट मोड (Sunlight Mode)" : language === "hi" ? "सूर्यप्रकाश मोड" : "Switch to Outdoor Sunlight Mode")
+              }
+              aria-label={theme === "sunlight" ? "Switch to Night Mode" : "Switch to Sunlight High-Contrast Mode"}
+              style={{
+                background: theme === "sunlight" ? "#fef3c7" : "rgba(255, 255, 255, 0.08)",
+                border: theme === "sunlight" ? "1.5px solid #f59e0b" : "1px solid rgba(255, 255, 255, 0.2)",
+                color: theme === "sunlight" ? "#b45309" : "#fef08a",
+                padding: "6px 9px",
+                borderRadius: 8,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                fontSize: "0.74rem",
+                fontWeight: 700,
+                transition: "all 0.2s ease"
+              }}
+            >
+              {theme === "sunlight" ? <Sun size={14} /> : <Moon size={14} />}
+              <span>{theme === "sunlight" ? (language === "mr" ? "उजेड" : language === "hi" ? "उजाला" : "Sun") : (language === "mr" ? "रात्र" : language === "hi" ? "रात" : "Dark")}</span>
+            </button>
+          )}
 
           {/* About & Privacy Trigger */}
           {onOpenAboutModal && (

@@ -14,7 +14,7 @@ from sqlalchemy.orm import Session
 
 from api.app.database import get_db
 from api.app.models import Student, Pathway, SyncLog, Recommendation, Facilitator, utc_now
-from api.app.sync.schemas import SyncBatchRequest, SyncBatchResponse, SyncItemResult
+from api.app.sync.schemas import SyncBatchRequest, SyncBatchResponse, SyncItemResult, SyncItemRequest
 from api.app.ai.mock_adapter import MockLLMAdapter
 from api.app.pathways.generator import generate_student_pathway
 from api.app.matching.router import _run_matches
@@ -34,6 +34,7 @@ def parse_iso(dt_str: str) -> datetime:
 
 
 @router.post("/sync", response_model=SyncBatchResponse)
+@router.post("/sync/batch", response_model=SyncBatchResponse)
 async def process_sync_batch(
     batch: SyncBatchRequest,
     db: Session = Depends(get_db)
@@ -51,7 +52,19 @@ async def process_sync_batch(
     llm = MockLLMAdapter()
     last_created_student_id = None
 
-    for item in batch.items:
+    def get_sort_key(item: SyncItemRequest):
+        payload = item.payload or {}
+        cid = item.client_id or payload.get("client_id") or ""
+        cseq = item.client_seq if item.client_seq is not None else payload.get("client_seq", 0)
+        try:
+            seq_val = int(cseq) if cseq is not None else 0
+        except (ValueError, TypeError):
+            seq_val = 0
+        return (str(cid), seq_val, str(item.updated_at or ""))
+
+    sorted_items = sorted(batch.items, key=get_sort_key)
+
+    for item in sorted_items:
         # 1. IDEMPOTENCY CHECK
         existing_log = db.query(SyncLog).filter(SyncLog.id == item.id).first()
         if existing_log:
@@ -66,6 +79,14 @@ async def process_sync_batch(
 
         item_time = parse_iso(item.updated_at)
         payload = item.payload or {}
+
+        client_id_val = item.client_id or payload.get("client_id")
+        client_seq_val = item.client_seq if item.client_seq is not None else payload.get("client_seq")
+        if client_seq_val is not None:
+            try:
+                client_seq_val = int(client_seq_val)
+            except (ValueError, TypeError):
+                client_seq_val = None
 
         # Strip any sensitive fields if accidentally included
         payload.pop("family_income", None)
@@ -109,6 +130,9 @@ async def process_sync_batch(
                     skills_val = ", ".join(extracted.practical_skills)
                     aspirations_val = ", ".join(extracted.career_aspirations)
 
+                consent_receipt_hash = payload.get("consent_receipt_hash")
+                consent_version = payload.get("consent_version", "DPDP_V1.0")
+
                 # Create student
                 student = Student(
                     name=student_name,
@@ -117,6 +141,8 @@ async def process_sync_batch(
                     state=state_val,
                     district=dist_val,
                     guardian_consent=True,
+                    consent_receipt_hash=consent_receipt_hash,
+                    consent_version=consent_version,
                     interests=interests_val,
                     skills=skills_val,
                     aspirations=aspirations_val,
@@ -126,6 +152,20 @@ async def process_sync_batch(
                 db.add(student)
                 db.flush()
                 last_created_student_id = student.id
+
+                if consent_receipt_hash:
+                    try:
+                        from api.app.models import ConsentReceipt
+                        if not db.query(ConsentReceipt).filter(ConsentReceipt.receipt_hash == consent_receipt_hash).first():
+                            cr = ConsentReceipt(
+                                receipt_hash=consent_receipt_hash,
+                                consent_version=consent_version or "DPDP_V1.0",
+                                student_id=student.id,
+                                recorded_at=item_time
+                            )
+                            db.add(cr)
+                    except Exception:
+                        pass
 
                 # Generate pathway for student
                 top_matches = _run_matches(
@@ -170,7 +210,9 @@ async def process_sync_batch(
                     item_type=item.type,
                     student_id=student.id,
                     status="synced",
-                    updated_at=item_time
+                    updated_at=item_time,
+                    client_id=client_id_val,
+                    client_seq=client_seq_val
                 )
                 db.add(sync_log)
                 db.commit()
@@ -209,7 +251,9 @@ async def process_sync_batch(
                         item_type=item.type,
                         student_id=actual_student_id,
                         status="failed",
-                        updated_at=item_time
+                        updated_at=item_time,
+                        client_id=client_id_val,
+                        client_seq=client_seq_val
                     )
                     db.add(sync_log)
                     db.commit()
@@ -233,7 +277,9 @@ async def process_sync_batch(
                         item_type=item.type,
                         student_id=actual_student_id,
                         status="conflict_ignored",
-                        updated_at=item_time
+                        updated_at=item_time,
+                        client_id=client_id_val,
+                        client_seq=client_seq_val
                     )
                     db.add(sync_log)
                     db.commit()
@@ -260,7 +306,9 @@ async def process_sync_batch(
                     item_type=item.type,
                     student_id=actual_student_id,
                     status="synced",
-                    updated_at=item_time
+                    updated_at=item_time,
+                    client_id=client_id_val,
+                    client_seq=client_seq_val
                 )
                 db.add(sync_log)
                 db.commit()
@@ -294,6 +342,10 @@ async def process_sync_batch(
                             student.name = payload["name"]
                         if "grade" in payload:
                             student.grade = int(payload["grade"])
+                        if "consent_receipt_hash" in payload:
+                            student.consent_receipt_hash = payload["consent_receipt_hash"]
+                        if "consent_version" in payload:
+                            student.consent_version = payload["consent_version"]
                         student.updated_at = item_time
                         status_str = "synced"
                 else:
@@ -304,7 +356,9 @@ async def process_sync_batch(
                     item_type=item.type,
                     student_id=student_id,
                     status=status_str,
-                    updated_at=item_time
+                    updated_at=item_time,
+                    client_id=client_id_val,
+                    client_seq=client_seq_val
                 )
                 db.add(sync_log)
                 db.commit()
@@ -354,7 +408,9 @@ async def process_sync_batch(
                     item_type=item.type,
                     student_id=student_id,
                     status="synced",
-                    updated_at=item_time
+                    updated_at=item_time,
+                    client_id=client_id_val,
+                    client_seq=client_seq_val
                 )
                 db.add(sync_log)
                 db.commit()
@@ -449,7 +505,9 @@ async def process_sync_batch(
                     item_type=item.type,
                     student_id=student_id,
                     status="synced",
-                    updated_at=item_time
+                    updated_at=item_time,
+                    client_id=client_id_val,
+                    client_seq=client_seq_val
                 )
                 db.add(sync_log)
                 db.commit()

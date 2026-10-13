@@ -14,6 +14,8 @@ class SyncItemRequest(BaseModel):
     payload: Dict[str, Any] = Field(default_factory=dict, description="Event data without sensitive fields")
     updated_at: str = Field(..., description="Client ISO timestamp for last-write-wins conflict resolution")
     attempts: int = Field(0, description="Retry attempt count")
+    client_id: Optional[str] = Field(None, description="Client instance identifier")
+    client_seq: Optional[int] = Field(None, description="Monotonic sequence integer")
 
 
 class SyncBatchRequest(BaseModel):

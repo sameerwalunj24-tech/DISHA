@@ -25,6 +25,8 @@ class Student(Base):
     
     # Child-safety / DPDP Act compliance
     guardian_consent = Column(Boolean, default=False, nullable=False)
+    consent_receipt_hash = Column(String(64), nullable=True, index=True)
+    consent_version = Column(String(20), default="DPDP_V1.0", nullable=True)
     
     # Profile vectors / keywords
     interests = Column(Text, nullable=True)  # JSON or comma-separated tags
@@ -40,6 +42,19 @@ class Student(Base):
     cohort_memberships = relationship("CohortMember", back_populates="student", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="student", cascade="all, delete-orphan")
     module_enrollments = relationship("ModuleEnrollment", back_populates="student", cascade="all, delete-orphan")
+    consent_receipts = relationship("ConsentReceipt", back_populates="student", cascade="all, delete-orphan")
+
+
+class ConsentReceipt(Base):
+    __tablename__ = "consent_receipts"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    receipt_hash = Column(String(64), unique=True, index=True, nullable=False)
+    consent_version = Column(String(20), default="DPDP_V1.0", nullable=False)
+    recorded_at = Column(DateTime, default=utc_now, nullable=False)
+    student_id = Column(String(36), ForeignKey("students.id"), nullable=True)
+
+    student = relationship("Student", back_populates="consent_receipts")
 
 
 class Facilitator(Base):
@@ -122,6 +137,8 @@ class SyncLog(Base):
     item_type = Column(String(50), nullable=False)
     student_id = Column(String(36), nullable=True)
     status = Column(String(20), default="synced", nullable=False)
+    client_id = Column(String(64), nullable=True, index=True)
+    client_seq = Column(Integer, nullable=True)
     updated_at = Column(DateTime, default=utc_now, nullable=False)
     applied_at = Column(DateTime, default=utc_now, nullable=False)
 

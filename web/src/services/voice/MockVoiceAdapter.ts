@@ -81,17 +81,32 @@ export class MockVoiceAdapter implements VoiceAdapter {
     this.cancelSpeech();
 
     // Use browser SpeechSynthesis if supported, otherwise resolve gracefully
-    if ("speechSynthesis" in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = language;
       utterance.rate = 0.95; // Slightly slower for rural clarity
+      utterance.onstart = () => {
+        window.dispatchEvent(new CustomEvent("disha_speech_start", { detail: { text, language } }));
+      };
+      utterance.onend = () => {
+        window.dispatchEvent(new CustomEvent("disha_speech_end", { detail: { text, language } }));
+      };
+      utterance.onerror = () => {
+        window.dispatchEvent(new CustomEvent("disha_speech_end", { detail: { text, language } }));
+      };
       window.speechSynthesis.speak(utterance);
     }
   }
 
   cancelSpeech(): void {
-    if ("speechSynthesis" in window) {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
       window.speechSynthesis.cancel();
+      window.dispatchEvent(new CustomEvent("disha_speech_end"));
     }
+  }
+
+  stop(): void {
+    this.cancelSpeech();
+    this.stopListening();
   }
 }

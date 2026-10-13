@@ -35,6 +35,15 @@ class Settings(BaseModel):
         f"sqlite:///{ROOT_DIR / 'disha.db'}"
     )
 
+    @property
+    def is_sqlite(self) -> bool:
+        return self.DATABASE_URL.startswith("sqlite")
+
+    @property
+    def is_postgres(self) -> bool:
+        return self.DATABASE_URL.startswith("postgresql") or self.DATABASE_URL.startswith("postgres")
+
+
     # JWT Secret loaded strictly from environment variable
     JWT_SECRET: str = os.getenv("JWT_SECRET", DEFAULT_DEV_SECRET)
     

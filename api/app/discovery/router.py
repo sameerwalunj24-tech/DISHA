@@ -23,6 +23,8 @@ class AnswerRequest(BaseModel):
     answer_text: str
     guardian_consent: Optional[bool] = False
     student_name: Optional[str] = "विद्यार्थी (Learner)"
+    consent_receipt_hash: Optional[str] = None
+    consent_version: Optional[str] = "DPDP_V1.0"
 
 @router.get("/questions", response_model=List[QuestionDTO])
 def list_questions(language: str = "mr"):
@@ -31,6 +33,7 @@ def list_questions(language: str = "mr"):
     return [get_question_dto(q, language) for q in questions]
 
 @router.post("/start")
+@router.post("/session")
 def start_session(req: StartDiscoveryRequest):
     """Initialize a new 7-question discovery session and get Question 1."""
     session, first_q, total = start_discovery_session(language=req.language)
@@ -55,6 +58,8 @@ async def answer_question(req: AnswerRequest, db: Session = Depends(get_db)):
         answer_text=req.answer_text,
         guardian_consent=req.guardian_consent,
         student_name=req.student_name,
+        consent_receipt_hash=req.consent_receipt_hash,
+        consent_version=req.consent_version,
         db=db
     )
     if result.get("consent_blocked"):

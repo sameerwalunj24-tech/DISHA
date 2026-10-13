@@ -7,6 +7,7 @@ import {
 import { useI18n } from "../i18n";
 import { voiceService } from "../services/voice";
 import { saveCachedMatches, getCachedMatches } from "../services/db/offlineStorage";
+import { apiUrl } from "../services/apiConfig";
 
 interface MatchItem {
   opportunity: {
@@ -116,7 +117,7 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
       if (studentId) {
         // Fetch recommendations for this student
         try {
-          const recRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${studentId}/recommendations`);
+          const recRes = await fetch(apiUrl(`/api/v1/students/${studentId}/recommendations`));
           if (recRes.ok) {
             const recData = await recRes.json();
             setRecommendations(recData);
@@ -139,7 +140,7 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
           bodyPayload.category = activeCategory;
         }
 
-        const res = await fetch(`http://127.0.0.1:8000/api/v1/students/${studentId}/matches`, {
+        const res = await fetch(apiUrl(`/api/v1/students/${studentId}/matches`), {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(bodyPayload),
@@ -147,7 +148,7 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
         if (!res.ok) throw new Error("Failed to fetch opportunities");
         formattedMatches = await res.json();
       } else {
-        let url = `http://127.0.0.1:8000/api/v1/opportunities`;
+        let url = apiUrl("/api/v1/opportunities");
         if (activeCategory !== "ALL") {
           url += `?category=${encodeURIComponent(activeCategory)}`;
         }
@@ -259,14 +260,16 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
           <button
             key={c.key}
             onClick={() => setActiveCategory(c.key)}
+            className="filter-pill"
             style={{
               background: activeCategory === c.key ? "var(--primary-saffron)" : "rgba(30,41,59,0.7)",
-              border: "1px solid " + (activeCategory === c.key ? "var(--primary-saffron)" : "rgba(255,255,255,0.1)"),
-              color: "#fff",
-              padding: "6px 14px",
+              border: "1px solid " + (activeCategory === c.key ? "var(--primary-saffron)" : "rgba(255,255,255,0.18)"),
+              color: activeCategory === c.key ? "#0f172a" : "#ffffff",
+              padding: "8px 18px",
+              minHeight: 48,
               borderRadius: 9999,
-              fontSize: "0.8rem",
-              fontWeight: 600,
+              fontSize: "0.85rem",
+              fontWeight: 700,
               cursor: "pointer",
               whiteSpace: "nowrap"
             }}

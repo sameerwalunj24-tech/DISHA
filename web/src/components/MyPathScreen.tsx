@@ -40,6 +40,7 @@ import {
   getOfflineProfiles,
   enqueueSyncItem
 } from "../services/db/offlineStorage";
+import { apiUrl } from "../services/apiConfig";
 import { DEFAULT_OFFLINE_PATHWAYS } from "../data/defaultPathways";
 import type {
   PathwayData,
@@ -69,6 +70,7 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
   const [isSpeakingId, setIsSpeakingId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isOfflineLoaded, setIsOfflineLoaded] = useState<boolean>(false);
+  const [offlineNotice, setOfflineNotice] = useState<string | null>(null);
 
   // Helper for multilingual text
   const getText = (obj?: MultiLingualText | null): string => {
@@ -121,7 +123,7 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
 
       if (isOnline && studentId) {
         try {
-          const res = await fetch(`http://127.0.0.1:8000/api/v1/students/${studentId}/pathway`);
+          const res = await fetch(apiUrl(`/api/v1/students/${studentId}/pathway`));
           if (res.ok) {
             const apiData = await res.json();
             loadedData = apiData;
@@ -218,6 +220,17 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
       step_id: stepId,
       is_done: updated.has(stepId)
     });
+
+    if (!isOnline) {
+      setOfflineNotice(
+        language === "mr"
+          ? "📡 ऑफलाइन सेव्ह केले (Saved offline - will sync when online)"
+          : language === "hi"
+          ? "📡 ऑफ़लाइन सेव किया (Saved offline - will sync when online)"
+          : "📡 Saved offline - will sync when online"
+      );
+      setTimeout(() => setOfflineNotice(null), 3500);
+    }
   };
 
   // Read aloud helper using WebSpeechVoiceAdapter
@@ -269,6 +282,28 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
 
   return (
     <main className="main-container" style={{ paddingBottom: 80 }}>
+      {/* Offline Action Queued Notice */}
+      {offlineNotice && (
+        <div style={{
+          background: "rgba(245, 158, 11, 0.18)",
+          border: "1.5px solid #f59e0b",
+          color: "#fef3c7",
+          padding: "8px 16px",
+          borderRadius: 9999,
+          fontSize: "0.82rem",
+          fontWeight: 800,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 6,
+          boxShadow: "0 4px 14px rgba(245, 158, 11, 0.35)",
+          marginBottom: 12,
+          textAlign: "center"
+        }}>
+          {offlineNotice}
+        </div>
+      )}
+
       {/* Top Header Card */}
       <div
         className="greeting-card"
