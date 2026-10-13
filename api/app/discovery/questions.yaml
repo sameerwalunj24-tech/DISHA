@@ -1,0 +1,119 @@
+questions:
+  - id: "q_grade"
+    order: 1
+    key: "grade"
+    icon: "GraduationCap"
+    text:
+      mr: "तुम्ही सध्या कोणत्या वर्गात किंवा वर्षात शिकत आहात?"
+      hi: "आप अभी किस कक्षा या वर्ष में पढ़ रहे हैं?"
+      en: "Which class or year are you currently studying in?"
+    subtext:
+      mr: "उदा. ९वी, १०वी, १२वी, आयटीआय किंवा कॉलेज"
+      hi: "उदा. 9वीं, 10वीं, 12वीं, आईटीआई या कॉलेज"
+      en: "e.g., Class 9, 10, 12, ITI, or College"
+    options:
+      mr: ["९ वी", "१० वी", "११ वी", "१२ वी", "आयटीआय / डिप्लोमा", "कॉलेज / पदवी"]
+      hi: ["9वीं", "10वीं", "11वीं", "12वीं", "आईटीआई / डिप्लोमा", "कॉलेज / स्नातक"]
+      en: ["Std 9", "Std 10", "Std 11", "Std 12", "ITI / Diploma", "College / Degree"]
+
+  - id: "q_location"
+    order: 2
+    key: "state_district"
+    icon: "MapPin"
+    text:
+      mr: "तुमचे गाव, तालुका आणि जिल्हा कोणता आहे?"
+      hi: "आपका गाँव, तहसील और ज़िला कौन सा है?"
+      en: "Which village, taluka, and district are you from?"
+    subtext:
+      mr: "उदा. सातारा, कोल्हापूर, पुणे, नाशिक"
+      hi: "उदा. सतना, इंदौर, नासिक, जयपुर"
+      en: "e.g., Satara, Kolhapur, Pune, Nashik"
+    options:
+      mr: ["सातारा", "पुणे", "नाशिक", "कोल्हापूर", "छ. संभाजीनगर", "इतर"]
+      hi: ["सतना", "इंदौर", "पुणे", "नासिक", "जयपुर", "अन्य"]
+      en: ["Satara", "Pune", "Nashik", "Kolhapur", "Sambhajinagar", "Other"]
+
+  - id: "q_subjects"
+    order: 3
+    key: "favorite_subjects"
+    icon: "BookOpen"
+    text:
+      mr: "शाळेत किंवा कॉलेजमध्ये तुम्हाला कोणते विषय सर्वात जास्त आवडतात?"
+      hi: "स्कूल या कॉलेज में आपको कौन से विषय सबसे अच्छे लगते हैं?"
+      en: "Which subjects do you enjoy the most in school or college?"
+    subtext:
+      mr: "उदा. विज्ञान, गणित, भाषा, चित्रकला, इतिहास किंवा प्रॅक्टिकल काम"
+      hi: "उदा. विज्ञान, गणित, भाषा, कला, इतिहास या प्रैक्टिकल कार्य"
+      en: "e.g., Science, Math, Languages, Drawing, History, or Practical work"
+    options:
+      mr: ["विज्ञान व तंत्रज्ञान", "गणित व आकडेमोड", "भाषा व वाचन", "चित्रकला व हस्तकला", "कृषी व पर्यावरण", "प्रॅक्टिकल / वर्कशॉप"]
+      hi: ["विज्ञान और तकनीक", "गणित और हिसाब", "भाषा और संवाद", "कला और हस्तशिल्प", "कृषि और पर्यावरण", "प्रैक्टिकल / वर्कशॉप"]
+      en: ["Science & Tech", "Math & Numbers", "Languages", "Arts & Crafts", "Agri & Environment", "Hands-on Practical"]
+
+  - id: "q_activities"
+    order: 4
+    key: "things_enjoyed"
+    icon: "Wrench"
+    text:
+      mr: "मोकळ्या वेळेत तुम्हाला काय करायला आवडते?"
+      hi: "खाली समय में आपको क्या करना सबसे ज़्यादा पसंद है?"
+      en: "What kind of activities do you enjoy doing in your free time?"
+    subtext:
+      mr: "उदा. यंत्रे/वाहने दुरुस्त करणे, शेती/झाडे, इतरांना मदत करणे, संगणक/फोन वापरणे"
+      hi: "उदा. गाड़ियाँ/मशीन ठीक करना, खेती/पौधे, लोगों की मदद, मोबाइल/कंप्यूटर"
+      en: "e.g., Fixing machines, farming, helping people, mobile/computers, making things"
+    options:
+      mr: ["यंत्रे व मोटार दुरुस्ती", "शेती व झाडांची काळजी", "इतरांना मदत व शिकवणे", "मोबाईल व तंत्रज्ञान", "हस्तकला व बांधकाम", "व्यवसाय व विक्री"]
+      hi: ["मशीन व उपकरण रिपेयर", "खेती और बागवानी", "लोगों की मदद व सिखाना", "मोबाइल व तकनीक", "हस्तशिल्प व निर्माण", "दुकानदारी व व्यापार"]
+      en: ["Fixing Machines / Wiring", "Farming & Plant care", "Helping & Teaching others", "Mobiles & Tech", "Crafting & Building", "Trading & Sales"]
+
+  - id: "q_family_work"
+    order: 5
+    key: "family_work"
+    icon: "Home"
+    text:
+      mr: "तुमच्या कुटुंबातील सदस्य उदरनिर्वाहासाठी काय काम करतात?"
+      hi: "आपके परिवार के सदस्य आजीविका के लिए क्या काम करते हैं?"
+      en: "What does your family do for livelihood?"
+    subtext:
+      mr: "उदा. शेती, पशुपालन, गॅरेज/दुकान, मजुरी, नोकरी किंवा कारागिरी"
+      hi: "उदा. खेती, डेयरी, दुकान, मजदूरी, नौकरी या दस्तकारी"
+      en: "e.g., Farming, dairy, small shop, daily wage, transport, skilled craft"
+    options:
+      mr: ["शेती व बागायती", "पशुपालन व दुग्ध व्यवसाय", "लहान दुकान / व्यवसाय", "कारागिरी (वेल्डिंग/सुतार/इ.)", "दळणवळण / ड्रायव्हिंग", "शासकीय / खाजगी नोकरी"]
+      hi: ["खेती और बागवानी", "पशुपालन व डेयरी", "छोटी दुकान / व्यापार", "कारीगरी (वेल्डिंग/मिस्त्री)", "ड्राइविंग / ट्रांसपोर्ट", "सरकारी / प्राइवेट नौकरी"]
+      en: ["Farming & Agriculture", "Dairy & Livestock", "Small Shop / Business", "Skilled Craft (Welding/Carpentry)", "Driving / Transport", "Job / Service"]
+
+  - id: "q_aspiration"
+    order: 6
+    key: "aspiration"
+    icon: "Target"
+    text:
+      mr: "भविष्यात तुम्हाला काय बनायला किंवा कोणते काम करायला आवडेल?"
+      hi: "भविष्य में आप क्या बनना चाहते हैं या क्या काम करना चाहते हैं?"
+      en: "What would you like to become or work as in the future?"
+    subtext:
+      mr: "माहित नसल्यास 'अजून ठरवले नाही' सांगा, दिशा तुम्हाला मार्ग शोधून देईल"
+      hi: "अगर नहीं पता तो 'अभी तय नहीं' कहें, दिशा आपको रास्ता बताएगी"
+      en: "If not sure, say 'Don't know yet'—Disha will guide you"
+    options:
+      mr: ["सोलर / इलेक्ट्रिकल तंत्रज्ञ", "आधुनिक शेती उद्योजक", "आरोग्य सेवक / नर्स", "रेल्वे / पोलीस / सैन्य", "संगणक / डेटा ऑपरेटर", "अजून ठरवले नाही (दिशा मदत करेल)"]
+      hi: ["सोलर / इलेक्ट्रीशियन", "कृषि उद्यमी / डेयरी", "स्वास्थ्य कर्मी / नर्स", "रेलवे / पुलिस / सेना", "कंप्यूटर / डेटा एंट्री", "अभी तय नहीं है (दिशा मदद करे)"]
+      en: ["Solar / Electrician Tech", "Agri / Dairy Entrepreneur", "Healthcare / Nurse", "Railway / Police / Army", "Computer Operator", "Not sure yet (Guide me)"]
+
+  - id: "q_mobility"
+    order: 7
+    key: "mobility"
+    icon: "Compass"
+    text:
+      mr: "पुढील शिक्षण किंवा कामासाठी तुम्ही घरापासून किती लांब जाऊ शकता?"
+      hi: "आगे की पढ़ाई या काम के लिए आप घर से कितनी दूर जा सकते हैं?"
+      en: "For further studies or training, how far can you travel from home?"
+    subtext:
+      mr: "उदा. गावातच, तालुक्याच्या ठिकाणी, किंवा शहरात हॉस्टेलमध्ये"
+      hi: "उदा. अपने गाँव में ही, तहसील/ज़िला शहर, या किसी भी बड़े शहर में"
+      en: "e.g., Stay in village, nearby taluka/district town, or any major city"
+    options:
+      mr: ["फक्त स्वतःच्या गावात / जवळ", "तालुका किंवा जिल्हा केंद्रात", "पुणे / मुंबई किंवा कुठेही जाण्याची तयारी", "ऑनलाइन / घरातून"]
+      hi: ["केवल अपने गाँव / पास में", "तहसील या ज़िला केंद्र में", "बड़े शहर / कहीं भी जाने को तैयार", "ऑनलाइन / घर से"]
+      en: ["Only local village / nearby", "Taluka / District center", "Any major city / Anywhere in state", "Online / From home"]

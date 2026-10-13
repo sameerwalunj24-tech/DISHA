@@ -9,6 +9,7 @@ from api.app.config import settings
 from api.app.database import engine, Base, get_db
 from api.app.models import Opportunity
 from api.app.schemas import HealthResponse, OpportunityResponse
+from api.app.discovery.router import router as discovery_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -34,6 +35,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(discovery_router)
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check(db: Session = Depends(get_db)):
