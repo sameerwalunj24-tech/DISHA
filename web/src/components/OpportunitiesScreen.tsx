@@ -91,28 +91,33 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
     }
 
     try {
-      // If studentId exists, fetch personalized matches from API
-      let url = studentId 
-        ? `http://127.0.0.1:8000/api/v1/students/${studentId}/matches?language=${language}`
-        : `http://127.0.0.1:8000/api/v1/opportunities`;
-
-      if (studentId && optionalIncome) {
-        url += `&family_income=${encodeURIComponent(optionalIncome)}`;
-      }
-
-      if (studentId && activeCategory !== "ALL") {
-        url += `&category=${encodeURIComponent(activeCategory)}`;
-      }
-
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Failed to fetch opportunities");
-      const data = await res.json();
-
       let formattedMatches: MatchItem[] = [];
 
       if (studentId) {
-        formattedMatches = data;
+        const bodyPayload: Record<string, any> = { language };
+        if (optionalIncome) {
+          bodyPayload.family_income = parseFloat(optionalIncome);
+        }
+        if (activeCategory !== "ALL") {
+          bodyPayload.category = activeCategory;
+        }
+
+        const res = await fetch(`http://127.0.0.1:8000/api/v1/students/${studentId}/matches`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bodyPayload),
+        });
+        if (!res.ok) throw new Error("Failed to fetch opportunities");
+        formattedMatches = await res.json();
       } else {
+        let url = `http://127.0.0.1:8000/api/v1/opportunities`;
+        if (activeCategory !== "ALL") {
+          url += `?category=${encodeURIComponent(activeCategory)}`;
+        }
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Failed to fetch opportunities");
+        const data = await res.json();
+
         // Fallback for general browsing before student completes discovery:
         // Score them with standard rural grade 10 profile
         formattedMatches = data.map((opp: any) => ({

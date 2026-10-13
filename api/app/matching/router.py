@@ -1,13 +1,14 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from api.app.database import get_db
 from api.app.models import Student, Opportunity
 from api.app.schemas import (
-    OpportunityResponse, 
-    OpportunityMatchResponse, 
-    ScoreBreakdown, 
+    OpportunityResponse,
+    OpportunityMatchResponse,
+    ScoreBreakdown,
     EligibilityCheckRequest
 )
 from api.app.matching.rules_engine import evaluate_opportunity
@@ -15,19 +16,71 @@ from api.app.matching.explainer import generate_grounded_explanation
 
 router = APIRouter(prefix="/api/v1", tags=["Matching & Eligibility"])
 
-@router.get("/students/{student_id}/matches", response_model=List[OpportunityMatchResponse])
-def get_student_matches(
+
+class MatchRequest(BaseModel):
+    """
+    POST body for student matches.
+    Sensitive fields (income, social category) live here – NEVER in URL query strings.
+    Query strings appear in server access logs and browser history; bodies do not.
+    """
+    language: str = "mr"
+    category: Optional[str] = None
+    # SENSITIVE: transmitted in body only, never stored, never logged
+    family_income: Optional[float] = None
+    social_category: Optional[str] = None
+
+
+@router.post("/students/{student_id}/matches", response_model=List[OpportunityMatchResponse])
+def get_student_matches_post(
     student_id: str,
-    family_income: Optional[float] = Query(None, description="Optional family income for shortlisted check (NOT saved to database)"),
-    social_category: Optional[str] = Query(None, description="Optional social category (NOT saved to database)"),
+    req: MatchRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    POST version of student matches – use this when supplying income/category.
+    Sensitive fields are in the request body and never appear in logs or browser history.
+    Excludes expired schemes, ranks verified records first, never persists sensitive fields.
+    """
+    return _run_matches(
+        student_id=student_id,
+        language=req.language,
+        category=req.category,
+        family_income=req.family_income,
+        social_category=req.social_category,
+        db=db
+    )
+
+
+@router.get("/students/{student_id}/matches", response_model=List[OpportunityMatchResponse])
+def get_student_matches_get(
+    student_id: str,
     language: str = Query("mr", description="mr, hi, or en"),
     category: Optional[str] = Query(None, description="Filter by category: scholarship, apprenticeship, vocational, scheme"),
     db: Session = Depends(get_db)
 ):
     """
-    Grounded opportunity matching for a student profile with deterministic eligibility scoring.
-    Excludes expired schemes, ranks verified records first, and never persists sensitive fields.
+    GET version – no sensitive fields accepted in URL.
+    For income/social_category, use POST /students/{id}/matches instead.
     """
+    return _run_matches(
+        student_id=student_id,
+        language=language,
+        category=category,
+        family_income=None,
+        social_category=None,
+        db=db
+    )
+
+
+def _run_matches(
+    student_id: str,
+    language: str,
+    category: Optional[str],
+    family_income: Optional[float],
+    social_category: Optional[str],
+    db: Session
+) -> List[OpportunityMatchResponse]:
+    """Shared matching logic. Sensitive args never leave this function's scope."""
     student = db.query(Student).filter(Student.id == student_id).first()
     if not student:
         raise HTTPException(status_code=404, detail="Student profile not found")
@@ -37,13 +90,14 @@ def get_student_matches(
         "state": student.state,
         "district": student.district,
         "gender": student.gender or "ALL",
+        "age_years": student.age_years,
         "primary_interests": [s.strip() for s in (student.interests or "").split(",") if s.strip()],
         "practical_skills": [s.strip() for s in (student.skills or "").split(",") if s.strip()],
         "career_aspirations": [s.strip() for s in (student.aspirations or "").split(",") if s.strip()],
         "mobility_preference": "DISTRICT"
     }
 
-    # Sensitive fields kept in-memory request scope ONLY
+    # Sensitive fields: kept in-memory only for this request, never written to DB
     sensitive_context = {
         "family_income": family_income,
         "social_category": social_category
@@ -97,6 +151,7 @@ def get_student_matches(
     matches.sort(key=lambda m: m.score, reverse=True)
     return matches
 
+
 @router.post("/eligibility/check", response_model=OpportunityMatchResponse)
 def check_single_eligibility(
     req: EligibilityCheckRequest,
@@ -104,6 +159,7 @@ def check_single_eligibility(
 ):
     """
     Check deterministic eligibility for a single opportunity with student parameters.
+    Sensitive fields (family_income, social_category) are in the POST body.
     """
     opp = db.query(Opportunity).filter(Opportunity.id == req.opportunity_id).first()
     if not opp:
