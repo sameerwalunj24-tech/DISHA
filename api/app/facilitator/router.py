@@ -464,8 +464,9 @@ def export_cohort_summary_csv(
     db: Session = Depends(get_db)
 ):
     """
-    Exports aggregated cohort data as CSV.
-    STRICT PRIVACY: Excludes all personal identifiers (no names, no phone, no roll numbers, no income).
+    Exports aggregated cohort data as CSV with statistical disclosure control (k-anonymity).
+    STRICT PRIVACY: Excludes all personal identifiers AND hides any count below 5 (<5)
+    to prevent individual re-identification in small rural cohorts.
     """
     cohort = db.query(Cohort).filter(Cohort.id == cohort_id).first()
     if not cohort or cohort.facilitator_id != facilitator.id:
@@ -473,12 +474,16 @@ def export_cohort_summary_csv(
 
     members = db.query(CohortMember).filter(CohortMember.cohort_id == cohort.id).all()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([
-        "Grade", "Career_Cluster", "Profile_Status",
-        "Pathway_Progress_Band", "Flag_Rising", "Flag_StrongFit", "Flag_NeedsSupport"
-    ])
+    def mask_count(val: int) -> str:
+        """Hides any non-zero count below 5 for statistical privacy."""
+        if val == 0:
+            return "0"
+        if val < 5:
+            return "<5"
+        return str(val)
+
+    # Group records by (grade, cluster, profile_status, progress_band)
+    groups: Dict[tuple, Dict[str, int]] = {}
 
     for mem in members:
         s = mem.student
@@ -487,7 +492,6 @@ def export_cohort_summary_csv(
         pathway = db.query(Pathway).filter(Pathway.student_id == s.id).first()
         cluster = pathway.career_goal if pathway else "general_explore"
 
-        # Progress band
         completed_count = 0
         if pathway and pathway.micro_steps_json:
             try:
@@ -512,14 +516,47 @@ def export_cohort_summary_csv(
         flags = evaluate_talent_radar(s, pathway, matches, "en")
         flag_codes = {f["code"] for f in flags}
 
-        writer.writerow([
-            s.grade,
+        key = (
+            str(s.grade or "Unknown"),
             cluster,
             "COMPLETE" if s.interests else "IN_PROGRESS",
-            progress_band,
-            "YES" if "RISING" in flag_codes else "NO",
-            "YES" if "STRONG_FIT" in flag_codes else "NO",
-            "YES" if "NEEDS_SUPPORT" in flag_codes else "NO"
+            progress_band
+        )
+
+        if key not in groups:
+            groups[key] = {
+                "total": 0,
+                "rising": 0,
+                "strong_fit": 0,
+                "needs_support": 0
+            }
+
+        groups[key]["total"] += 1
+        if "RISING" in flag_codes:
+            groups[key]["rising"] += 1
+        if "STRONG_FIT" in flag_codes:
+            groups[key]["strong_fit"] += 1
+        if "NEEDS_SUPPORT" in flag_codes:
+            groups[key]["needs_support"] += 1
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Grade", "Career_Cluster", "Profile_Status", "Pathway_Progress_Band",
+        "Student_Count", "Flag_Rising_Count", "Flag_StrongFit_Count", "Flag_NeedsSupport_Count"
+    ])
+
+    for key, counts in groups.items():
+        grade, cluster, prof_status, band = key
+        writer.writerow([
+            grade,
+            cluster,
+            prof_status,
+            band,
+            mask_count(counts["total"]),
+            mask_count(counts["rising"]),
+            mask_count(counts["strong_fit"]),
+            mask_count(counts["needs_support"])
         ])
 
     csv_data = output.getvalue()

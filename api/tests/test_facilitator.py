@@ -321,9 +321,13 @@ def test_anonymized_cohort_csv_export():
 
         # Header check
         assert "Grade,Career_Cluster,Profile_Status,Pathway_Progress_Band" in csv_content
+        assert "Student_Count" in csv_content
         # Ensure NO student personal identifiers
         assert "गोपाळ" not in csv_content
         assert s.id not in csv_content
         assert "Gopal" not in csv_content
+
+        # Security check: Any count below 5 is masked with "<5"
+        assert "<5" in csv_content
     finally:
         db.close()
