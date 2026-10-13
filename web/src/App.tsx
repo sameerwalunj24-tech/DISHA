@@ -3,6 +3,7 @@ import { I18nProvider, useI18n } from "./i18n";
 import { Header } from "./components/Header";
 import { StudentHome } from "./components/StudentHome";
 import { FacilitatorModal } from "./components/FacilitatorModal";
+import { DiscoverFlow } from "./components/DiscoverFlow";
 import { Download, Sparkles, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -96,6 +97,12 @@ const DishaMain: React.FC = () => {
 
       {selectedScreen === "home" ? (
         <StudentHome onSelectTile={handleTileSelect} />
+      ) : selectedScreen === "discover" ? (
+        <DiscoverFlow
+          isOnline={isOnline}
+          onBackToHome={() => setSelectedScreen("home")}
+          onGoToPathway={() => setSelectedScreen("pathway")}
+        />
       ) : (
         <main className="main-container">
           <div className="greeting-card">
@@ -103,7 +110,6 @@ const DishaMain: React.FC = () => {
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Sparkles size={22} style={{ color: "#f97316" }} />
                 <h2>
-                  {selectedScreen === "discover" && t.tiles.discover.title}
                   {selectedScreen === "pathway" && t.tiles.pathway.title}
                   {selectedScreen === "opportunities" && t.tiles.opportunities.title}
                 </h2>
@@ -125,9 +131,6 @@ const DishaMain: React.FC = () => {
               </button>
             </div>
             <p style={{ marginTop: 10 }}>
-              {selectedScreen === "discover" && (
-                "तुमचे आवडीचे क्षेत्र (उदा. सोलर पंप दुरुस्ती, शेती तंत्रज्ञान, नर्सिंग, रेल्वे) शोधण्यासाठी मुख्य पानावर माइक दाबा."
-              )}
               {selectedScreen === "pathway" && (
                 "तुमच्यासाठी ३० दिवसांचे टप्पे: १) मूलभूत कौशल्ये, २) प्रात्यक्षिक सराव, ३) पात्रता परीक्षा, ४) नोकरी/अप्रेन्टिसशिप अर्ज."
               )}
