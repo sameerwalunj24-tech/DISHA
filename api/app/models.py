@@ -37,6 +37,8 @@ class Student(Base):
 
     facilitator = relationship("Facilitator", back_populates="students")
     pathways = relationship("Pathway", back_populates="student", cascade="all, delete-orphan")
+    cohort_memberships = relationship("CohortMember", back_populates="student", cascade="all, delete-orphan")
+    recommendations = relationship("Recommendation", back_populates="student", cascade="all, delete-orphan")
 
 
 class Facilitator(Base):
@@ -54,6 +56,8 @@ class Facilitator(Base):
     created_at = Column(DateTime, default=utc_now, nullable=False)
 
     students = relationship("Student", back_populates="facilitator")
+    cohorts = relationship("Cohort", back_populates="facilitator", cascade="all, delete-orphan")
+    recommendations = relationship("Recommendation", back_populates="facilitator", cascade="all, delete-orphan")
 
 
 class Opportunity(Base):
@@ -118,4 +122,47 @@ class SyncLog(Base):
     status = Column(String(20), default="synced", nullable=False)
     updated_at = Column(DateTime, default=utc_now, nullable=False)
     applied_at = Column(DateTime, default=utc_now, nullable=False)
+
+
+class Cohort(Base):
+    __tablename__ = "cohorts"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    facilitator_id = Column(String(36), ForeignKey("facilitators.id"), nullable=False)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    join_code = Column(String(10), unique=True, index=True, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    facilitator = relationship("Facilitator", back_populates="cohorts")
+    members = relationship("CohortMember", back_populates="cohort", cascade="all, delete-orphan")
+
+
+class CohortMember(Base):
+    __tablename__ = "cohort_members"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    cohort_id = Column(String(36), ForeignKey("cohorts.id"), nullable=False)
+    student_id = Column(String(36), ForeignKey("students.id"), nullable=False)
+    nickname = Column(String(50), nullable=False)  # Privacy-preserving roster display
+    joined_at = Column(DateTime, default=utc_now, nullable=False)
+
+    cohort = relationship("Cohort", back_populates="members")
+    student = relationship("Student", back_populates="cohort_memberships")
+
+
+class Recommendation(Base):
+    __tablename__ = "recommendations"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    facilitator_id = Column(String(36), ForeignKey("facilitators.id"), nullable=False)
+    student_id = Column(String(36), ForeignKey("students.id"), nullable=False)
+    opportunity_id = Column(String(100), nullable=False)
+    opportunity_title = Column(String(200), nullable=True)
+    note = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    facilitator = relationship("Facilitator", back_populates="recommendations")
+    student = relationship("Student", back_populates="recommendations")
+
 

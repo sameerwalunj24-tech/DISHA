@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from api.app.database import get_db
-from api.app.models import Student, Pathway, SyncLog, utc_now
+from api.app.models import Student, Pathway, SyncLog, Recommendation, Facilitator, utc_now
 from api.app.sync.schemas import SyncBatchRequest, SyncBatchResponse, SyncItemResult
 from api.app.ai.mock_adapter import MockLLMAdapter
 from api.app.pathways.generator import generate_student_pathway
@@ -314,6 +314,56 @@ async def process_sync_batch(
                     status=status_str,
                     student_id=student_id,
                     message="Sync event applied"
+                ))
+                processed += 1
+
+            # Handler D: Opportunity Recommendation (from Facilitator)
+            elif item.type == "recommendation":
+                student_id = payload.get("student_id")
+                opportunity_id = payload.get("opportunity_id")
+                facilitator_id = payload.get("facilitator_id")
+                opp_title = payload.get("opportunity_title", "Recommended Opportunity")
+                note = payload.get("note", "")
+
+                if not student_id or not opportunity_id:
+                    results.append(SyncItemResult(
+                        id=item.id,
+                        status="failed",
+                        message="MISSING_DATA: student_id and opportunity_id required for recommendation"
+                    ))
+                    failed += 1
+                    continue
+
+                if not facilitator_id:
+                    fac = db.query(Facilitator).first()
+                    facilitator_id = fac.id if fac else "fac_demo"
+
+                rec = Recommendation(
+                    id=item.id,
+                    facilitator_id=facilitator_id,
+                    student_id=student_id,
+                    opportunity_id=opportunity_id,
+                    opportunity_title=opp_title,
+                    note=note,
+                    created_at=item_time
+                )
+                db.add(rec)
+
+                sync_log = SyncLog(
+                    id=item.id,
+                    item_type=item.type,
+                    student_id=student_id,
+                    status="synced",
+                    updated_at=item_time
+                )
+                db.add(sync_log)
+                db.commit()
+
+                results.append(SyncItemResult(
+                    id=item.id,
+                    status="synced",
+                    student_id=student_id,
+                    message="Recommendation synced successfully"
                 ))
                 processed += 1
 
