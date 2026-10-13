@@ -62,7 +62,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
   const [textAnswer, setTextAnswer] = useState<string>("");
   const [isListening, setIsListening] = useState<boolean>(false);
   const [partialVoice, setPartialVoice] = useState<string>("");
-  const [guardianConsent, setGuardianConsent] = useState<boolean>(true);
+  const [guardianConsent, setGuardianConsent] = useState<boolean>(false);
   const [studentName] = useState<string>("विद्यार्थी (Learner)");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -181,7 +181,12 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
         setCompletedProfile(data.profile);
         if (data.student_id) {
           try {
-            const matchRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${data.student_id}/matches?language=${language}`);
+            // POST so sensitive fields never appear in URL query strings / logs
+            const matchRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${data.student_id}/matches`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ language })
+            });
             if (matchRes.ok) {
               const matchData = await matchRes.json();
               setTopMatches(matchData.slice(0, 3));
@@ -645,26 +650,54 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
       {/* DPDP Act Child-Safe Guardian Consent Checkbox */}
       <div style={{
         background: "rgba(15,23,42,0.8)",
-        border: "1px solid rgba(255,255,255,0.1)",
+        border: guardianConsent ? "1px solid #10b981" : "1px solid rgba(249,115,22,0.6)",
         borderRadius: 12,
         padding: 12,
-        display: "flex",
-        alignItems: "flex-start",
-        gap: 10
+        marginTop: 8
       }}>
-        <input
-          type="checkbox"
-          id="guardian-consent-chk"
-          checked={guardianConsent}
-          onChange={(e) => setGuardianConsent(e.target.checked)}
-          style={{ width: 18, height: 18, accentColor: "#f97316", marginTop: 2, cursor: "pointer" }}
-        />
-        <label htmlFor="guardian-consent-chk" style={{ fontSize: "0.78rem", color: "#cbd5e1", lineHeight: 1.4, cursor: "pointer" }}>
-          <strong style={{ color: "#fff", display: "inline-flex", alignItems: "center", gap: 4 }}>
-            <Shield size={13} style={{ color: "#10b981" }} /> पालकांची संमती (Guardian Consent):
-          </strong>{" "}
-          माहिती गोपनीयता आणि DPDP कायद्यानुसार करिअर मार्गदर्शनासाठी प्राथमिक प्रोफाइल तयार करण्यास पालकांची संमती आहे.
-        </label>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <input
+            type="checkbox"
+            id="guardian-consent-chk"
+            checked={guardianConsent}
+            onChange={(e) => setGuardianConsent(e.target.checked)}
+            style={{ width: 18, height: 18, accentColor: "#f97316", marginTop: 2, cursor: "pointer", flexShrink: 0 }}
+            aria-required="true"
+          />
+          <label htmlFor="guardian-consent-chk" style={{ fontSize: "0.78rem", color: "#cbd5e1", lineHeight: 1.5, cursor: "pointer" }}>
+            <strong style={{ color: "#fff", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+              <Shield size={13} style={{ color: "#10b981" }} />
+              {language === "mr" && "पालकांची संमती आवश्यक आहे (Guardian Consent Required)"}
+              {language === "hi" && "अभिभावक की सहमति आवश्यक है (Guardian Consent Required)"}
+              {language === "en" && "Guardian Consent Required"}
+            </strong>
+            {language === "mr" && (
+              <span>
+                दिशा तुमचे नाव, इयत्ता, जिल्हा, आवडी आणि करिअर ध्येय <strong>फक्त करिअर मार्गदर्शनासाठी</strong> गोळा करते. हे डेटा तृतीय पक्षाला विकले जात नाही.
+                <br />🎙️ <em>आवाज नोंदणी: ब्राउझरची Speech API वापरली जाते; आवाज ब्राउझर विक्रेत्याकडे (Google/Apple) पाठवला जाऊ शकतो. Production मध्ये Bhashini किंवा on-device speech वापरले जाईल.</em>
+              </span>
+            )}
+            {language === "hi" && (
+              <span>
+                दिशा आपका नाम, कक्षा, जिला, रुचियाँ और करियर लक्ष्य <strong>केवल करियर मार्गदर्शन के लिए</strong> एकत्र करती है। यह डेटा किसी तीसरे पक्ष को नहीं बेचा जाता।
+                <br />🎙️ <em>आवाज़ रिकॉर्डिंग: ब्राउज़र की Speech API उपयोग होती है; आवाज़ ब्राउज़र विक्रेता (Google/Apple) को भेजी जा सकती है। Production में Bhashini या on-device speech उपयोग होगा।</em>
+              </span>
+            )}
+            {language === "en" && (
+              <span>
+                Disha collects your name, class, district, interests and career goal <strong>only for career guidance</strong>. This data is never sold to third parties.
+                <br />🎙️ <em>Voice note: Browser Speech API is used; audio may be processed by your browser vendor (Google/Apple). Production will use Bhashini or on-device speech.</em>
+              </span>
+            )}
+          </label>
+        </div>
+        {!guardianConsent && (
+          <p style={{ color: "#fb923c", fontSize: "0.75rem", marginTop: 8, marginLeft: 28 }}>
+            {language === "mr" && "संमती दिल्याशिवाय प्रोफाईल सेव्ह होणार नाही."}
+            {language === "hi" && "सहमति के बिना प्रोफ़ाइल सेव नहीं होगी।"}
+            {language === "en" && "Profile will not be saved without consent."}
+          </p>
+        )}
       </div>
     </main>
   );

@@ -56,3 +56,33 @@ Unlike urban-centric platforms requiring fast connections and high digital liter
 2. **Phase 2 (Core Loop & Voice):** Multilingual voice discovery flow, deterministic eligibility rules engine, 30-day micro-step pathway generator, and offline sync queue.
 3. **Phase 3 (Facilitator & Marketplace):** Facilitator dashboard, cohort management, module creator, and monetization flows.
 4. **Phase 4 (Interoperability & Polish):** Standards-based connector APIs (ONEST/DigiLocker mocks), performance optimization on low-end mobile profiles, and demo hardening.
+
+---
+
+## 5. Privacy & Data Policy
+
+### A. Guardian Consent
+- The guardian consent checkbox **starts unchecked** and must be actively ticked by the guardian before any profile data is saved.
+- The checkbox displays a plain-language explanation in Marathi, Hindi, and English of exactly what data is collected and why.
+- The server returns HTTP 403 if a save is attempted without consent — the block is enforced at the API level, not just the UI.
+
+### B. Sensitive Fields (income, social category)
+- Family income and social category are **never stored** in the database.
+- These fields are transmitted only in **POST request bodies** (never in GET query strings), so they do not appear in server access logs or browser history.
+- The rules engine marks eligibility as `UNKNOWN` (not `FAIL`) when these fields are omitted — an absent answer never disqualifies a student.
+
+### C. Data Minimisation
+- Only the minimum fields needed for career guidance are stored: name, class, district, gender, interests, skills, aspirations, preferred language.
+- Student age is stored only when explicitly provided during Discovery (optional question).
+
+### D. Voice Processing Disclosure
+Voice input uses the **browser's built-in Web Speech API**. This means:
+- Audio is processed by the browser vendor (Google on Chrome, Apple on Safari, etc.) and may be sent to their servers.
+- **In production**, Disha will replace the browser Speech API with **Bhashini** (India's national language AI platform) or an **on-device speech model** to keep audio on-device or within Indian jurisdiction.
+- The consent checkbox in the Discovery flow explicitly discloses this to users in all three languages.
+
+### E. Data Verification
+- All opportunity data in `data/opportunities.csv` starts with `verification_status = sample_unverified`.
+- The **Verified ✓** seal is shown in the UI **only** when both `verified_by` and `verified_on` are filled by a human reviewer.
+- The ranking bonus (+30 points) applies **only** to verified rows.
+- Run `python api/verify_report.py` to get a checklist for human verification.
