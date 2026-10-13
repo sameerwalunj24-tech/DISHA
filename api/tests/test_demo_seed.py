@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 from api.app.main import app
 from api.app.database import SessionLocal
+from api.app.config import settings
 from api.app.models import Facilitator, Cohort, Student, Pathway, Recommendation, ModuleEnrollment
 from api.seed_demo import seed_demo_data
 
@@ -77,3 +78,43 @@ def test_api_demo_reset_endpoint():
     data = res.json()
     assert data["status"] == "success"
     assert "DEMO10" in data["message"] or data["details"]["join_code"] == "DEMO10"
+
+def test_demo_reset_and_login_gated_in_production_mode(monkeypatch):
+    """In production mode, demo reset and demo login return 403 unless valid X-Admin-Key is provided."""
+    monkeypatch.setattr(settings, "ENVIRONMENT", "production")
+
+    # 1. Demo reset without admin key must return 403
+    res_reset_blocked = client.post("/api/v1/demo/reset")
+    assert res_reset_blocked.status_code == 403
+    assert "DEMO_RESET_DISABLED" in res_reset_blocked.json()["detail"]
+
+    # 2. Demo reset with valid admin key succeeds (200)
+    res_reset_admin = client.post("/api/v1/demo/reset", headers={"X-Admin-Key": settings.ADMIN_KEY})
+    assert res_reset_admin.status_code == 200
+
+    # 3. Demo facilitator login without admin key in production must return 403
+    demo_phone = settings.DEMO_FACILITATOR_PHONE
+    res_login_blocked = client.post("/api/v1/facilitator/auth/request-otp", json={"phone_number": demo_phone})
+    assert res_login_blocked.status_code == 403
+    assert "DEMO_LOGIN_DISABLED" in res_login_blocked.json()["detail"]
+
+    # 4. Demo facilitator verify-otp without admin key in production returns 403
+    res_verify_blocked = client.post("/api/v1/facilitator/auth/verify-otp", json={"phone_number": demo_phone, "otp": "123456"})
+    assert res_verify_blocked.status_code == 403
+    assert "DEMO_LOGIN_DISABLED" in res_verify_blocked.json()["detail"]
+
+    # 5. Demo facilitator login with admin key succeeds (200)
+    res_login_admin = client.post(
+        "/api/v1/facilitator/auth/request-otp",
+        json={"phone_number": demo_phone},
+        headers={"X-Admin-Key": settings.ADMIN_KEY}
+    )
+    assert res_login_admin.status_code == 200
+
+    # 6. Regular non-demo phone in production does not leak demo_otp on-screen
+    res_prod_regular = client.post(
+        "/api/v1/facilitator/auth/request-otp",
+        json={"phone_number": "9811122233"}
+    )
+    assert res_prod_regular.status_code == 200
+    assert res_prod_regular.json()["demo_otp"] is None

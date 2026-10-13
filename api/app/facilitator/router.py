@@ -16,9 +16,10 @@ import random
 import json
 from datetime import datetime, timezone
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi import APIRouter, Depends, HTTPException, status, Response, Header
 from sqlalchemy.orm import Session
 
+from api.app.config import settings, is_demo_allowed
 from api.app.database import get_db
 from api.app.models import (
     Facilitator, Student, Pathway, Opportunity,
@@ -52,14 +53,27 @@ def generate_join_code() -> str:
 # ==========================================
 
 @router.post("/facilitator/auth/request-otp", response_model=OTPResponse)
-def request_otp(req: OTPRequest, db: Session = Depends(get_db)):
+def request_otp(
+    req: OTPRequest,
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    db: Session = Depends(get_db)
+):
     """
     Prototype-grade OTP login.
     In dev/demo mode, the OTP is returned directly in the response for on-screen display.
+    In production mode, demo facilitator login is refused and demo_otp is not exposed.
     """
     phone = req.phone_number.strip()
     if not phone:
         raise HTTPException(status_code=400, detail="Phone number is required.")
+
+    # Guard demo facilitator account in non-dev environments
+    if phone == settings.DEMO_FACILITATOR_PHONE:
+        if not is_demo_allowed(settings.ENVIRONMENT, x_admin_key):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="DEMO_LOGIN_DISABLED: Demo facilitator login is disabled in production mode. Provide a valid 'X-Admin-Key' header."
+            )
 
     # Find or auto-provision facilitator account
     facilitator = db.query(Facilitator).filter(Facilitator.phone_number == phone).first()
@@ -79,17 +93,35 @@ def request_otp(req: OTPRequest, db: Session = Depends(get_db)):
 
     otp_code = generate_otp(phone)
 
-    return OTPResponse(
-        phone_number=phone,
-        demo_otp=otp_code,
-        message=f"Demo OTP: {otp_code} (Valid for 15 minutes)"
-    )
+    if is_demo_allowed(settings.ENVIRONMENT, x_admin_key):
+        return OTPResponse(
+            phone_number=phone,
+            demo_otp=otp_code,
+            message=f"Demo OTP: {otp_code} (Valid for 15 minutes)"
+        )
+    else:
+        return OTPResponse(
+            phone_number=phone,
+            demo_otp=None,
+            message="OTP dispatched via SMS provider (Production Mode)."
+        )
 
 
 @router.post("/facilitator/auth/verify-otp", response_model=TokenResponse)
-def verify_otp_endpoint(req: OTPVerifyRequest, db: Session = Depends(get_db)):
+def verify_otp_endpoint(
+    req: OTPVerifyRequest,
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    db: Session = Depends(get_db)
+):
     """Verifies OTP and issues a prototype JWT token."""
     phone = req.phone_number.strip()
+    if phone == settings.DEMO_FACILITATOR_PHONE:
+        if not is_demo_allowed(settings.ENVIRONMENT, x_admin_key):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="DEMO_LOGIN_DISABLED: Demo facilitator login is disabled in production mode. Provide a valid 'X-Admin-Key' header."
+            )
+
     if not verify_otp(phone, req.otp):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

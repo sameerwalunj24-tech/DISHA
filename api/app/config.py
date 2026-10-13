@@ -55,6 +55,19 @@ class Settings(BaseModel):
     VOICE_ADAPTER: str = os.getenv("VOICE_ADAPTER", "mock")
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "mock")
 
+    # Admin Key for protected maintenance endpoints
+    ADMIN_KEY: str = os.getenv("ADMIN_KEY", "disha_admin_secret_key_2026")
+    DEMO_FACILITATOR_PHONE: str = os.getenv("DEMO_FACILITATOR_PHONE", "9822000000")
+
+def is_demo_allowed(env: str, admin_key: str | None = None) -> bool:
+    """Returns True if demo operations (seed/reset/demo login) are permitted."""
+    env_clean = env.strip().lower()
+    if env_clean in ("development", "dev", "demo", "test"):
+        return True
+    if admin_key and admin_key.strip() == settings.ADMIN_KEY:
+        return True
+    return False
+
 def get_settings() -> Settings:
     s = Settings()
     validate_secrets(s.ENVIRONMENT, s.JWT_SECRET)

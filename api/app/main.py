@@ -1,11 +1,11 @@
 from contextlib import asynccontextmanager
-from typing import List
-from fastapi import FastAPI, Depends, HTTPException
+from typing import List, Optional
+from fastapi import FastAPI, Depends, HTTPException, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 
-from api.app.config import settings
+from api.app.config import settings, is_demo_allowed
 from api.app.database import engine, Base, get_db
 from api.app.models import Opportunity
 from api.app.schemas import HealthResponse, OpportunityResponse
@@ -93,8 +93,16 @@ def list_opportunities(
     return query.all()
 
 @app.post("/api/v1/demo/reset", tags=["Demo"])
-def reset_demo(db: Session = Depends(get_db)):
+def reset_demo(
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    db: Session = Depends(get_db)
+):
     """Restores pre-configured demo facilitator, cohort DEMO10, and 3 students at various stages."""
+    if not is_demo_allowed(settings.ENVIRONMENT, x_admin_key):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="DEMO_RESET_DISABLED: Demo environment reset is disabled in production mode. Provide a valid 'X-Admin-Key' header."
+        )
     from api.seed_demo import seed_demo_data
     result = seed_demo_data(db)
     return {

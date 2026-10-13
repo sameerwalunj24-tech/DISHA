@@ -19,7 +19,7 @@ class OTPRequest(BaseModel):
 
 class OTPResponse(BaseModel):
     phone_number: str
-    demo_otp: str = Field(..., description="Prototype demo OTP displayed on-screen")
+    demo_otp: Optional[str] = Field(None, description="Prototype demo OTP displayed on-screen in dev/demo mode")
     message: str
 
 
