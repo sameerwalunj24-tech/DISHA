@@ -21,6 +21,7 @@ class Student(Base):
     district = Column(String(50), nullable=True)
     gender = Column(String(10), default="ALL", nullable=True)  # FEMALE, MALE, OTHER, ALL
     annual_family_income = Column(Float, nullable=True)
+    age_years = Column(Integer, nullable=True)  # Optional – used for age-gated scheme checks
     
     # Child-safety / DPDP Act compliance
     guardian_consent = Column(Boolean, default=False, nullable=False)
@@ -64,6 +65,8 @@ class Opportunity(Base):
     provider = Column(String(150), nullable=False)
     min_grade = Column(Integer, default=9, nullable=False)
     max_grade = Column(Integer, default=16, nullable=False)
+    min_age = Column(Integer, nullable=True)   # e.g. 18 – null means no age floor
+    max_age = Column(Integer, nullable=True)   # e.g. 35 – null means no age ceiling
     states = Column(String(255), default="Maharashtra;All India", nullable=False)
     income_max = Column(Float, nullable=True)
     gender = Column(String(20), default="ALL", nullable=False)  # ALL, FEMALE, MALE
@@ -77,6 +80,8 @@ class Opportunity(Base):
     source_url = Column(String(500), nullable=False)
     last_verified = Column(String(20), nullable=False)  # YYYY-MM-DD
     verification_status = Column(String(50), default="sample_unverified", nullable=False)  # verified, sample_unverified
+    verified_by = Column(String(100), nullable=True)  # Human verifier name
+    verified_on = Column(String(20), nullable=True)  # YYYY-MM-DD
     is_sample = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=utc_now, nullable=False)
 

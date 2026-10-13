@@ -12,10 +12,10 @@ def test_discovery_questions_list():
     response = client.get("/api/v1/discovery/questions?language=mr")
     assert response.status_code == 200
     questions = response.json()
-    assert len(questions) == 7
+    assert len(questions) == 8
     # Verify order and keys
     expected_keys = [
-        "grade", "state_district", "favorite_subjects", 
+        "grade", "age", "state_district", "favorite_subjects",
         "things_enjoyed", "family_work", "aspiration", "mobility"
     ]
     for idx, key in enumerate(expected_keys):
@@ -51,11 +51,12 @@ def test_discovery_flow_consent_blocked_when_not_granted():
     assert start_resp.status_code == 200
     data = start_resp.json()
     session_id = data["session_id"]
-    assert data["total_questions"] == 7
+    assert data["total_questions"] == 8
 
-    # 2. Answer questions 1 through 6
+    # 2. Answer questions 1 through 7
     sample_answers = [
         ("q_grade", "१० वी"),
+        ("q_age", "15-17 वर्षे"),
         ("q_location", "सातारा"),
         ("q_subjects", "विज्ञान"),
         ("q_activities", "सोलर पंप दुरुस्ती"),
@@ -74,7 +75,7 @@ def test_discovery_flow_consent_blocked_when_not_granted():
         assert step_data["is_complete"] is False
         assert step_data["next_question"] is not None
 
-    # 3. Answer question 7 WITHOUT consent -> must be blocked
+    # 3. Answer question 8 WITHOUT consent -> must be blocked
     final_resp = client.post("/api/v1/discovery/answer", json={
         "session_id": session_id,
         "question_id": "q_mobility",
@@ -89,9 +90,10 @@ def test_discovery_flow_completes_and_saves_student():
     start_resp = client.post("/api/v1/discovery/start", json={"language": "mr"})
     session_id = start_resp.json()["session_id"]
 
-    # 2. Answer all 7 questions with guardian consent
+    # 2. Answer all 8 questions with guardian consent
     questions = [
         ("q_grade", "१० वी"),
+        ("q_age", "15-17 वर्षे"),
         ("q_location", "पुणे"),
         ("q_subjects", "गणित व तंत्रज्ञान"),
         ("q_activities", "इलेक्ट्रिक वायरिंग"),

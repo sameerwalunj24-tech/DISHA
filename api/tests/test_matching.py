@@ -154,8 +154,11 @@ def test_sensitive_fields_not_persisted_in_db():
     student_id = student.id
     db.close()
 
-    # 2. Call matches API with sensitive query parameter
-    resp = client.get(f"/api/v1/students/{student_id}/matches?family_income=150000&social_category=OBC")
+    # 2. Call matches API with sensitive fields in POST BODY (never in URL query string)
+    resp = client.post(
+        f"/api/v1/students/{student_id}/matches",
+        json={"language": "mr", "family_income": 150000, "social_category": "OBC"}
+    )
     assert resp.status_code == 200
     matches = resp.json()
     assert len(matches) >= 3
@@ -169,3 +172,57 @@ def test_sensitive_fields_not_persisted_in_db():
         assert check_student.annual_family_income is None
     finally:
         db_check.close()
+
+
+def test_rule_age_gating():
+    """Class 10 student must NOT be ELIGIBLE for an 18+ scheme (step-0b)."""
+    # Opportunity with min_age=18 (adult-only scheme)
+    adult_only_opp = {
+        **SAMPLE_OPP,
+        "min_age": 18,
+        "max_age": None,
+        "income_max": None
+    }
+
+    # Case 1: student is 16 -> AGE_TOO_YOUNG -> NOT_ELIGIBLE
+    res_young = evaluate_opportunity(
+        adult_only_opp,
+        {"grade": 10, "state": "Maharashtra", "mobility": "DISTRICT", "age_years": 16}
+    )
+    assert res_young.overall_eligibility == "NOT_ELIGIBLE"
+    assert any(r.reason_code == "AGE_TOO_YOUNG" for r in res_young.failed_rules), \
+        "Expected AGE_TOO_YOUNG in failed_rules"
+
+    # Case 2: student is 18 -> AGE_IN_RANGE -> ELIGIBLE
+    res_ok = evaluate_opportunity(
+        adult_only_opp,
+        {"grade": 10, "state": "Maharashtra", "mobility": "DISTRICT", "age_years": 18}
+    )
+    assert res_ok.overall_eligibility == "ELIGIBLE"
+    assert any(r.reason_code == "AGE_IN_RANGE" for r in res_ok.passed_rules)
+
+    # Case 3: age not provided -> UNKNOWN -> LIKELY (not FAIL)
+    res_unknown = evaluate_opportunity(
+        adult_only_opp,
+        {"grade": 10, "state": "Maharashtra", "mobility": "DISTRICT"}
+    )
+    assert res_unknown.overall_eligibility == "LIKELY", \
+        "Missing age should give LIKELY not NOT_ELIGIBLE"
+    assert any(r.reason_code == "AGE_NOT_PROVIDED" for r in res_unknown.unknown_rules)
+
+    # Case 4: max_age rule – student too old (30 years for a youth scheme)
+    youth_opp = {**SAMPLE_OPP, "min_age": None, "max_age": 21, "income_max": None}
+    res_old = evaluate_opportunity(
+        youth_opp,
+        {"grade": 10, "state": "Maharashtra", "mobility": "DISTRICT", "age_years": 30}
+    )
+    assert res_old.overall_eligibility == "NOT_ELIGIBLE"
+    assert any(r.reason_code == "AGE_TOO_OLD" for r in res_old.failed_rules)
+
+    # Case 5: no age restriction -> PASS with AGE_NO_RESTRICTION
+    no_age_opp = {**SAMPLE_OPP, "min_age": None, "max_age": None, "income_max": None}
+    res_no_age = evaluate_opportunity(
+        no_age_opp,
+        {"grade": 10, "state": "Maharashtra", "mobility": "DISTRICT"}
+    )
+    assert any(r.reason_code == "AGE_NO_RESTRICTION" for r in res_no_age.passed_rules)

@@ -103,7 +103,36 @@ def evaluate_opportunity(
     else:
         record_rule("GENDER", "FAIL", "GENDER_MISMATCH", f"Exclusive for {opp_gender}; student is {student_gender}")
 
-    # 5. Income Rule (Sensitive: if unknown, marked UNKNOWN, never FAIL)
+    # 5. Age Rule (Optional – UNKNOWN when not provided)
+    opp_min_age = getattr(opp, "min_age", None) if not isinstance(opp, dict) else opp.get("min_age")
+    opp_max_age = getattr(opp, "max_age", None) if not isinstance(opp, dict) else opp.get("max_age")
+    student_age = student_profile.get("age_years")
+
+    has_age_rule = (opp_min_age is not None) or (opp_max_age is not None)
+    if not has_age_rule:
+        record_rule("AGE", "PASS", "AGE_NO_RESTRICTION", "No age restriction for this opportunity")
+    elif student_age is None:
+        age_desc = []
+        if opp_min_age:
+            age_desc.append(f"min {opp_min_age} yrs")
+        if opp_max_age:
+            age_desc.append(f"max {opp_max_age} yrs")
+        record_rule("AGE", "UNKNOWN", "AGE_NOT_PROVIDED",
+                    f"Opportunity requires age {' / '.join(age_desc)}; student age not given")
+    else:
+        too_young = (opp_min_age is not None) and (student_age < opp_min_age)
+        too_old   = (opp_max_age is not None) and (student_age > opp_max_age)
+        if too_young:
+            record_rule("AGE", "FAIL", "AGE_TOO_YOUNG",
+                        f"Minimum age is {opp_min_age}; student is {student_age}")
+        elif too_old:
+            record_rule("AGE", "FAIL", "AGE_TOO_OLD",
+                        f"Maximum age is {opp_max_age}; student is {student_age}")
+        else:
+            record_rule("AGE", "PASS", "AGE_IN_RANGE",
+                        f"Student age {student_age} is within required range {opp_min_age}–{opp_max_age}")
+
+    # 6. Income Rule (Sensitive: if unknown, marked UNKNOWN, never FAIL)
     income_max = getattr(opp, "income_max", None) if not isinstance(opp, dict) else opp.get("income_max")
     student_income = sensitive_data.get("family_income")
 
@@ -118,7 +147,7 @@ def evaluate_opportunity(
         # Sensitive field omitted -> Marked UNKNOWN
         record_rule("INCOME", "UNKNOWN", "INCOME_UNVERIFIED", f"Requires family income below ₹{income_max}. Optional answer not provided.")
 
-    # 6. Mobility Rule
+    # 7. Mobility Rule
     opp_mobility = str(getattr(opp, "mobility", "DISTRICT") if not isinstance(opp, dict) else opp.get("mobility", "DISTRICT")).upper()
     student_mobility = str(student_profile.get("mobility_preference") or student_profile.get("mobility", "DISTRICT")).upper()
     

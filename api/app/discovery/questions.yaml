@@ -16,8 +16,25 @@ questions:
       hi: ["9वीं", "10वीं", "11वीं", "12वीं", "आईटीआई / डिप्लोमा", "कॉलेज / स्नातक"]
       en: ["Std 9", "Std 10", "Std 11", "Std 12", "ITI / Diploma", "College / Degree"]
 
-  - id: "q_location"
+  - id: "q_age"
     order: 2
+    key: "age"
+    icon: "Award"
+    text:
+      mr: "तुमचे वय किती आहे? (ऐच्छिक – काही योजनांसाठी आवश्यक)"
+      hi: "आपकी उम्र क्या है? (वैकल्पिक – कुछ योजनाओं के लिए ज़रूरी)"
+      en: "How old are you? (Optional – some schemes need this)"
+    subtext:
+      mr: "उदा. 14, 16, 18 वर्षे. माहित नसल्यास 'माहित नाही' निवडा."
+      hi: "उदा. 14, 16, 18 वर्ष। पता नहीं हो तो 'पता नहीं' चुनें।"
+      en: "e.g., 14, 16, 18 years. If not sure, choose 'Not sure'."
+    options:
+      mr: ["14 वर्षे किंवा कमी", "15-17 वर्षे", "18-21 वर्षे", "22 वर्षे किंवा जास्त", "माहित नाही"]
+      hi: ["14 वर्ष या कम", "15-17 वर्ष", "18-21 वर्ष", "22 वर्ष या अधिक", "पता नहीं"]
+      en: ["14 or younger", "15-17 years", "18-21 years", "22 or older", "Not sure"]
+
+  - id: "q_location"
+    order: 3
     key: "state_district"
     icon: "MapPin"
     text:
@@ -34,7 +51,7 @@ questions:
       en: ["Satara", "Pune", "Nashik", "Kolhapur", "Sambhajinagar", "Other"]
 
   - id: "q_subjects"
-    order: 3
+    order: 4
     key: "favorite_subjects"
     icon: "BookOpen"
     text:
@@ -51,7 +68,7 @@ questions:
       en: ["Science & Tech", "Math & Numbers", "Languages", "Arts & Crafts", "Agri & Environment", "Hands-on Practical"]
 
   - id: "q_activities"
-    order: 4
+    order: 5
     key: "things_enjoyed"
     icon: "Wrench"
     text:
@@ -68,7 +85,7 @@ questions:
       en: ["Fixing Machines / Wiring", "Farming & Plant care", "Helping & Teaching others", "Mobiles & Tech", "Crafting & Building", "Trading & Sales"]
 
   - id: "q_family_work"
-    order: 5
+    order: 6
     key: "family_work"
     icon: "Home"
     text:
@@ -85,7 +102,7 @@ questions:
       en: ["Farming & Agriculture", "Dairy & Livestock", "Small Shop / Business", "Skilled Craft (Welding/Carpentry)", "Driving / Transport", "Job / Service"]
 
   - id: "q_aspiration"
-    order: 6
+    order: 7
     key: "aspiration"
     icon: "Target"
     text:
@@ -102,7 +119,7 @@ questions:
       en: ["Solar / Electrician Tech", "Agri / Dairy Entrepreneur", "Healthcare / Nurse", "Railway / Police / Army", "Computer Operator", "Not sure yet (Guide me)"]
 
   - id: "q_mobility"
-    order: 7
+    order: 8
     key: "mobility"
     icon: "Compass"
     text:

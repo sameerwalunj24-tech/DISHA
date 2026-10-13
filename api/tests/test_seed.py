@@ -19,7 +19,7 @@ def test_seed_opportunities_inserts_records():
         solar_opp = db.query(Opportunity).filter(Opportunity.id == 1).first()
         assert solar_opp is not None
         assert "Solar" in solar_opp.title
-        assert solar_opp.verification_status == "verified"
+        assert solar_opp.verification_status == "sample_unverified"  # step-0a: all rows start unverified
         assert solar_opp.category == "apprenticeship"
         assert solar_opp.last_verified == "2026-10-01"
     finally:
