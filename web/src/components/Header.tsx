@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { Compass, Users, WifiOff, RefreshCw, Check } from "lucide-react";
+import { Compass, Users, WifiOff, RefreshCw, Check, RotateCcw, Info } from "lucide-react";
 import { useI18n, LANGUAGE_NAMES } from "../i18n";
 import type { Language } from "../i18n";
 import { useSyncStatus } from "../services/sync/useSyncStatus";
@@ -8,15 +8,21 @@ interface HeaderProps {
   isOnline: boolean;
   onOpenFacilitatorModal: () => void;
   onOpenJoinCohortModal?: () => void;
+  onOpenAboutModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenFacilitatorModal, onOpenJoinCohortModal }) => {
+export const Header: React.FC<HeaderProps> = ({
+  onOpenFacilitatorModal,
+  onOpenJoinCohortModal,
+  onOpenAboutModal
+}) => {
   const { language, setLanguage, t } = useI18n();
   const { isOnline, isDemoOffline, pendingCount, isSyncing, triggerSync, toggleDemoOffline } = useSyncStatus();
 
   // 5-tap hidden demo mode toggle
   const [tapCount, setTapCount] = useState<number>(0);
   const [demoToast, setDemoToast] = useState<string | null>(null);
+  const [isResettingDemo, setIsResettingDemo] = useState<boolean>(false);
   const tapResetTimer = useRef<number | null>(null);
 
   const handleLogoTap = () => {
@@ -103,6 +109,35 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFacilitatorModal, onOpenJo
     };
   };
 
+  const handleResetDemo = async () => {
+    if (!window.confirm(
+      language === "mr"
+        ? "डेमो डेटा रिसेट करायचा आहे का? (सौ. सुनिता पाटील, DEMO10 गट आणि ३ विद्यार्थी पुन्हा लोड होतील)"
+        : language === "hi"
+        ? "क्या आप डेमो डेटा रीसेट करना चाहते हैं? (डेमो शिक्षक और छात्र पुनर्स्थापित होंगे)"
+        : "Reset demo environment to default facilitator, DEMO10 cohort, and 3 demo students?"
+    )) {
+      return;
+    }
+
+    try {
+      setIsResettingDemo(true);
+      const res = await fetch("http://127.0.0.1:8000/api/v1/demo/reset", { method: "POST" });
+      if (res.ok) {
+        setDemoToast(
+          language === "mr" ? "✅ डेमो डेटा रिसेट झाला! (Demo Environment Restored)" :
+          language === "hi" ? "✅ डेमो डेटा रीसेट हुआ! (Demo Environment Restored)" :
+          "✅ Demo environment reset successfully!"
+        );
+        setTimeout(() => setDemoToast(null), 3500);
+      }
+    } catch (e) {
+      console.warn("Demo reset failed:", e);
+    } finally {
+      setIsResettingDemo(false);
+    }
+  };
+
   const chip = getStatusChipContent();
 
   return (
@@ -179,6 +214,49 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFacilitatorModal, onOpenJo
             <Users size={15} />
             <span>{t.facilitatorLogin}</span>
           </button>
+
+          {/* Hidden/Subtle Reset Demo Button */}
+          <button
+            onClick={handleResetDemo}
+            disabled={isResettingDemo}
+            title="Reset Demo Data (Facilitator, DEMO10, 3 Students)"
+            style={{
+              background: "rgba(249, 115, 22, 0.12)",
+              border: "1px dashed rgba(249, 115, 22, 0.45)",
+              color: "#fdba74",
+              padding: "6px 9px",
+              borderRadius: 8,
+              fontSize: "0.74rem",
+              fontWeight: 700,
+              cursor: "pointer",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 4
+            }}
+          >
+            <RotateCcw size={12} className={isResettingDemo ? "spin" : ""} />
+            <span>{language === "mr" ? "डेमो रिसेट" : language === "hi" ? "डेमो रीसेट" : "Reset Demo"}</span>
+          </button>
+
+          {/* About & Privacy Trigger */}
+          {onOpenAboutModal && (
+            <button
+              onClick={onOpenAboutModal}
+              title={language === "mr" ? "माहिती व गोपनीयता धोरण" : language === "hi" ? "जानकारी एवं गोपनीयता नीति" : "About & Privacy Policy"}
+              style={{
+                background: "rgba(255, 255, 255, 0.08)",
+                border: "1px solid rgba(255, 255, 255, 0.2)",
+                color: "#cbd5e1",
+                padding: "6px 8px",
+                borderRadius: 8,
+                cursor: "pointer",
+                display: "inline-flex",
+                alignItems: "center"
+              }}
+            >
+              <Info size={14} />
+            </button>
+          )}
         </div>
       </header>
 

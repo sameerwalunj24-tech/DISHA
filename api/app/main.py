@@ -91,3 +91,14 @@ def list_opportunities(
         query = query.filter(Opportunity.min_grade <= grade, Opportunity.max_grade >= grade)
     
     return query.all()
+
+@app.post("/api/v1/demo/reset", tags=["Demo"])
+def reset_demo(db: Session = Depends(get_db)):
+    """Restores pre-configured demo facilitator, cohort DEMO10, and 3 students at various stages."""
+    from api.seed_demo import seed_demo_data
+    result = seed_demo_data(db)
+    return {
+        "status": "success",
+        "message": "Demo environment successfully restored with demo facilitator, cohort DEMO10, and 3 students.",
+        "details": result
+    }
