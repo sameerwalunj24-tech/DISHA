@@ -1,10 +1,10 @@
 import React, { useState } from "react";
-import { Compass, Route, Award, Mic, MicOff, ChevronRight, Volume2, Sparkles, Users } from "lucide-react";
+import { Compass, Route, Award, Mic, MicOff, ChevronRight, Volume2, Sparkles, Users, BookOpen } from "lucide-react";
 import { useI18n } from "../i18n";
 import { voiceService } from "../services/voice";
 
 interface StudentHomeProps {
-  onSelectTile: (tileKey: "discover" | "pathway" | "opportunities") => void;
+  onSelectTile: (tileKey: "discover" | "pathway" | "opportunities" | "marketplace") => void;
   onOpenJoinCohort?: () => void;
   joinedCohortName?: string | null;
 }
@@ -200,6 +200,37 @@ export const StudentHome: React.FC<StudentHomeProps> = ({ onSelectTile, onOpenJo
               <Volume2 size={20} />
             </span>
             <ChevronRight className="tile-arrow" size={24} />
+          </div>
+        </button>
+
+        {/* Tile 4: Marketplace Training Modules */}
+        <button
+          className="action-tile tile-marketplace"
+          onClick={() => onSelectTile("marketplace")}
+          aria-label="कौशल्य प्रशिक्षण कोर्सेस"
+          style={{
+            background: "linear-gradient(135deg, rgba(30, 41, 59, 0.9) 0%, rgba(15, 23, 42, 0.9) 100%)",
+            border: "1.5px solid rgba(56, 189, 248, 0.3)"
+          }}
+        >
+          <div className="tile-icon-box" style={{ background: "rgba(56, 189, 248, 0.15)", color: "#38bdf8" }}>
+            <BookOpen />
+          </div>
+          <div className="tile-content">
+            <div className="tile-header-row">
+              <span className="tile-title" style={{ color: "#fff" }}>
+                {language === "mr" ? "कौशल्य कोर्सेस" : language === "hi" ? "कौशल कोर्सेज" : "Skill Courses"}
+              </span>
+              <span className="tile-tag" style={{ background: "rgba(56, 189, 248, 0.2)", color: "#38bdf8" }}>
+                {language === "mr" ? "मार्गदर्शक" : language === "hi" ? "मार्गदर्शक" : "Mentors"}
+              </span>
+            </div>
+            <p className="tile-subtitle">
+              {language === "mr" ? "स्थानिक शिक्षक व तंत्रज्ञांचे प्रात्यक्षिक कोर्सेस" : language === "hi" ? "स्थानीय शिक्षकों के व्यावहारिक कोर्सेज" : "Facilitator practical courses & workshops"}
+            </p>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+            <ChevronRight className="tile-arrow" size={24} style={{ color: "#38bdf8" }} />
           </div>
         </button>
       </section>

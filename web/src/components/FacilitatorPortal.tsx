@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
   X, Users, Plus, FileSpreadsheet,
   Award, TrendingUp, HelpCircle, Sparkles, LogOut,
-  ChevronRight, Smartphone, CheckCircle2, ArrowLeft, Send
+  ChevronRight, Smartphone, CheckCircle2, ArrowLeft, Send,
+  DollarSign
 } from "lucide-react";
 import { useI18n } from "../i18n";
 import { enqueueSyncItem } from "../services/db/offlineStorage";
@@ -124,9 +125,88 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
   // Active Radar tooltip
   const [activeReason, setActiveReason] = useState<{ studentName: string; flag: RadarFlag } | null>(null);
 
+  // Phase 7 Marketplace: Tab & Earnings state
+  const [mainTab, setMainTab] = useState<"COHORTS" | "EARNINGS">("COHORTS");
+  const [earnings, setEarnings] = useState<any>(null);
+  const [isLoadingEarnings, setIsLoadingEarnings] = useState<boolean>(false);
+
+  // Author Module state
+  const [showCreateModule, setShowCreateModule] = useState<boolean>(false);
+  const [modTitle, setModTitle] = useState<string>("");
+  const [modDesc, setModDesc] = useState<string>("");
+  const [modPriceType, setModPriceType] = useState<"FREE" | "ONE_TIME" | "MONTHLY">("ONE_TIME");
+  const [modPrice, setModPrice] = useState<number>(150);
+  const [modStepTitle, setModStepTitle] = useState<string>("");
+  const [modStepContent, setModStepContent] = useState<string>("");
+  const [createModSuccess, setCreateModSuccess] = useState<boolean>(false);
+
+  const loadEarnings = async () => {
+    if (!token) return;
+    setIsLoadingEarnings(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/earnings", {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setEarnings(data);
+      }
+    } catch (err) {
+      console.warn("Could not load earnings:", err);
+    } finally {
+      setIsLoadingEarnings(false);
+    }
+  };
+
+  const handleCreateModule = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!modTitle.trim() || !token) return;
+
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/facilitator/modules", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          title: modTitle.trim(),
+          description: modDesc.trim(),
+          language: language,
+          price_type: modPriceType,
+          price_inr: modPriceType === "FREE" ? 0 : Number(modPrice),
+          steps: [
+            {
+              step_number: 1,
+              title: modStepTitle.trim() || "प्रात्यक्षिक धडा १",
+              content: modStepContent.trim() || modDesc.trim() || "मूलभूत प्रात्यक्षिक माहिती.",
+              practical_task: "साधनांची जुळणी व सराव करणे."
+            }
+          ]
+        })
+      });
+
+      if (res.ok) {
+        setCreateModSuccess(true);
+        setTimeout(() => {
+          setCreateModSuccess(false);
+          setShowCreateModule(false);
+          setModTitle("");
+          setModDesc("");
+          setModStepTitle("");
+          setModStepContent("");
+          loadEarnings();
+        }, 1200);
+      }
+    } catch (err) {
+      console.warn("Create module error:", err);
+    }
+  };
+
   useEffect(() => {
     if (token) {
       loadCohorts();
+      loadEarnings();
     }
   }, [token]);
 
@@ -698,40 +778,279 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
             )}
           </div>
         ) : (
-          /* VIEW 3: COHORT LISTING & MANAGEMENT */
+          /* VIEW 3: COHORT LISTING & MARKETPLACE EARNINGS */
           <div style={{ padding: "16px 0" }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-              <div>
-                <h4 style={{ margin: 0, color: "#fff", fontSize: "1rem" }}>
-                  {language === "mr" && "माझे विद्यार्थी गट (My Cohorts)"}
-                  {language === "hi" && "मेरे छात्र समूह (My Cohorts)"}
-                  {language === "en" && "My Cohorts"}
-                </h4>
-                <p style={{ margin: "2px 0 0 0", color: "#94a3b8", fontSize: "0.78rem" }}>
-                  वर्गानुसार विद्यार्थी व्यवस्थापित करा
-                </p>
-              </div>
+            {/* Main Tabs */}
+            <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
               <button
-                onClick={() => setShowCreateCohort(true)}
+                onClick={() => setMainTab("COHORTS")}
                 style={{
-                  background: "#f97316",
-                  border: "none",
-                  color: "#fff",
-                  padding: "8px 14px",
+                  padding: "6px 14px",
                   borderRadius: 9999,
-                  cursor: "pointer",
-                  fontSize: "0.8rem",
+                  border: "none",
+                  background: mainTab === "COHORTS" ? "#f97316" : "rgba(255,255,255,0.08)",
+                  color: "#fff",
                   fontWeight: 700,
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
                   display: "flex",
                   alignItems: "center",
                   gap: 6
                 }}
               >
-                <Plus size={15} /> नवीन गट जोडा
+                <Users size={14} /> माझे विद्यार्थी गट ({cohorts.length})
+              </button>
+              <button
+                onClick={() => {
+                  setMainTab("EARNINGS");
+                  loadEarnings();
+                }}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 9999,
+                  border: "none",
+                  background: mainTab === "EARNINGS" ? "#38bdf8" : "rgba(255,255,255,0.08)",
+                  color: mainTab === "EARNINGS" ? "#000" : "#cbd5e1",
+                  fontWeight: 700,
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <DollarSign size={14} /> कोर्सेस व कमाई (88% Revenue Split)
               </button>
             </div>
 
-            {/* Create Cohort Sub-Form */}
+            {mainTab === "EARNINGS" ? (
+              /* TAB 2: MARKETPLACE & EARNINGS DASHBOARD */
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div>
+                    <h4 style={{ margin: 0, color: "#fff", fontSize: "1rem" }}>
+                      प्रशिक्षण कोर्सेस व कमाई (Marketplace & Revenue)
+                    </h4>
+                    <p style={{ margin: "2px 0 0 0", color: "#94a3b8", fontSize: "0.78rem" }}>
+                      महसूल विभागणी: मार्गदर्शक ८८% • प्लॅटफॉर्म १२%
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateModule(!showCreateModule)}
+                    style={{
+                      background: "#38bdf8",
+                      border: "none",
+                      color: "#000",
+                      padding: "8px 14px",
+                      borderRadius: 9999,
+                      cursor: "pointer",
+                      fontSize: "0.8rem",
+                      fontWeight: 800,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6
+                    }}
+                  >
+                    <Plus size={15} /> नवीन कोर्स तयार करा
+                  </button>
+                </div>
+
+                {/* KPI Earnings Cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 16 }}>
+                  <div style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                    <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>एकूण विक्री (Gross)</span>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fff", marginTop: 4 }}>
+                      ₹{earnings?.gross_revenue_inr || 0}
+                    </div>
+                  </div>
+
+                  <div style={{ background: "rgba(16,185,129,0.15)", border: "1.5px solid rgba(16,185,129,0.4)", borderRadius: 12, padding: 12 }}>
+                    <span style={{ fontSize: "0.72rem", color: "#34d399", fontWeight: 700 }}>तुमचा वाटा (८८% Net)</span>
+                    <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#34d399", marginTop: 4 }}>
+                      ₹{earnings?.facilitator_share_88pct_inr || 0}
+                    </div>
+                  </div>
+
+                  <div style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: 12, padding: 12 }}>
+                    <span style={{ fontSize: "0.72rem", color: "#38bdf8" }}>प्लॅटफॉर्म शुल्क (१२%)</span>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#38bdf8", marginTop: 4 }}>
+                      ₹{earnings?.platform_share_12pct_inr || 0}
+                    </div>
+                  </div>
+
+                  <div style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                    <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>एकूण नोंदणी</span>
+                    <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fdba74", marginTop: 4 }}>
+                      {earnings?.total_enrollments || 0} विद्यार्थी
+                    </div>
+                  </div>
+                </div>
+
+                {/* Create Module Sub-Form */}
+                {showCreateModule && (
+                  <form onSubmit={handleCreateModule} style={{ background: "rgba(15,23,42,0.85)", border: "1px solid rgba(56,189,248,0.5)", borderRadius: 14, padding: 16, marginBottom: 16 }}>
+                    <h5 style={{ margin: "0 0 10px 0", color: "#38bdf8", fontSize: "0.95rem" }}>
+                      नवीन प्रशिक्षण कोर्स तयार करा (Author Training Course)
+                    </h5>
+
+                    <div className="form-group" style={{ marginBottom: 10 }}>
+                      <label htmlFor="mod-title">कोर्सचे नाव (Course Title)</label>
+                      <input
+                        id="mod-title"
+                        type="text"
+                        className="form-input"
+                        placeholder="उदा. सौर ऊर्जा तंत्रज्ञ प्रात्यक्षिक"
+                        value={modTitle}
+                        onChange={(e) => setModTitle(e.target.value)}
+                        required
+                      />
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 10 }}>
+                      <label htmlFor="mod-desc">वर्णन व उद्दिष्टे (Description)</label>
+                      <textarea
+                        id="mod-desc"
+                        className="form-input"
+                        rows={2}
+                        placeholder="या कोर्समधून विद्यार्थी काय शिकतील?"
+                        value={modDesc}
+                        onChange={(e) => setModDesc(e.target.value)}
+                      />
+                    </div>
+
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 12 }}>
+                      <div className="form-group">
+                        <label htmlFor="mod-price-type">शुल्क प्रकार (Price Model)</label>
+                        <select
+                          id="mod-price-type"
+                          className="form-select"
+                          value={modPriceType}
+                          onChange={(e: any) => setModPriceType(e.target.value)}
+                        >
+                          <option value="FREE">मोफत (Free)</option>
+                          <option value="ONE_TIME">एकदाच शुल्क (One-time Fee)</option>
+                          <option value="MONTHLY">मासिक वर्गणी (Monthly Sub)</option>
+                        </select>
+                      </div>
+
+                      {modPriceType !== "FREE" && (
+                        <div className="form-group">
+                          <label htmlFor="mod-price">किंमत ₹ (Price in INR)</label>
+                          <input
+                            id="mod-price"
+                            type="number"
+                            className="form-input"
+                            value={modPrice}
+                            onChange={(e) => setModPrice(Number(e.target.value))}
+                            min={10}
+                            step={10}
+                            required
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 12 }}>
+                      <label htmlFor="mod-step-title">पहिला प्रात्यक्षिक धडा / कृती (Lesson 1)</label>
+                      <input
+                        id="mod-step-title"
+                        type="text"
+                        className="form-input"
+                        placeholder="उदा. सोलर पॅनल व इनव्हर्टर ओळख"
+                        value={modStepTitle}
+                        onChange={(e) => setModStepTitle(e.target.value)}
+                      />
+                    </div>
+
+                    {createModSuccess && (
+                      <p style={{ color: "#34d399", fontSize: "0.82rem", marginBottom: 10 }}>
+                        ✓ कोर्स यशस्वीरीत्या प्रकाशित झाला!
+                      </p>
+                    )}
+
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateModule(false)}
+                        style={{ padding: "8px 14px", borderRadius: 8, border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "#cbd5e1", cursor: "pointer" }}
+                      >
+                        रद्द करा
+                      </button>
+                      <button type="submit" className="submit-btn" style={{ flex: 1, padding: "8px 14px" }}>
+                        कोर्स प्रकाशित करा (Publish Course) →
+                      </button>
+                    </div>
+                  </form>
+                )}
+
+                {/* Modules Revenue Breakdown List */}
+                <div style={{ background: "rgba(15,23,42,0.4)", borderRadius: 14, padding: 14 }}>
+                  <h5 style={{ margin: "0 0 10px 0", color: "#fff", fontSize: "0.88rem" }}>
+                    माझे प्रकाशित कोर्सेस ({earnings?.modules_breakdown?.length || 0})
+                  </h5>
+                  {isLoadingEarnings ? (
+                    <p style={{ color: "#94a3b8", fontSize: "0.8rem" }}>लोड होत आहे...</p>
+                  ) : !earnings?.modules_breakdown || earnings.modules_breakdown.length === 0 ? (
+                    <p style={{ color: "#94a3b8", fontSize: "0.8rem" }}>अद्याप कोणताही कोर्स तयार केला नाही.</p>
+                  ) : (
+                    <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                      {earnings.modules_breakdown.map((mb: any) => (
+                        <div key={mb.module_id} style={{ background: "rgba(30,41,59,0.7)", borderRadius: 10, padding: 10, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                          <div>
+                            <strong style={{ color: "#fff", fontSize: "0.9rem", display: "block" }}>{mb.title}</strong>
+                            <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                              किंमत: ₹{mb.price_inr} • नोंदणी: {mb.enrollments_count} विद्यार्थी
+                            </span>
+                          </div>
+                          <div style={{ textAlign: "right" }}>
+                            <div style={{ fontSize: "0.92rem", fontWeight: 800, color: "#34d399" }}>
+                              ₹{mb.facilitator_share_88pct_inr}
+                            </div>
+                            <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
+                              ८८% वाटा
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* TAB 1: COHORT LISTING */
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+                  <div>
+                    <h4 style={{ margin: 0, color: "#fff", fontSize: "1rem" }}>
+                      {language === "mr" && "माझे विद्यार्थी गट (My Cohorts)"}
+                      {language === "hi" && "मेरे छात्र समूह (My Cohorts)"}
+                      {language === "en" && "My Cohorts"}
+                    </h4>
+                    <p style={{ margin: "2px 0 0 0", color: "#94a3b8", fontSize: "0.78rem" }}>
+                      वर्गानुसार विद्यार्थी व्यवस्थापित करा
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateCohort(true)}
+                    style={{
+                      background: "#f97316",
+                      border: "none",
+                      color: "#fff",
+                      padding: "8px 14px",
+                      borderRadius: 9999,
+                      cursor: "pointer",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6
+                    }}
+                  >
+                    <Plus size={15} /> नवीन गट जोडा
+                  </button>
+                </div>
+
+                {/* Create Cohort Sub-Form */}
             {showCreateCohort && (
               <form onSubmit={handleCreateCohort} style={{ background: "rgba(15,23,42,0.8)", border: "1px solid rgba(249,115,22,0.5)", borderRadius: 14, padding: 14, marginBottom: 16 }}>
                 <h5 style={{ margin: "0 0 10px 0", color: "#fff", fontSize: "0.9rem" }}>नवीन गट तयार करा (Create Cohort)</h5>
@@ -817,6 +1136,8 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
             )}
           </div>
         )}
+      </div>
+    )}
 
         {/* MODAL OVERLAY: TALENT RADAR EXPLANATION (WHY) */}
         {activeReason && (

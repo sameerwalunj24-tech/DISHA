@@ -39,6 +39,7 @@ class Student(Base):
     pathways = relationship("Pathway", back_populates="student", cascade="all, delete-orphan")
     cohort_memberships = relationship("CohortMember", back_populates="student", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="student", cascade="all, delete-orphan")
+    module_enrollments = relationship("ModuleEnrollment", back_populates="student", cascade="all, delete-orphan")
 
 
 class Facilitator(Base):
@@ -58,6 +59,7 @@ class Facilitator(Base):
     students = relationship("Student", back_populates="facilitator")
     cohorts = relationship("Cohort", back_populates="facilitator", cascade="all, delete-orphan")
     recommendations = relationship("Recommendation", back_populates="facilitator", cascade="all, delete-orphan")
+    training_modules = relationship("TrainingModule", back_populates="facilitator", cascade="all, delete-orphan")
 
 
 class Opportunity(Base):
@@ -164,5 +166,40 @@ class Recommendation(Base):
 
     facilitator = relationship("Facilitator", back_populates="recommendations")
     student = relationship("Student", back_populates="recommendations")
+
+
+class TrainingModule(Base):
+    __tablename__ = "training_modules"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    facilitator_id = Column(String(36), ForeignKey("facilitators.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    description = Column(Text, nullable=True)
+    language = Column(String(10), default="mr", nullable=False)  # mr, hi, en
+    price_type = Column(String(20), default="FREE", nullable=False)  # FREE, ONE_TIME, MONTHLY
+    price_inr = Column(Float, default=0.0, nullable=False)
+    steps_json = Column(Text, default="[]", nullable=False)  # JSON array of lessons/steps
+    is_published = Column(Boolean, default=True, nullable=False)
+    created_at = Column(DateTime, default=utc_now, nullable=False)
+
+    facilitator = relationship("Facilitator", back_populates="training_modules")
+    enrollments = relationship("ModuleEnrollment", back_populates="module", cascade="all, delete-orphan")
+
+
+class ModuleEnrollment(Base):
+    __tablename__ = "module_enrollments"
+
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    student_id = Column(String(36), ForeignKey("students.id"), nullable=False)
+    module_id = Column(String(36), ForeignKey("training_modules.id"), nullable=False)
+    payment_status = Column(String(20), default="PAID_MOCK", nullable=False)  # FREE, PAID_MOCK
+    amount_paid = Column(Float, default=0.0, nullable=False)
+    platform_fee_inr = Column(Float, default=0.0, nullable=False)  # Platform share: 12%
+    facilitator_share_inr = Column(Float, default=0.0, nullable=False)  # Facilitator share: 88%
+    enrolled_at = Column(DateTime, default=utc_now, nullable=False)
+
+    student = relationship("Student", back_populates="module_enrollments")
+    module = relationship("TrainingModule", back_populates="enrollments")
+
 
 

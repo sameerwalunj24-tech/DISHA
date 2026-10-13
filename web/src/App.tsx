@@ -7,6 +7,7 @@ import { JoinCohortModal } from "./components/JoinCohortModal";
 import { DiscoverFlow } from "./components/DiscoverFlow";
 import { OpportunitiesScreen } from "./components/OpportunitiesScreen";
 import { MyPathScreen } from "./components/MyPathScreen";
+import { MarketplaceScreen } from "./components/MarketplaceScreen";
 import { Download, X } from "lucide-react";
 
 import { useSyncStatus } from "./services/sync/useSyncStatus";
@@ -24,7 +25,7 @@ const DishaMain: React.FC = () => {
   const [isJoinCohortOpen, setIsJoinCohortOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
-  const [selectedScreen, setSelectedScreen] = useState<"home" | "discover" | "pathway" | "opportunities">("home");
+  const [selectedScreen, setSelectedScreen] = useState<"home" | "discover" | "pathway" | "opportunities" | "marketplace">("home");
 
   // Shared-Device Mode State
   const [sharedDeviceCohort, setSharedDeviceCohort] = useState<{ id: string; name: string; joinCode: string } | null>(() => {
@@ -88,7 +89,7 @@ const DishaMain: React.FC = () => {
     }
   };
 
-  const handleTileSelect = (tileKey: "discover" | "pathway" | "opportunities") => {
+  const handleTileSelect = (tileKey: "discover" | "pathway" | "opportunities" | "marketplace") => {
     setSelectedScreen(tileKey);
   };
 
@@ -264,6 +265,12 @@ const DishaMain: React.FC = () => {
           studentId={studentId}
           onBackToHome={() => setSelectedScreen("home")}
           onGoToOpportunities={() => setSelectedScreen("opportunities")}
+        />
+      ) : selectedScreen === "marketplace" ? (
+        <MarketplaceScreen
+          isOnline={isOnline}
+          studentId={studentId}
+          onBackToHome={() => setSelectedScreen("home")}
         />
       ) : (
         <StudentHome
