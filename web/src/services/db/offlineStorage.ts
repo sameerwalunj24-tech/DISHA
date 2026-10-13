@@ -1,7 +1,8 @@
-// Disha IndexedDB Offline Storage for profiles & quiz sync queue
+// Disha IndexedDB Offline Storage for profiles & opportunity caching
 const DB_NAME = "disha_offline_db";
-const DB_VERSION = 1;
-const STORE_NAME = "offline_profiles";
+const DB_VERSION = 2;
+const STORE_PROFILES = "offline_profiles";
+const STORE_MATCHES = "cached_matches";
 
 export interface OfflineProfileRecord {
   id: string;
@@ -34,8 +35,11 @@ function openDB(): Promise<IDBDatabase> {
 
     request.onupgradeneeded = (event: IDBVersionChangeEvent) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      if (!db.objectStoreNames.contains(STORE_NAME)) {
-        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      if (!db.objectStoreNames.contains(STORE_PROFILES)) {
+        db.createObjectStore(STORE_PROFILES, { keyPath: "id" });
+      }
+      if (!db.objectStoreNames.contains(STORE_MATCHES)) {
+        db.createObjectStore(STORE_MATCHES, { keyPath: "cache_key" });
       }
     };
 
@@ -48,24 +52,20 @@ export async function saveOfflineProfile(record: OfflineProfileRecord): Promise<
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readwrite");
-      const store = tx.objectStore(STORE_NAME);
+      const tx = db.transaction(STORE_PROFILES, "readwrite");
+      const store = tx.objectStore(STORE_PROFILES);
       const req = store.put(record);
 
       req.onsuccess = () => {
-        console.log("[IndexedDB] Successfully saved offline profile:", record.id);
-        // Also keep a copy in localStorage for backup redundancy
         try {
           localStorage.setItem(`disha_pending_profile_${record.id}`, JSON.stringify(record));
-        } catch (e) {
-          // ignore localStorage overflow
-        }
+        } catch (e) {}
         resolve();
       };
       req.onerror = () => reject(req.error);
     });
   } catch (err) {
-    console.warn("[IndexedDB] Falling back to localStorage:", err);
+    console.warn("[IndexedDB] Falling back to localStorage for profile:", err);
     localStorage.setItem(`disha_pending_profile_${record.id}`, JSON.stringify(record));
   }
 }
@@ -74,15 +74,14 @@ export async function getOfflineProfiles(): Promise<OfflineProfileRecord[]> {
   try {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const tx = db.transaction(STORE_NAME, "readonly");
-      const store = tx.objectStore(STORE_NAME);
+      const tx = db.transaction(STORE_PROFILES, "readonly");
+      const store = tx.objectStore(STORE_PROFILES);
       const req = store.getAll();
 
       req.onsuccess = () => resolve(req.result || []);
       req.onerror = () => reject(req.error);
     });
   } catch (err) {
-    // Fallback: collect from localStorage
     const records: OfflineProfileRecord[] = [];
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i);
@@ -94,5 +93,58 @@ export async function getOfflineProfiles(): Promise<OfflineProfileRecord[]> {
       }
     }
     return records;
+  }
+}
+
+export async function saveCachedMatches(matches: any[]): Promise<void> {
+  const record = {
+    cache_key: "latest_matches",
+    updated_at: new Date().toISOString(),
+    matches
+  };
+
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_MATCHES, "readwrite");
+      const store = tx.objectStore(STORE_MATCHES);
+      const req = store.put(record);
+      req.onsuccess = () => {
+        try {
+          localStorage.setItem("disha_cached_matches", JSON.stringify(matches));
+        } catch (e) {}
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    localStorage.setItem("disha_cached_matches", JSON.stringify(matches));
+  }
+}
+
+export async function getCachedMatches(): Promise<any[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_MATCHES, "readonly");
+      const store = tx.objectStore(STORE_MATCHES);
+      const req = store.get("latest_matches");
+
+      req.onsuccess = () => {
+        if (req.result && req.result.matches) {
+          resolve(req.result.matches);
+        } else {
+          const fallback = localStorage.getItem("disha_cached_matches");
+          resolve(fallback ? JSON.parse(fallback) : []);
+        }
+      };
+      req.onerror = () => {
+        const fallback = localStorage.getItem("disha_cached_matches");
+        resolve(fallback ? JSON.parse(fallback) : []);
+      };
+    });
+  } catch (e) {
+    const fallback = localStorage.getItem("disha_cached_matches");
+    return fallback ? JSON.parse(fallback) : [];
   }
 }

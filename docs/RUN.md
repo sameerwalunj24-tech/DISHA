@@ -23,8 +23,9 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 * **API Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
 * **Interactive OpenAPI Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-* **Discovery Endpoints:** `POST /api/v1/discovery/start`, `POST /api/v1/discovery/answer`
-* **Opportunities Endpoint:** [http://localhost:8000/api/v1/opportunities](http://localhost:8000/api/v1/opportunities)
+* **Student Matches Endpoint:** `GET /api/v1/students/{id}/matches`
+* **Single Eligibility Check:** `POST /api/v1/eligibility/check`
+* **Opportunities Catalog:** [http://localhost:8000/api/v1/opportunities](http://localhost:8000/api/v1/opportunities)
 
 ---
 
@@ -43,45 +44,53 @@ npm run dev -- --host
 ### 1. Online Conversational Discovery (Voice / Typing)
 1. Open the app on your computer or phone browser (`http://localhost:5173`).
 2. Tap the first big tile: **करिअर शोधा (Discover Career)**.
-3. The app starts Question 1 of 7 in Marathi (`mr`):
-   - *Q1 (इयत्ता / Grade):* Tap an option (e.g., **१० वी**) or tap the microphone to speak.
-   - *Q2 (गाव / जिल्हा Location):* Tap or type (e.g., **सातारा**).
-   - *Q3 (आवडते विषय Subjects):* Tap or type (e.g., **विज्ञान व तंत्रज्ञान**).
-   - *Q4 (मोकळ्या वेळेत आवड Activities):* Tap or type (e.g., **यंत्रे व मोटार दुरुस्ती**).
-   - *Q5 (कुटुंबाचा व्यवसाय Family work):* Tap or type (e.g., **शेती व दुग्ध व्यवसाय**).
-   - *Q6 (भविष्यातील आवड Career goal):* Tap or type (e.g., **सोलर / इलेक्ट्रिकल तंत्रज्ञ**).
-   - *Q7 (प्रवासाची तयारी Mobility):* Tap or type (e.g., **तालुका किंवा जिल्हा केंद्रात**).
-4. Notice the **पालकांची संमती (Guardian Consent)** checkbox at the bottom (required for saving under the DPDP Act).
-5. Upon submitting Question 7, the AI extraction runs (via mock or Gemini) and displays **"तुमचा दिशा करिअर प्रोफाईल तयार आहे!"** with your recommended vocational pathways and skills.
-6. The profile is saved directly to the SQLite `Student` table in the backend.
+3. Answer all 7 questions in Marathi (`mr`), Hindi (`hi`), or English (`en`) via voice or tap.
+4. Keep **पालकांची संमती (Guardian Consent)** checked and submit the 7th question.
+5. The completed profile card displays your **Top Opportunity Matches** with green/amber badges and direct links.
 
 ### 2. Offline 8-Question Icon Quiz Fallback
-1. Turn off your Wi-Fi or toggle the button **"ऑफलाइन क्विझ वापरा"** inside the Discover screen.
-2. The app switches into the icon-based visual quiz:
-   - 8 cards with large pictorial icons (solar pump, tractor, tools, medicine, laptop).
-   - Tap any card to advance through all 8 questions.
-3. The app calculates a deterministic profile entirely in the browser and saves it to **IndexedDB** marked as `pending_sync`.
+1. Disconnect Wi-Fi or tap **"ऑफलाइन क्विझ वापरा"** inside the Discover screen.
+2. Complete the 8 pictorial cards (solar panel, tractor, tools, medicine, laptop).
+3. The app generates a local profile and saves it to **IndexedDB** marked as `pending_sync`.
+
+---
+
+## 🎯 How to Test "Opportunities & Grounded Eligibility" (Phase 3)
+
+1. From the home screen, tap the 3rd tile: **संधी व योजना (Opportunities)**.
+2. **Eligibility Badges:**
+   - `✓ पात्र (Eligible)` — Green badge: passes all deterministic rules.
+   - `⚠ बहुतांश पात्र (Likely)` — Amber badge: passed core rules, but optional info (like income ceiling) is unverified.
+   - `✕ अपात्र (Not Eligible)` — Grey badge: does not meet grade/gender criteria.
+3. **Verification Badges:**
+   - Verified schemes display a blue **"✓ अधिकृत शासकीय (Verified)"** badge and rank above sample records.
+   - Unverified sample rows display a visible **"Sample - unverified"** badge.
+4. **Explainable "Why" & Source Links:**
+   - Each card displays a plain-language explanation in the chosen language.
+   - Tap **"सविस्तर माहिती व कागदपत्रे ↓"** to view documents required and step-by-step application instructions.
+   - Tap **"अधिकृत संकेतस्थळ उघडा"** to open the real government portal (`apprenticeshipindia.gov.in`, `mahadbt.maharashtra.gov.in`, `pmvishwakarma.gov.in`).
+5. **Sensitive Fields Privacy:**
+   - Use the optional income box at the top to test dynamic income checking (e.g., enter `200000`).
+   - Sensitive income and caste category are **never stored in the database**.
+6. **Airplane Mode / Offline Verification:**
+   - Turn on Airplane Mode or disconnect Wi-Fi.
+   - The Opportunities screen continues to load and display all matched schemes from **IndexedDB** offline cache.
 
 ---
 
 ## 📱 How to Open on Your Phone (Same Wi-Fi)
 
-1. Connect both your computer and your phone to the same Wi-Fi network (or your phone's personal hotspot).
-2. Look at the terminal output from `npm run dev -- --host`. You will see a `Network:` line, such as:
-   ```
-   ➜  Network:  http://192.168.1.5:5173/
-   ```
-3. Open Chrome or your mobile browser on your phone and open that URL.
-4. On Chrome on Android, tap the **Microphone** button to dictate answers in Marathi, Hindi, or English using native browser speech recognition.
+1. Connect both your computer and your phone to the same Wi-Fi network.
+2. Look at the terminal output from `npm run dev -- --host` for the `Network:` URL (e.g. `http://192.168.1.5:5173`).
+3. Open Chrome on Android, dictate answers with the microphone, and test offline airplane mode.
 
 ---
 
 ## 🧪 Running Automated Tests
 
-To verify backend health, discovery state machine, schema validation, mock extraction, and consent blocking:
+Run the full test suite covering health, seed validation, 7-question state machine, rules engine edge cases, ranking order, expired exclusion, URL validator, and sensitive field privacy:
 ```bash
-# Run pytest from the repository root
 python -m pytest api/tests -v
 ```
 
-All 7 automated tests should pass with `100%` success.
+All 14 unit tests should pass with `100%` success.

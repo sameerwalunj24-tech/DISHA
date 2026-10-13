@@ -10,7 +10,7 @@ import {
 import { useI18n, type Language } from "../i18n";
 import { voiceService } from "../services/voice";
 import { OFFLINE_QUIZ_QUESTIONS, buildProfileFromQuizAnswers, type QuizOption } from "../data/offlineQuizData";
-import { saveOfflineProfile } from "../services/db/offlineStorage";
+import { saveOfflineProfile, saveCachedMatches } from "../services/db/offlineStorage";
 
 interface DiscoverFlowProps {
   isOnline: boolean;
@@ -74,6 +74,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
   // Completed State
   const [completedProfile, setCompletedProfile] = useState<ProfileSummary | null>(null);
   const [savedLocally, setSavedLocally] = useState<boolean>(false);
+  const [topMatches, setTopMatches] = useState<any[]>([]);
 
   // Initialize Online Flow
   useEffect(() => {
@@ -178,6 +179,18 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
 
       if (data.is_complete && data.profile) {
         setCompletedProfile(data.profile);
+        if (data.student_id) {
+          try {
+            const matchRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${data.student_id}/matches?language=${language}`);
+            if (matchRes.ok) {
+              const matchData = await matchRes.json();
+              setTopMatches(matchData.slice(0, 3));
+              await saveCachedMatches(matchData);
+            }
+          } catch (mErr) {
+            console.warn("Could not fetch matches immediately:", mErr);
+          }
+        }
       } else if (data.next_question) {
         setCurrentStep(data.current_step);
         setCurrentQuestion(data.next_question);
@@ -260,18 +273,82 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
             </div>
           </div>
 
-          {/* Aspirations */}
+          {/* Grounded Opportunity Matches */}
           <div style={{ marginBottom: 14 }}>
-            <h4 style={{ color: "#f97316", fontSize: "0.9rem", marginBottom: 6, display: "flex", alignItems: "center", gap: 6 }}>
-              <Sparkles size={16} /> शिफारस केलेले करिअर मार्ग (Top Career Paths):
+            <h4 style={{ color: "#f97316", fontSize: "0.9rem", marginBottom: 8, display: "flex", alignItems: "center", gap: 6 }}>
+              <Sparkles size={16} /> तुमच्यासाठी सर्वोत्तम संधी (Top Opportunity Matches):
             </h4>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {completedProfile.career_aspirations.map((asp, idx) => (
-                <span key={idx} style={{ background: "rgba(249,115,22,0.2)", color: "#fed7aa", border: "1px solid rgba(249,115,22,0.4)", padding: "4px 10px", borderRadius: 9999, fontSize: "0.85rem", fontWeight: 700 }}>
-                  ★ {asp}
-                </span>
-              ))}
-            </div>
+            {topMatches && topMatches.length > 0 ? (
+              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+                {topMatches.map((m: any, idx: number) => {
+                  const opp = m.opportunity;
+                  const isEligible = m.overall_eligibility === "ELIGIBLE";
+                  const isVerified = opp.verification_status === "verified";
+                  return (
+                    <div
+                      key={idx}
+                      style={{
+                        background: "rgba(15,23,42,0.8)",
+                        border: "1px solid rgba(255,255,255,0.1)",
+                        borderRadius: 12,
+                        padding: "10px 12px"
+                      }}
+                    >
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 6, marginBottom: 4 }}>
+                        <span style={{
+                          background: isEligible ? "rgba(16,185,129,0.15)" : "rgba(245,158,11,0.15)",
+                          color: isEligible ? "#34d399" : "#fbbf24",
+                          border: `1px solid ${isEligible ? "rgba(16,185,129,0.3)" : "rgba(245,158,11,0.3)"}`,
+                          padding: "2px 8px",
+                          borderRadius: 9999,
+                          fontSize: "0.72rem",
+                          fontWeight: 700
+                        }}>
+                          {isEligible ? "✓ पात्र (Eligible)" : "⚠ बहुतांश पात्र (Likely)"}
+                        </span>
+                        {isVerified ? (
+                          <span style={{ fontSize: "0.68rem", color: "#38bdf8", fontWeight: 700 }}>
+                            ✓ अधिकृत (Verified)
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: "0.68rem", color: "#fdba74", fontWeight: 700 }}>
+                            Sample - unverified
+                          </span>
+                        )}
+                      </div>
+                      <h5 style={{ color: "#fff", fontSize: "0.92rem", fontWeight: 700, marginBottom: 2 }}>
+                        {opp.title}
+                      </h5>
+                      <p style={{ color: "#94a3b8", fontSize: "0.75rem", marginBottom: 6 }}>
+                        {opp.provider} • {opp.benefits}
+                      </p>
+                      <a
+                        href={opp.source_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: "#f97316",
+                          fontSize: "0.75rem",
+                          fontWeight: 700,
+                          textDecoration: "underline",
+                          display: "inline-block"
+                        }}
+                      >
+                        अधिकृत पोर्टल पहा (View Source) →
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                {completedProfile.career_aspirations.map((asp, idx) => (
+                  <span key={idx} style={{ background: "rgba(249,115,22,0.2)", color: "#fed7aa", border: "1px solid rgba(249,115,22,0.4)", padding: "4px 10px", borderRadius: 9999, fontSize: "0.85rem", fontWeight: 700 }}>
+                    ★ {asp}
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Interests & Skills */}
