@@ -1,0 +1,68 @@
+from contextlib import asynccontextmanager
+from typing import List
+from fastapi import FastAPI, Depends, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+
+from api.app.config import settings
+from api.app.database import engine, Base, get_db
+from api.app.models import Opportunity
+from api.app.schemas import HealthResponse, OpportunityResponse
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize database tables on startup
+    Base.metadata.create_all(bind=engine)
+    yield
+
+app = FastAPI(
+    title=settings.PROJECT_NAME,
+    version=settings.VERSION,
+    description=settings.DESCRIPTION,
+    lifespan=lifespan,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json"
+)
+
+# Enable CORS for local PWA dev and mobile access
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.CORS_ORIGINS if "*" not in settings.CORS_ORIGINS else ["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health", response_model=HealthResponse, tags=["System"])
+def health_check(db: Session = Depends(get_db)):
+    """Health check endpoint validating API and database connectivity."""
+    db_status = "connected"
+    try:
+        db.execute(text("SELECT 1"))
+    except Exception as e:
+        db_status = f"unhealthy: {str(e)}"
+
+    return HealthResponse(
+        status="ok" if "unhealthy" not in db_status else "degraded",
+        service=settings.PROJECT_NAME,
+        version=settings.VERSION,
+        environment=settings.ENVIRONMENT,
+        database=db_status
+    )
+
+@app.get("/api/v1/opportunities", response_model=List[OpportunityResponse], tags=["Opportunities"])
+def list_opportunities(
+    category: str = None,
+    grade: int = None,
+    db: Session = Depends(get_db)
+):
+    """Retrieve catalog of verified opportunities with deterministic filters."""
+    query = db.query(Opportunity)
+    if category:
+        query = query.filter(Opportunity.category == category)
+    if grade:
+        query = query.filter(Opportunity.min_grade <= grade, Opportunity.max_grade >= grade)
+    
+    return query.all()
