@@ -78,6 +78,31 @@ npm run dev -- --host
 
 ---
 
+## 🛣️ How to Test "My Path" (Phase 4)
+
+1. **Accessing My Path:**
+   - Tap the middle tile on the home screen: **माझा मार्ग (My Pathway)**, or tap **"माझा ३० दिवसांचा मार्ग पहा (View Pathway) →"** immediately after completing Discovery.
+2. **Career Cluster Matching:**
+   - Based on profile interests and aspirations (e.g. solar pumps, dairy farming, nursing, digital banking), the app automatically selects one of 5 grounded career clusters (`electrical_solar`, `agriculture_dairy`, `healthcare`, `it_digital`, `general_explore`).
+3. **Stage Timeline:**
+   - Switch between **"१) पुढील ३० दिवस" (Next 30 Days)**, **"२) ३-६ महिने" (3-6 Months)**, and **"३) १-२ वर्षे" (1-2 Years)**.
+4. **30-Day Practical Checklist & Progress Ring:**
+   - Browse Week 1 through Week 4 micro-steps (~15 minutes daily practical tasks).
+   - Tap any step's checkbox to **tick it off**.
+   - Watch the animated **Progress Ring** update (e.g. 25%, 50%, 100%).
+   - Ticked steps are stored in **IndexedDB** (`sync_status: pending_sync`) and persist across page reloads and device restarts.
+5. **Voice Read Aloud:**
+   - Tap the speaker icon (🔊) next to any step or milestone to hear it read aloud in Marathi (`mr-IN`), Hindi (`hi-IN`), or English (`en-IN`) using the voice adapter.
+6. **No Invented Links Guarantee:**
+   - Every resource URL is strictly verified against `data/opportunities.csv`. Unverified steps display **"🔒 दुवा लवकरच उपलब्ध (Link coming soon)"** so learners are never misled by broken or hallucinated links.
+7. **Alternative Vocational / Non-STEM Option:**
+   - Scroll to the bottom to see the highlighted practical vocational livelihood alternative (e.g. agricultural pump repair, automated dairy equipment servicing, mobile hardware repair, or traditional artisanal trades).
+8. **Airplane Mode / Offline Verification:**
+   - Turn on Airplane Mode or disconnect Wi-Fi.
+   - Reload the page: the pathway and all ticks load immediately from IndexedDB with an **"✈️ ऑफलाइन कॅश"** badge.
+
+---
+
 ## 📱 How to Open on Your Phone (Same Wi-Fi)
 
 1. Connect both your computer and your phone to the same Wi-Fi network.
@@ -88,9 +113,10 @@ npm run dev -- --host
 
 ## 🧪 Running Automated Tests
 
-Run the full test suite covering health, seed validation, 7-question state machine, rules engine edge cases, ranking order, expired exclusion, URL validator, and sensitive field privacy:
+Run the full test suite covering health, seed validation, age-gated rules, guardian consent enforcement, sensitive field privacy, pathway template validation, zero invented URLs, milestone deadlines, and progress persistence:
 ```bash
 python -m pytest api/tests -v
 ```
 
-All 14 unit tests should pass with `100%` success.
+All 26 unit tests should pass with `100%` success.
+

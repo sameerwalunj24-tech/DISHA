@@ -1,0 +1,311 @@
+id: electrical_solar
+career_cluster: electrical_solar
+title:
+  mr: "सौर ऊर्जा व ग्रामीण विद्युत तंत्रज्ञ (Solar & Electrical Technician)"
+  hi: "सौर ऊर्जा और ग्रामीण विद्युत तकनीशियन (Solar & Electrical Technician)"
+  en: "Solar Energy & Rural Electrical Technician"
+description:
+  mr: "सौर पॅनेल बसवणे, घरगुती वायरिंग आणि इलेक्ट्रिक मोटर दुरुस्तीचे प्रत्यक्ष कौशल्य."
+  hi: "सोलर पैनल इंस्टॉलेशन, घरेलू वायरिंग और विद्युत मोटर मरम्मत का व्यावहारिक कौशल।"
+  en: "Hands-on skills in solar panel installation, domestic wiring, and electric motor maintenance."
+tags:
+  - solar
+  - electric
+  - wiring
+  - motor
+  - repair
+  - workshop
+  - renewable
+  - pump
+  - mechanic
+
+stages:
+  next_30_days:
+    title:
+      mr: "पुढील ३० दिवस (दररोज १५ मिनिटे सराव)"
+      hi: "अगले ३० दिन (प्रतिदिन १५ मिनट अभ्यास)"
+      en: "Next 30 Days (~15 mins daily practical steps)"
+    weeks:
+      - week_number: 1
+        title:
+          mr: "आठवडा १ - विद्युत सुरक्षा आणि मूलभूत साधने"
+          hi: "सप्ताह १ - विद्युत सुरक्षा और बुनियादी उपकरण"
+          en: "Week 1 - Electrical Safety & Basic Tools"
+        steps:
+          - id: es_w1_s1
+            day: 1
+            estimated_minutes: 15
+            icon: Shield
+            title:
+              mr: "सुरक्षा नियम व खबरदारी"
+              hi: "सुरक्षा नियम और सावधानियां"
+              en: "Safety Rules & Precautions"
+            description:
+              mr: "विजेचे काम करताना रबरी चप्पल वापरणे आणि मेन स्विच बंद ठेवणे समजून घ्या."
+              hi: "बिजली का काम करते समय रबर की चप्पल और मुख्य स्विच बंद करने के नियम समझें।"
+              en: "Understand safety essentials like rubber-soled footwear and turning off main switches."
+            practical_action:
+              mr: "घरातील मेन स्विच आणि फ्यूज बोर्ड कुठे आहे ते तपासा."
+              hi: "घर का मुख्य स्विच और फ्यूज बोर्ड कहाँ है, देखें।"
+              en: "Locate the main switchboard and fuse box in your home."
+            resource_url: null
+            needs_verification: true
+
+          - id: es_w1_s2
+            day: 3
+            estimated_minutes: 15
+            icon: Wrench
+            title:
+              mr: "टेस्टर आणि स्क्रू ड्रायव्हरचा योग्य वापर"
+              hi: "टेस्टर और स्क्रू ड्राइवर का सही उपयोग"
+              en: "Using Line Testers & Screwdrivers"
+            description:
+              mr: "फेज टेस्टरमधील निऑन दिवा कसा जळतो आणि विद्युत प्रवाह कसा ओळखायचा ते जाणून घ्या."
+              hi: "फेज टेस्टर की नीयन बत्ती कैसे जलती है और बिजली का प्रवाह कैसे जांचें, जानें।"
+              en: "Learn how a neon phase tester detects live voltage safely."
+            practical_action:
+              mr: "मोठ्यांच्या उपस्थितीत टेस्टरने सॉकेटचा लाईव्ह पिन तपासा."
+              hi: "बड़ों की मौजूदगी में टेस्टर से सॉकेट का लाइव पिन जांचें।"
+              en: "Check a dead and live wall socket using a tester under elder supervision."
+            resource_url: null
+            needs_verification: true
+
+          - id: es_w1_s3
+            day: 5
+            estimated_minutes: 15
+            icon: Zap
+            title:
+              mr: "वायरचे प्रकार आणि इन्सुलेशन"
+              hi: "तारों के प्रकार और इन्सुलेशन"
+              en: "Wire Gauges & Insulation Basics"
+            description:
+              mr: "कॉपर आणि ॲल्युमिनियम वायरमधील फरक आणि वायर स्ट्रिपर वापरणे."
+              hi: "तांबे और एल्युमिनियम तार में अंतर तथा वायर स्ट्रिपर का उपयोग।"
+              en: "Understand copper vs aluminum conductors and basic wire stripping."
+            practical_action:
+              mr: "जुनी निरुपयोगी वायर सोलून तिचा गेज हाताने तपासून पहा."
+              hi: "किसी पुराने बेकार तार का इंसुलेशन छीलकर जांचें।"
+              en: "Practice stripping a piece of scrap insulated wire cleanly."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 2
+        title:
+          mr: "आठवडा २ - सौर ऊर्जेची मूलतत्त्वे"
+          hi: "सप्ताह २ - सौर ऊर्जा के बुनियादी सिद्धांत"
+          en: "Week 2 - Solar Energy Fundamentals"
+        steps:
+          - id: es_w2_s1
+            day: 8
+            estimated_minutes: 15
+            icon: Sun
+            title:
+              mr: "सोलर पॅनेल कसे कार्य करते?"
+              hi: "सोलर पैनल कैसे काम करता है?"
+              en: "How Solar Panels Work"
+            description:
+              mr: "सूर्यप्रकाशापासून डीसी (DC) वीज कशी तयार होते आणि बॅटरी कशी चार्ज होते ते शिका."
+              hi: "धूप से डीसी बिजली कैसे बनती है और बैटरी कैसे चार्ज होती है, समझें।"
+              en: "Understand photovoltaic conversion from sunlight to DC electricity."
+            practical_action:
+              mr: "गावातील सोलर दिवा किंवा शेतातील सोलर पंप जवळून पहा."
+              hi: "गांव की सोलर स्ट्रीट लाइट या खेत का सोलर पंप ध्यान से देखें।"
+              en: "Inspect a local solar street lamp or farm solar pump installation."
+            resource_url: null
+            needs_verification: true
+
+          - id: es_w2_s2
+            day: 11
+            estimated_minutes: 15
+            icon: BatteryCharging
+            title:
+              mr: "इन्व्हर्टर आणि बॅटरी कनेक्शन"
+              hi: "इन्वर्टर और बैटरी कनेक्शन"
+              en: "Inverters & Battery Connections"
+            description:
+              mr: "डीसी ते एसी प्रवाह कसा बदलला जातो आणि बॅटरीचे पाणी (डिस्टिल्ड वॉटर) कसे तपासतात."
+              hi: "डीसी से एसी करंट कैसे बदलता है और बैटरी का पानी कैसे जांचें।"
+              en: "Learn how inverters convert DC to AC and basic battery water maintenance."
+            practical_action:
+              mr: "घरातील किंवा शेजारील इन्व्हर्टरचे व्होल्टेज इंडिकेटर तपासा."
+              hi: "घर या पड़ोस के इन्वर्टर का चार्ज इंडिकेटर देखें।"
+              en: "Check the charge indicator lights on an inverter or battery unit."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 3
+        title:
+          mr: "आठवडा ३ - शेती पंप व मोटर सुरक्षितता"
+          hi: "सप्ताह ३ - कृषि पंप और मोटर सुरक्षा"
+          en: "Week 3 - Farm Pumps & Motor Basics"
+        steps:
+          - id: es_w3_s1
+            day: 15
+            estimated_minutes: 15
+            icon: Gauge
+            title:
+              mr: "सबमर्सिबल पंप आणि स्टार्टर"
+              hi: "सबमर्सिबल पंप और स्टार्टर"
+              en: "Submersible Pumps & Starters"
+            description:
+              mr: "शेतातील ३-फेज मोटर स्टार्टर आणि रिलेचे कार्य समजून घ्या."
+              hi: "खेत के ३-फेज स्टार्टर और रिले का काम समझें।"
+              en: "Learn how 3-phase motor starters and thermal overload relays protect pumps."
+            practical_action:
+              mr: "शेतातील स्टार्टर बॉक्सचे हिरवे आणि लाल बटण आणि फ्यूज तपासा."
+              hi: "खेत के स्टार्टर बॉक्स के बटन और फ्यूज का निरीक्षण करें।"
+              en: "Observe the start/stop mechanism and fuse wire in a farm starter box."
+            resource_url: null
+            needs_verification: true
+
+          - id: es_w3_s2
+            day: 18
+            estimated_minutes: 15
+            icon: CheckCircle
+            title:
+              mr: "अर्थिंग (Earthing) का महत्त्वाची आहे?"
+              hi: "अर्थिंग (Earthing) क्यों ज़रूरी है?"
+              en: "Why Proper Earthing Matters"
+            description:
+              mr: "विद्युत शॉकपासून संरक्षण करण्यासाठी अर्थिंग खड्डा आणि मीठ-कोळशाचा वापर."
+              hi: "बिजली के झटके से बचाव के लिए अर्थिंग गड्ढा और नमक-कोयले का उपयोग।"
+              en: "Understand earthing pits, salt-charcoal mixtures, and shock prevention."
+            practical_action:
+              mr: "तुमच्या घराची किंवा पंपाची अर्थिंग वायर जमिनीत घट्ट जोडलेली आहे का ते पहा."
+              hi: "घर या मोटर की अर्थिंग तार जमीन में ठीक से जुड़ी है या नहीं, देखें।"
+              en: "Check if your pump or house earthing lead is firmly grounded."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 4
+        title:
+          mr: "आठवडा ४ - सरकारी योजना आणि करिअर दिशा"
+          hi: "सप्ताह ४ - सरकारी योजनाएं और करियर दिशा"
+          en: "Week 4 - Schemes & Career Direction"
+        steps:
+          - id: es_w4_s1
+            day: 22
+            estimated_minutes: 15
+            icon: FileText
+            title:
+              mr: "स्किल इंडिया आणि पीएम सूर्य घर योजना"
+              hi: "स्किल इंडिया और पीएम सूर्य घर योजना"
+              en: "Skill India & PM Surya Ghar Scheme"
+            description:
+              mr: "रूफटॉप सोलर इन्स्टॉलेशनसाठी सरकारकडून दिले जाणारे मोफत प्रशिक्षण व अनुदान."
+              hi: "रूफटॉप सोलर स्थापना के लिए सरकार द्वारा दिए जाने वाले मुफ्त प्रशिक्षण और सब्सिडी।"
+              en: "Explore government training subsidies for rooftop solar installations."
+            practical_action:
+              mr: "आधार कार्ड व १० वी मार्कशीट तयार ठेवा."
+              hi: "आधार कार्ड और १०वीं की मार्कशीट तैयार रखें।"
+              en: "Gather your Aadhaar card and 10th mark sheet for apprenticeship registration."
+            resource_url: https://www.apprenticeshipindia.gov.in
+            needs_verification: false
+
+          - id: es_w4_s2
+            day: 28
+            estimated_minutes: 15
+            icon: Award
+            title:
+              mr: "जवळच्या ITI / PMKK केंद्राला भेट"
+              hi: "नज़दीकी ITI / PMKK केंद्र की यात्रा"
+              en: "Visit Nearest ITI / PMKK Training Center"
+            description:
+              mr: "वायरमन किंवा इलेक्ट्रिशियन ट्रेडमधील प्रवेश प्रक्रिया समजून घेणे."
+              hi: "वायरमैन या इलेक्ट्रीशियन ट्रेड में प्रवेश प्रक्रिया समझें।"
+              en: "Learn how to enroll in a wireman or solar PV certificate course."
+            practical_action:
+              mr: "स्थानिक इलेक्ट्रिशियन किंवा शिक्षकांशी ३० मिनिटे चर्चा करा."
+              hi: "स्थानीय इलेक्ट्रीशियन या शिक्षक से ३० मिनट चर्चा करें।"
+              en: "Have a 30-minute interview with a local electrician or ITI teacher."
+            resource_url: https://www.nsdcindia.org
+            needs_verification: false
+
+  months_3_to_6:
+    title:
+      mr: "३ ते ६ महिने - कौशल्य प्रमाणपत्र आणि शिकाऊ उमेदवारी"
+      hi: "३ से ६ महीने - कौशल प्रमाणन और शिक्षुता"
+      en: "3-6 Months - Skill Certification & Apprenticeship"
+    milestones:
+      - id: es_m3_1
+        title:
+          mr: "राष्ट्रीय शिकाऊ उमेदवारी (NAPS) नोंदणी"
+          hi: "राष्ट्रीय शिक्षुता प्रोत्साहन (NAPS) पंजीकरण"
+          en: "Register for NAPS Solar PV Apprenticeship"
+        description:
+          mr: "महिन्याला ₹८,००० विद्यावेतनासह १ वर्षाचे प्रत्यक्ष कामावरील प्रशिक्षण."
+          hi: "₹८,०००/माह स्टाइपेंड के साथ १ वर्ष का कार्यस्थल प्रशिक्षण।"
+          en: "1-year on-the-job training with Rs 8,000/month stipend and certificate."
+        practical_action:
+          mr: "अप्रेंटिसशिप पोर्टलवर प्रोफाइल तयार करा."
+          hi: "अप्रेंटिसशिप पोर्टल पर प्रोफाइल बनाएं।"
+          en: "Create learner profile on the official Apprenticeship India portal."
+        resource_url: https://www.apprenticeshipindia.gov.in
+        needs_verification: false
+
+      - id: es_m3_2
+        title:
+          mr: "स्थानिक वर्कशॉपमध्ये मदतनीस म्हणून काम"
+          hi: "स्थानीय वर्कशॉप में सहायक के रूप में कार्य"
+          en: "Assistant Role with Local Certified Electrician"
+        description:
+          mr: "दर आठवड्याला प्रत्यक्ष वायरिंग, स्टार्टर दुरुस्ती आणि इन्व्हर्टर फिटिंगचा सराव."
+          hi: "हर सप्ताह वास्तविक वायरिंग, स्टार्टर मरम्मत और इन्वर्टर फिटिंग का अभ्यास।"
+          en: "Weekend apprenticeship assisting a village electrical contractor."
+        practical_action:
+          mr: "स्वतःची ५ मूलभूत साधनांची किट तयार करा."
+          hi: "अपने ५ बुनियादी उपकरणों की किट तैयार करें।"
+          en: "Assemble a personal 5-piece insulated hand-tool kit."
+        resource_url: null
+        needs_verification: true
+
+  years_1_to_2:
+    title:
+      mr: "१ ते २ वर्षे - स्वतंत्र ग्रामीण उद्योजक"
+      hi: "१ से २ वर्ष - स्वतंत्र ग्रामीण उद्यमी"
+      en: "1-2 Years - Independent Rural Entrepreneur"
+    milestones:
+      - id: es_y1_1
+        title:
+          mr: "पीएम विश्वकर्मा किंवा मुद्रा कर्ज योजना"
+          hi: "पीएम विश्वकर्मा या मुद्रा ऋण योजना"
+          en: "PM Vishwakarma / MUDRA Tool Loan"
+        description:
+          mr: "स्वतःचे सोलर व इलेक्ट्रिकल सेवा केंद्र सुरू करण्यासाठी विनातारण कर्ज."
+          hi: "अपना सोलर एवं इलेक्ट्रिकल सेवा केंद्र शुरू करने हेतु बिना गारंटी ऋण।"
+          en: "Collateral-free micro-credit to set up a village solar repair shop."
+        practical_action:
+          mr: "बँक किंवा सीएससी केंद्रात जाऊन विश्वकर्मा योजनेची माहिती घ्या."
+          hi: "बैंक या सीएससी केंद्र जाकर विश्वकर्मा योजना की जानकारी लें।"
+          en: "Inquire at nearest Common Service Center (CSC) or bank branch."
+        resource_url: https://pmvishwakarma.gov.in
+        needs_verification: false
+
+      - id: es_y1_2
+        title:
+          mr: "पीडब्ल्यूडी वायरमन परवाना (PWD License) परीक्षा"
+          hi: "पीडब्ल्यूडी वायरमैन लाइसेंस परीक्षा"
+          en: "State PWD Wireman License Examination"
+        description:
+          mr: "शासकीय कंत्राट आणि प्रमाणित वायरिंग कामासाठी अधिकृत राज्य परवाना मिळवणे."
+          hi: "सरकारी ठेके और प्रमाणित वायरिंग कार्य के लिए राज्य का आधिकारिक लाइसेंस।"
+          en: "Pass state electrical licensing board exam for licensed contractor status."
+        practical_action:
+          mr: "जिल्हा विद्युत निरीक्षक कार्यालयातून अर्ज मिळवा."
+          hi: "जिला विद्युत निरीक्षक कार्यालय से फॉर्म प्राप्त करें।"
+          en: "Obtain exam syllabus from the District Electrical Inspectorate."
+        resource_url: null
+        needs_verification: true
+
+vocational_alternative:
+  id: alt_rural_pump_mechanic
+  title:
+    mr: "कृषी डिझेल व सोलर पंप दुरुस्ती तंत्रज्ञ"
+    hi: "कृषि डीजल एवं सोलर पंप मरम्मत तकनीशियन"
+    en: "Rural Agricultural Pump & Small Engine Mechanic"
+  description:
+    mr: "शेतातील डिझेल इंजिन, स्प्रिंकलर आणि तुषार सिंचन यंत्रणेची देखभाल व दुरुस्ती."
+    hi: "खेतों के डीजल इंजन, स्प्रिंकलर और ड्रिप सिंचाई प्रणाली की मरम्मत और देखभाल।"
+    en: "Repair small farm engines, diesel generators, and drip/sprinkler water pumps."
+  resource_url: null
+  needs_verification: true

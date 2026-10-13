@@ -1,0 +1,242 @@
+id: it_digital
+career_cluster: it_digital
+title:
+  mr: "ग्रामीण डिजिटल सेवा व बँकिंग प्रतिनिधी (Digital Banking & IT Services)"
+  hi: "ग्रामीण डिजिटल सेवाएं और बैंकिंग प्रतिनिधि (Digital Banking & IT Services)"
+  en: "Rural Digital Services & Banking Correspondent"
+description:
+  mr: "सामान्य सेवा केंद्र (CSC), आधार/पॅन नोंदणी, डीबीटी बँकिंग, एमएस ऑफिस आणि स्मार्टफोन दुरुस्ती."
+  hi: "जन सेवा केंद्र (CSC), आधार/पैन सेवा, डीबीटी बैंकिंग, एमएस ऑफिस और स्मार्टफोन मरम्मत।"
+  en: "Common Service Centre (CSC) operations, DBT banking correspondent terminal, office software, and mobile hardware."
+tags:
+  - digital
+  - computer
+  - banking
+  - mobile
+  - online
+  - internet
+  - software
+  - data
+  - office
+  - typing
+
+stages:
+  next_30_days:
+    title:
+      mr: "पुढील ३० दिवस (दररोज १५ मिनिटे सराव)"
+      hi: "अगले ३० दिन (प्रतिदिन १५ मिनट अभ्यास)"
+      en: "Next 30 Days (~15 mins daily practical steps)"
+    weeks:
+      - week_number: 1
+        title:
+          mr: "आठवडा १ - संगणक व इंटरनेट साक्षरता"
+          hi: "सप्ताह १ - कंप्यूटर और इंटरनेट साक्षरता"
+          en: "Week 1 - Computer & Internet Essentials"
+        steps:
+          - id: it_w1_s1
+            day: 1
+            estimated_minutes: 15
+            icon: Monitor
+            title:
+              mr: "टायपिंग गती आणि मराठी/इंग्रजी कीबोर्ड"
+              hi: "टाइपिंग स्पीड और हिंदी/अंग्रेजी कीबोर्ड"
+              en: "Keyboard Skills & Regional Language Typing"
+            description:
+              mr: "बोटांचे योग्य स्थान (ASDF - JKL;) आणि गुगल इनपुट टूल्सने मराठी/हिंदी टायपिंग."
+              hi: "उंगलियों की सही स्थिति और इनपुट टूल्स द्वारा हिंदी/मराठी में तेज़ टाइपिंग।"
+              en: "Learn home row key placement and phonetic regional language keyboard tools."
+            practical_action:
+              mr: "कोणत्याही मोफत टायपिंग टूलवर १५ मिनिटे टायपिंगचा सराव करा."
+              hi: "किसी मुफ्त टाइपिंग टूल पर १५ मिनट टाइपिंग का अभ्यास करें।"
+              en: "Practice 15 minutes of touch-typing aiming for 20 words per minute."
+            resource_url: null
+            needs_verification: true
+
+          - id: it_w1_s2
+            day: 4
+            estimated_minutes: 15
+            icon: FileText
+            title:
+              mr: "स्प्रेडशीट (Excel / Google Sheets) ची मूलतत्त्वे"
+              hi: "स्प्रेडशीट (एक्सेल) के बुनियादी सूत्र"
+              en: "Basic Spreadsheets & Data Entry"
+            description:
+              mr: "रो आणि कॉलम, बेरीज (SUM), सरासरी (AVERAGE) आणि साधे तक्ते तयार करणे."
+              hi: "पंक्ति और कॉलम, योग (SUM), औसत और सरल तालिकाएं बनाना समझें।"
+              en: "Learn how rows, columns, simple SUM formulas, and tables work in spreadsheets."
+            practical_action:
+              mr: "घरातील महिन्याचा किराणा खर्चाचा तक्ता फोन किंवा संगणकावर तयार करा."
+              hi: "घर के महीने के राशन खर्च की तालिका फोन या कंप्यूटर पर बनाएं।"
+              en: "Build a simple monthly household expense sheet with 5 categories and total sum."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 2
+        title:
+          mr: "आठवडा २ - डिजिटल सरकारी सेवा व नागरिक पोर्टल"
+          hi: "सप्ताह २ - डिजिटल सरकारी सेवाएं और नागरिक पोर्टल"
+          en: "Week 2 - Digital Citizen Portals"
+        steps:
+          - id: it_w2_s1
+            day: 8
+            estimated_minutes: 15
+            icon: Shield
+            title:
+              mr: "आधार, पॅन आणि डिजिलॉकरचे कामकाज"
+              hi: "आधार, पैन और डिजिलॉकर की कार्यप्रणाली"
+              en: "Aadhaar, PAN & DigiLocker Workflows"
+            description:
+              mr: "ई-केवायसी (e-KYC), ओटीपी पडताळणी आणि डिजिलॉकरमध्ये कागदपत्रे सुरक्षित ठेवणे."
+              hi: "ई-केवाईसी, ओटीपी सत्यापन और डिजिलॉकर में दस्तावेज़ सुरक्षित रखने की प्रक्रिया।"
+              en: "Understand e-KYC verification, OTP safety, and paperless digital document vaults."
+            practical_action:
+              mr: "स्वतःचे डिजिलॉकर खाते उघडून १० वीची गुणपत्रिका डाउनलोड करा."
+              hi: "अपना डिजिलॉकर खाता खोलकर १०वीं की अंकसूची डाउनलोड करें।"
+              en: "Link your DigiLocker account and fetch your digital school certificate."
+            resource_url: null
+            needs_verification: true
+
+          - id: it_w2_s2
+            day: 12
+            estimated_minutes: 15
+            icon: Lock
+            title:
+              mr: "सायबर सुरक्षा आणि ऑनलाइन फसवणुकीपासून बचाव"
+              hi: "साइबर सुरक्षा और ऑनलाइन धोखाधड़ी से बचाव"
+              en: "Cyber Safety & Fraud Prevention"
+            description:
+              mr: "पासवर्ड सुरक्षितता, फिशिंग लिंक्स, ओटीपी कोणालाही न सांगणे आणि यूपीआय सुरक्षा."
+              hi: "सुरक्षित पासवर्ड, फ़िशिंग लिंक की पहचान और ओटीपी कभी साझा न करने का नियम।"
+              en: "Recognize phishing SMS scams, never share OTPs, and master secure UPI transactions."
+            practical_action:
+              mr: "घरातील मोठ्यांना सुरक्षित यूपीआय वापराचे ३ नियम समजावून सांगा."
+              hi: "घर के बुजुर्गों को सुरक्षित यूपीआई उपयोग के ३ नियम समझाएं।"
+              en: "Educate a family elder on 3 golden rules of never sharing financial OTPs."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 3
+        title:
+          mr: "आठवडा ३ - सूक्ष्म बँकिंग आणि डीबीटी यंत्रणा"
+          hi: "सप्ताह ३ - माइक्रो बैंकिंग और डीबीटी प्रणाली"
+          en: "Week 3 - Micro-Banking & DBT Mechanisms"
+        steps:
+          - id: it_w3_s1
+            day: 16
+            estimated_minutes: 15
+            icon: DollarSign
+            title:
+              mr: "बँक मित्र (BC) आणि आधार सक्षम पेमेंट (AePS)"
+              hi: "बैंक मित्र (BC) और आधार सक्षम भुगतान (AePS)"
+              en: "Business Correspondent & AePS Basics"
+            description:
+              mr: "बोटाच्या ठशाने बँकेतून पैसे काढणे आणि गावातील वृद्धांना घरपोच निवृत्तीवेतन देणे."
+              hi: "अंगूठे के निशान से बायोमेट्रिक पैसे निकालना और पेंशन वितरण का कार्य।"
+              en: "Learn biometric micro-ATM cash withdrawals and government direct benefit transfers."
+            practical_action:
+              mr: "गावातील बँक मित्राच्या केंद्राला भेट देऊन मायक्रो-एटीएमचे काम पहा."
+              hi: "गांव के बैंक मित्र के पास जाकर माइक्रो-एटीएम से लेन-देन देखें।"
+              en: "Observe a live AePS cash withdrawal at a local rural customer service point."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 4
+        title:
+          mr: "आठवडा ४ - सर्टिफिकेशन आणि प्रशिक्षण योजना"
+          hi: "सप्ताह ४ - प्रमाणन और प्रशिक्षण योजनाएं"
+          en: "Week 4 - Certification & Training Schemes"
+        steps:
+          - id: it_w4_s1
+            day: 23
+            estimated_minutes: 15
+            icon: Award
+            title:
+              mr: "इंडियन बँक्स असोसिएशन (IBA) प्रशिक्षण"
+              hi: "इंडियन बैंक्स एसोसिएशन (IBA) प्रशिक्षण"
+              en: "Indian Banks Association BC Trainee Program"
+            description:
+              mr: "बँक प्रतिनिधी बनण्यासाठी लागणारे मोफत टॅब्लेट, मायक्रो-एटीएम आणि मासिक मानधन."
+              hi: "बैंक प्रतिनिधि बनने हेतु निःशुल्क टैबलेट, पीओएस टर्मिनल और मासिक मानदेय।"
+              en: "Explore training guidelines and bank branch sponsorship for village correspondents."
+            practical_action:
+              mr: "पॅन कार्ड आणि १२ वी गुणपत्रिका तयार ठेवा."
+              hi: "पैन कार्ड और १२वीं की अंकसूची तैयार रखें।"
+              en: "Check that you have an active bank account, PAN card, and 12th certificate."
+            resource_url: https://www.iba.org.in
+            needs_verification: false
+
+          - id: it_w4_s2
+            day: 28
+            estimated_minutes: 15
+            icon: BookOpen
+            title:
+              mr: "MS-CIT किंवा प्रधानमंत्री ग्रामीण डिजिटल साक्षरता"
+              hi: "एमएस-सीआईटी या पीएमजीदिशा प्रमाणन"
+              en: "State IT Certification (MS-CIT / PMGDISHA)"
+            description:
+              mr: "शासकीय नोकऱ्यांसाठी लागणारे अधिकृत संगणक प्रमाणपत्र मिळवण्याचे नियम."
+              hi: "सरकारी नौकरियों के लिए आवश्यक अधिकृत कंप्यूटर प्रमाणपत्र के नियम।"
+              en: "Review local exam centers for recognized state IT literacy certification."
+            practical_action:
+              mr: "जवळच्या संगणक केंद्रात जाऊन एमएस-सीआयटी परीक्षेची चौकशी करा."
+              hi: "नज़दीकी कंप्यूटर संस्थान जाकर कोर्स फीस और परीक्षा की जानकारी लें।"
+              en: "Inquire about upcoming test batches at your local authorized IT training institute."
+            resource_url: null
+            needs_verification: true
+
+  months_3_to_6:
+    title:
+      mr: "३ ते ६ महिने - सीएससी / बँक मित्र नोंदणी"
+      hi: "३ से ६ महीने - सीएससी / बैंक मित्र पंजीकरण"
+      en: "3-6 Months - Certified CSC & Bank Mitra Setup"
+    milestones:
+      - id: it_m3_1
+        title:
+          mr: "IIBF बँक मित्र परीक्षा उत्तीर्ण करणे"
+          hi: "IIBF बैंक मित्र परीक्षा उत्तीर्ण करना"
+          en: "Pass IIBF Business Correspondent Certification"
+        description:
+          mr: "इंडियन इन्स्टिट्यूट ऑफ बँकिंग अँड फायनान्सची अधिकृत परीक्षा देऊन प्रमाणपत्र मिळवणे."
+          hi: "इंडियन इंस्टीट्यूट ऑफ बैंकिंग एंड फाइनेंस की आधिकारिक परीक्षा पास करना।"
+          en: "Clear the official national IIBF BC certification required by all public sector banks."
+        practical_action:
+          mr: "IIBF संकेतस्थळावर जाऊन परीक्षेचा अभ्यासक्रम डाउनलोड करा."
+          hi: "IIBF वेबसाइट पर जाकर परीक्षा सिलेबस डाउनलोड करें।"
+          en: "Download the IIBF candidate handbook and sample question papers."
+        resource_url: null
+        needs_verification: true
+
+  years_1_to_2:
+    title:
+      mr: "१ ते २ वर्षे - संपूर्ण डिजिटल सेवा केंद्र व रोजगार"
+      hi: "१ से २ वर्ष - पूर्ण डिजिटल सेवा केंद्र और रोज़गार"
+      en: "1-2 Years - Full-Fledged Village Digital Seva Kendra"
+    milestones:
+      - id: it_y1_1
+        title:
+          mr: "स्वतःचे गाव पातळीवरील 'आपले सरकार' / CSC केंद्र"
+          hi: "अपना गांव स्तरीय 'आपले सरकार' / सीएससी केंद्र"
+          en: "Launch Independent Village Digital Seva Kendra"
+        description:
+          mr: "प्रिंटर, लॅपटॉप आणि बायोमेट्रिक स्कॅनरसह सर्व शासकीय दाखले व ऑनलाइन फॉर्म सेवा."
+          hi: "प्रिंटर, लैपटॉप और बायोमेट्रिक स्कैनर के साथ सभी सरकारी प्रमाण पत्र सेवा।"
+          en: "Operate a profitable rural center providing 40+ government certificate and application services."
+        practical_action:
+          mr: "सीएससी व्हीएलई (VLE) आयडीसाठी नोंदणी करा."
+          hi: "सीएससी वीएलई (VLE) आईडी के लिए आवेदन करें।"
+          en: "Register for rural Village Level Entrepreneur (VLE) kiosk credentials."
+        resource_url: null
+        needs_verification: true
+
+vocational_alternative:
+  id: alt_mobile_hardware_repair
+  title:
+    mr: "स्मार्टफोन स्क्रीन व मदरबोर्ड दुरुस्ती तंत्रज्ञ"
+    hi: "स्मार्टफोन स्क्रीन एवं मदरबोर्ड रिपेयर तकनीशियन"
+    en: "Smartphone Hardware & Component Level Repair Technician"
+  description:
+    mr: "फुटलेली स्क्रीन बदलणे, चार्जिंग जॅक सोल्डरिंग आणि बॅटरी बदलण्याचे प्रत्यक्ष कौशल्य."
+    hi: "टूटी स्क्रीन बदलना, चार्जिंग जैक सोल्डरिंग और बैटरी रिप्लेसमेंट का काम।"
+    en: "Hands-on micro-soldering, broken display replacement, and battery diagnostics for rural phones."
+  resource_url: null
+  needs_verification: true

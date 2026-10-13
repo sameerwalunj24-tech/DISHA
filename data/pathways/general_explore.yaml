@@ -1,0 +1,242 @@
+id: general_explore
+career_cluster: general_explore
+title:
+  mr: "समग्र करिअर शोध व कौशल्य विकास (General Career Exploration)"
+  hi: "समग्र करियर खोज और कौशल विकास (General Career Exploration)"
+  en: "General Career Exploration & Skill Building"
+description:
+  mr: "विविध व्यावसायिक क्षेत्रे, सरकारी शिष्यवृत्ती, व्यावहारिक कौशल्ये आणि भविष्यातील संधींचा शोध."
+  hi: "विभिन्न व्यावसायिक क्षेत्र, सरकारी छात्रवृत्ति, व्यावहारिक कौशल और भविष्य के अवसरों की खोज।"
+  en: "Discover diverse vocational trades, state scholarships, hands-on skills, and rural livelihood pathways."
+tags:
+  - general
+  - explore
+  - career
+  - education
+  - skill
+  - study
+  - guidance
+  - scholarship
+  - college
+  - trade
+
+stages:
+  next_30_days:
+    title:
+      mr: "पुढील ३० दिवस (दररोज १५ मिनिटे सराव)"
+      hi: "अगले ३० दिन (प्रतिदिन १५ मिनट अभ्यास)"
+      en: "Next 30 Days (~15 mins daily practical steps)"
+    weeks:
+      - week_number: 1
+        title:
+          mr: "आठवडा १ - स्वतःच्या आवडी आणि क्षमतांची ओळख"
+          hi: "सप्ताह १ - अपनी रुचियों और क्षमताओं की पहचान"
+          en: "Week 1 - Self-Assessment & Strength Discovery"
+        steps:
+          - id: ge_w1_s1
+            day: 1
+            estimated_minutes: 15
+            icon: Compass
+            title:
+              mr: "माझी आवड: हाताने काम की संगणक?"
+              hi: "मेरी रुचि: हाथों से काम या कंप्यूटर?"
+              en: "Hands-on vs Analytical Preferences"
+            description:
+              mr: "तुम्हाला अवजारे हाताळायला आवडतात, लोकांशी बोलायला की विचार करून प्रश्न सोडवायला?"
+              hi: "आपको उपकरण संभालना पसंद है, लोगों से बात करना या कंप्यूटर पर काम करना?"
+              en: "Reflect on whether you thrive in practical trade work, public interaction, or analytical tasks."
+            practical_action:
+              mr: "तुम्हाला आनंद देणाऱ्या ३ कामांची यादी कागदावर लिहा."
+              hi: "आपको खुशी देने वाले ३ पसंदीदा कामों की सूची बनाएं।"
+              en: "Write down 3 everyday tasks that make you lose track of time."
+            resource_url: null
+            needs_verification: true
+
+          - id: ge_w1_s2
+            day: 4
+            estimated_minutes: 15
+            icon: Users
+            title:
+              mr: "गावातील ५ वेगवेगळ्या व्यावसायिकांचे निरीक्षण"
+              hi: "गांव के ५ विभिन्न व्यवसायियों का अवलोकन"
+              en: "Observe 5 Diverse Rural Livelihoods"
+            description:
+              mr: "इलेक्ट्रिशियन, डेअरी संकलक, औषध विक्रेता, मेकॅनिक आणि बँक मित्रांचे दैनंदिन काम पहा."
+              hi: "इलेक्ट्रीशियन, दुग्ध संकलक, केमिस्ट, मैकेनिक और बैंक मित्र के दैनिक कार्य देखें।"
+              en: "Take notice of daily challenges and incomes across 5 diverse local occupations."
+            practical_action:
+              mr: "कोणत्याही दोन व्यावसायिकांना त्यांचा अनुभव आणि सुरुवातीची माहिती विचारा."
+              hi: "किन्हीं दो व्यवसायियों से उनके काम और शुरुआती पूंजी की जानकारी लें।"
+              en: "Ask two village workers what skills were most valuable when they started."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 2
+        title:
+          mr: "आठवडा २ - शालेय शिक्षणानंतरचे विविध पर्याय"
+          hi: "सप्ताह २ - स्कूली शिक्षा के बाद विभिन्न विकल्प"
+          en: "Week 2 - Post-School Pathways (ITI / Diploma / College)"
+        steps:
+          - id: ge_w2_s1
+            day: 8
+            estimated_minutes: 15
+            icon: Award
+            title:
+              mr: "१० वी / १२ वी नंतरचे ३ मुख्य मार्ग"
+              hi: "१०वीं / १२वीं के बाद के ३ मुख्य रास्ते"
+              en: "3 Clear Routes After 10th / 12th"
+            description:
+              mr: "१) ITI आणि कौशल्य प्रमाणपत्र, २) ३ वर्षांचा तंत्रनिकेतन डिप्लोमा, ३) पारंपरिक पदवी."
+              hi: "१) आईटीआई और कौशल प्रमाणन, २) ३-वर्षीय पॉलिटेक्निक डिप्लोमा, ३) पारंपरिक डिग्री।"
+              en: "Understand trade diplomas vs polytechnic engineering vs degree colleges."
+            practical_action:
+              mr: "तुमच्या शाळेतील शिक्षकांशी पुढील शिक्षणाच्या पर्यायांवर बोला."
+              hi: "अपने स्कूल शिक्षक से आगे की पढ़ाई के विकल्पों पर चर्चा करें।"
+              en: "Discuss options with your school headmaster or career teacher."
+            resource_url: null
+            needs_verification: true
+
+          - id: ge_w2_s2
+            day: 12
+            estimated_minutes: 15
+            icon: FileCheck
+            title:
+              mr: "आवश्यक प्रमाणपत्रांची पूर्वतयारी"
+              hi: "आवश्यक प्रमाण पत्रों की पूर्व तैयारी"
+              en: "Essential Document Readiness Checklist"
+            description:
+              mr: "आधार कार्ड, रहिवासी दाखला (Domicile), उत्पन्न दाखला आणि जात प्रमाणपत्र."
+              hi: "आधार कार्ड, मूल निवास प्रमाण पत्र, आय प्रमाण पत्र और जाति प्रमाण पत्र।"
+              en: "Essential papers needed for government schemes and scholarships."
+            practical_action:
+              mr: "घरात कोणते दाखले उपलब्ध आहेत आणि कोणते काढायचे आहेत ते तपासा."
+              hi: "घर में कौन से प्रमाण पत्र उपलब्ध हैं, उनकी जांच करें।"
+              en: "Cross-check your family documents against scholarship requirements."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 3
+        title:
+          mr: "आठवडा ३ - सरकारी शिष्यवृत्ती व आर्थिक सहाय्य"
+          hi: "सप्ताह ३ - सरकारी छात्रवृत्ति और वित्तीय सहायता"
+          en: "Week 3 - Government Scholarships & Financial Aid"
+        steps:
+          - id: ge_w3_s1
+            day: 17
+            estimated_minutes: 15
+            icon: Award
+            title:
+              mr: "राष्ट्रीय शिष्यवृत्ती पोर्टल (NSP) ची माहिती"
+              hi: "राष्ट्रीय छात्रवृत्ति पोर्टल (NSP) की जानकारी"
+              en: "National Scholarship Portal (NSP) Schemes"
+            description:
+              mr: "९ वी ते १२ वीच्या विद्यार्थ्यांसाठी NMMSS आणि इतर केंद्रीय शिष्यवृत्ती."
+              hi: "९वीं से १२वीं के छात्रों के लिए NMMSS और अन्य केंद्रीय छात्रवृत्तियां।"
+              en: "Learn how NMMSS provides Rs 12,000/year to rural secondary school students."
+            practical_action:
+              mr: "राष्ट्रीय शिष्यवृत्ती पोर्टलच्या मुख्य पानाची माहिती तपासा."
+              hi: "नेशनल स्कॉलरशिप पोर्टल का मुख्य पृष्ठ देखें।"
+              en: "Review scholarship eligibility guides on the NSP official portal."
+            resource_url: https://scholarships.gov.in
+            needs_verification: false
+
+          - id: ge_w3_s2
+            day: 21
+            estimated_minutes: 15
+            icon: Globe
+            title:
+              mr: "महाडीबीटी (MahaDBT) राज्य शिष्यवृत्ती"
+              hi: "महाडीबीटी (MahaDBT) राज्य छात्रवृत्ति"
+              en: "MahaDBT State Scholarship Options"
+            description:
+              mr: "महाराष्ट्रातील ग्रामीण मुली आणि मागासवर्गीय विद्यार्थ्यांसाठी शुल्कमाफी योजना."
+              hi: "महाराष्ट्र के ग्रामीण छात्राओं और आरक्षित वर्गों के लिए शुल्क माफी योजनाएं।"
+              en: "State post-matric scholarship criteria and annual maintenance allowances."
+            practical_action:
+              mr: "पालकांचा चालू आर्थिक वर्षाचा उत्पन्नाचा दाखला तयार आहे का ते पहा."
+              hi: "माता-पिता का चालू वर्ष का आय प्रमाण पत्र तैयार रखें।"
+              en: "Check family annual income certificate renewal deadlines."
+            resource_url: https://mahadbt.maharashtra.gov.in
+            needs_verification: false
+
+      - week_number: 4
+        title:
+          mr: "आठवडा ४ - वैयक्तिक उद्दिष्ट आणि कृती आराखडा"
+          hi: "सप्ताह ४ - व्यक्तिगत लक्ष्य और कार्य योजना"
+          en: "Week 4 - Action Plan & Goal Commitment"
+        steps:
+          - id: ge_w4_s1
+            day: 25
+            estimated_minutes: 15
+            icon: Target
+            title:
+              mr: "पुढील ६ महिन्यांचे एक मुख्य ध्येय ठरवा"
+              hi: "अगले ६ महीने का एक मुख्य लक्ष्य तय करें"
+              en: "Set One Primary 6-Month Objective"
+            description:
+              mr: "एका विशिष्ट कौशल्यात पारंगत होणे किंवा शिष्यवृत्ती परीक्षेची तयारी करणे."
+              hi: "किसी विशिष्ट हुनर में निपुण होना या किसी छात्रवृत्ति परीक्षा की तैयारी।"
+              en: "Choose one trade certification or competitive exam to focus effort upon."
+            practical_action:
+              mr: "स्वतःच्या ध्येयाची एक ओळ एका कागदावर लिहून अभ्यासाच्या जागेवर लावा."
+              hi: "अपना मुख्य लक्ष्य एक कागज़ पर लिखकर पढ़ाई की जगह पर लगाएं।"
+              en: "Write your 6-month career commitment on a card and keep it visible."
+            resource_url: null
+            needs_verification: true
+
+  months_3_to_6:
+    title:
+      mr: "३ ते ६ महिने - निवडलेल्या क्षेत्रातील मूलभूत अभ्यास"
+      hi: "३ से ६ महीने - चुने गए क्षेत्र का बुनियादी अभ्यास"
+      en: "3-6 Months - Structured Learning & Trade Application"
+    milestones:
+      - id: ge_m3_1
+        title:
+          mr: "शिष्यवृत्ती किंवा प्रवेश परीक्षेचा अर्ज भरणे"
+          hi: "छात्रवृत्ति या प्रवेश परीक्षा का आवेदन भरना"
+          en: "Submit Scholarship or Entrance Application"
+        description:
+          mr: "योग्य तारखेच्या आत शाळा किंवा महा-ई-सेवा केंद्रातून अर्ज सादर करणे."
+          hi: "नियत तारीख से पूर्व स्कूल या महा-ई-सेवा केंद्र से फॉर्म जमा करना।"
+          en: "Submit official application with verified documents before cutoff dates."
+        practical_action:
+          mr: "अर्जाची पावती आणि संदर्भ क्रमांक सुरक्षित ठेवा."
+          hi: "आवेदन की रसीद और पावती नंबर संभाल कर रखें।"
+          en: "Save application acknowledgement slip and keep reference number safe."
+        resource_url: https://scholarships.gov.in
+        needs_verification: false
+
+  years_1_to_2:
+    title:
+      mr: "१ ते २ वर्षे - पदविका / शिकाऊ उमेदवारी पूर्ण करणे"
+      hi: "१ से २ वर्ष - डिप्लोमा / शिक्षुता पूर्ण करना"
+      en: "1-2 Years - Certification & Apprenticeship"
+    milestones:
+      - id: ge_y1_1
+        title:
+          mr: "राष्ट्रीय कौशल्य पात्रता (NSQF) प्रमाणपत्र"
+          hi: "राष्ट्रीय कौशल योग्यता (NSQF) प्रमाणन"
+          en: "NSQF-Aligned Skill Certification"
+        description:
+          mr: "केंद्र सरकारच्या कौशल्य विकास मंत्रालयाचे अधिकृत स्तर-४ किंवा स्तर-५ प्रमाणपत्र."
+          hi: "कौशल विकास मंत्रालय का स्तर-४ या स्तर-५ का अधिकृत प्रमाणपत्र।"
+          en: "Graduate with NSQF Level-4 industry-recognized credentials."
+        practical_action:
+          mr: "स्किल इंडिया डिजिटल पोर्टलवर तुमचे प्रमाणपत्र डाउनलोड करा."
+          hi: "स्किल इंडिया डिजिटल पोर्टल से अपना प्रमाण पत्र डाउनलोड करें।"
+          en: "Verify and download digital certificate on Skill India portal."
+        resource_url: https://www.nsdcindia.org
+        needs_verification: false
+
+vocational_alternative:
+  id: alt_pm_vishwakarma_craft
+  title:
+    mr: "पीएम विश्वकर्मा पारंपरिक कारागीर व तंत्रज्ञान"
+    hi: "पीएम विश्वकर्मा पारंपरिक शिल्पकार एवं कारीगरी"
+    en: "PM Vishwakarma Traditional Craft & Modern Tools"
+  description:
+    mr: "सुतारकाम, वेल्डिंग, लोहारकाम किंवा चर्मोद्योगातील आधुनिक टूलकिट आणि कर्ज सहाय्य."
+    hi: "बढ़ईगीरी, वेल्डिंग, लोहारगिरी या शिल्पकार्य में आधुनिक टूलकिट और ऋण सुविधा।"
+    en: "Modern power-tool training and collateral-free enterprise loan for artisanal trades."
+  resource_url: https://pmvishwakarma.gov.in
+  needs_verification: false

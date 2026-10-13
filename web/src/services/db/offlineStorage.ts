@@ -1,8 +1,10 @@
 // Disha IndexedDB Offline Storage for profiles & opportunity caching
 const DB_NAME = "disha_offline_db";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 const STORE_PROFILES = "offline_profiles";
 const STORE_MATCHES = "cached_matches";
+const STORE_PATHWAYS = "cached_pathways";
+const STORE_PATHWAY_PROGRESS = "pathway_progress";
 
 export interface OfflineProfileRecord {
   id: string;
@@ -25,6 +27,13 @@ export interface OfflineProfileRecord {
   };
 }
 
+export interface PathwayProgressRecord {
+  pathway_key: string;
+  completed_step_ids: string[];
+  sync_status: "pending_sync" | "synced";
+  updated_at: string;
+}
+
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined" || !window.indexedDB) {
@@ -40,6 +49,12 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_MATCHES)) {
         db.createObjectStore(STORE_MATCHES, { keyPath: "cache_key" });
+      }
+      if (!db.objectStoreNames.contains(STORE_PATHWAYS)) {
+        db.createObjectStore(STORE_PATHWAYS, { keyPath: "cache_key" });
+      }
+      if (!db.objectStoreNames.contains(STORE_PATHWAY_PROGRESS)) {
+        db.createObjectStore(STORE_PATHWAY_PROGRESS, { keyPath: "pathway_key" });
       }
     };
 
@@ -148,3 +163,104 @@ export async function getCachedMatches(): Promise<any[]> {
     return fallback ? JSON.parse(fallback) : [];
   }
 }
+
+export async function saveCachedPathway(pathway: any, key: string = "latest_pathway"): Promise<void> {
+  const record = {
+    cache_key: key,
+    updated_at: new Date().toISOString(),
+    pathway
+  };
+
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PATHWAYS, "readwrite");
+      const store = tx.objectStore(STORE_PATHWAYS);
+      const req = store.put(record);
+      req.onsuccess = () => {
+        try {
+          localStorage.setItem(`disha_cached_pathway_${key}`, JSON.stringify(pathway));
+        } catch (e) {}
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    localStorage.setItem(`disha_cached_pathway_${key}`, JSON.stringify(pathway));
+  }
+}
+
+export async function getCachedPathway(key: string = "latest_pathway"): Promise<any | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_PATHWAYS, "readonly");
+      const store = tx.objectStore(STORE_PATHWAYS);
+      const req = store.get(key);
+
+      req.onsuccess = () => {
+        if (req.result && req.result.pathway) {
+          resolve(req.result.pathway);
+        } else {
+          const fallback = localStorage.getItem(`disha_cached_pathway_${key}`);
+          resolve(fallback ? JSON.parse(fallback) : null);
+        }
+      };
+      req.onerror = () => {
+        const fallback = localStorage.getItem(`disha_cached_pathway_${key}`);
+        resolve(fallback ? JSON.parse(fallback) : null);
+      };
+    });
+  } catch (e) {
+    const fallback = localStorage.getItem(`disha_cached_pathway_${key}`);
+    return fallback ? JSON.parse(fallback) : null;
+  }
+}
+
+export async function savePathwayProgress(record: PathwayProgressRecord): Promise<void> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_PATHWAY_PROGRESS, "readwrite");
+      const store = tx.objectStore(STORE_PATHWAY_PROGRESS);
+      const req = store.put(record);
+      req.onsuccess = () => {
+        try {
+          localStorage.setItem(`disha_progress_${record.pathway_key}`, JSON.stringify(record));
+        } catch (e) {}
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    localStorage.setItem(`disha_progress_${record.pathway_key}`, JSON.stringify(record));
+  }
+}
+
+export async function getPathwayProgress(key: string = "current_student"): Promise<PathwayProgressRecord | null> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_PATHWAY_PROGRESS, "readonly");
+      const store = tx.objectStore(STORE_PATHWAY_PROGRESS);
+      const req = store.get(key);
+
+      req.onsuccess = () => {
+        if (req.result) {
+          resolve(req.result);
+        } else {
+          const fallback = localStorage.getItem(`disha_progress_${key}`);
+          resolve(fallback ? JSON.parse(fallback) : null);
+        }
+      };
+      req.onerror = () => {
+        const fallback = localStorage.getItem(`disha_progress_${key}`);
+        resolve(fallback ? JSON.parse(fallback) : null);
+      };
+    });
+  } catch (e) {
+    const fallback = localStorage.getItem(`disha_progress_${key}`);
+    return fallback ? JSON.parse(fallback) : null;
+  }
+}
+

@@ -16,6 +16,7 @@ interface DiscoverFlowProps {
   isOnline: boolean;
   onBackToHome: () => void;
   onGoToPathway?: () => void;
+  onStudentCreated?: (id: string) => void;
 }
 
 interface QuestionDTO {
@@ -48,7 +49,7 @@ const ICON_MAP: Record<string, React.FC<any>> = {
   Wifi, ShoppingBag
 };
 
-export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHome, onGoToPathway }) => {
+export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHome, onGoToPathway, onStudentCreated }) => {
   const { language, t } = useI18n();
 
   // Mode: online conversational flow vs offline icon quiz
@@ -181,6 +182,10 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
         setCompletedProfile(data.profile);
         if (data.student_id) {
           try {
+            localStorage.setItem("disha_student_id", data.student_id);
+            if (onStudentCreated) {
+              onStudentCreated(data.student_id);
+            }
             // POST so sensitive fields never appear in URL query strings / logs
             const matchRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${data.student_id}/matches`, {
               method: "POST",

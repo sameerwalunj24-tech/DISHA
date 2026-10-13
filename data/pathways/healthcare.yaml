@@ -1,0 +1,242 @@
+id: healthcare
+career_cluster: healthcare
+title:
+  mr: "ग्रामीण आरोग्य व पॅरामेडिकल सेवा (Community Healthcare & Paramedic)"
+  hi: "ग्रामीण स्वास्थ्य और पैरामेडिकल सेवाएं (Community Healthcare & Paramedic)"
+  en: "Community Healthcare & Paramedical Services"
+description:
+  mr: "प्रथमोपचार, प्राथमिक आरोग्य केंद्र (PHC), आशा/ANM सहाय्यक आणि रुग्णालय सहाय्यक कौशल्ये."
+  hi: "प्राथमिक उपचार, प्राथमिक स्वास्थ्य केंद्र (PHC), आशा/एएनएम सहायक और अस्पताल सहायक कौशल।"
+  en: "First aid, vital signs monitoring, PHC coordination, ASHA/ANM bridging, and general duty nursing assistance."
+tags:
+  - healthcare
+  - nurse
+  - hospital
+  - clinic
+  - first-aid
+  - asha
+  - paramedic
+  - biology
+  - medicine
+  - health
+
+stages:
+  next_30_days:
+    title:
+      mr: "पुढील ३० दिवस (दररोज १५ मिनिटे सराव)"
+      hi: "अगले ३० दिन (प्रतिदिन १५ मिनट अभ्यास)"
+      en: "Next 30 Days (~15 mins daily practical steps)"
+    weeks:
+      - week_number: 1
+        title:
+          mr: "आठवडा १ - प्रथमोपचार आणि जीवनरक्षक मूलतत्त्वे"
+          hi: "सप्ताह १ - प्राथमिक उपचार और जीवनरक्षक बुनियादी सिद्धांत"
+          en: "Week 1 - First Aid & Vital Signs"
+        steps:
+          - id: hc_w1_s1
+            day: 1
+            estimated_minutes: 15
+            icon: Heart
+            title:
+              mr: "नाडीचे ठोके आणि श्वास मोजणे"
+              hi: "नाड़ी की गति और सांस मापना"
+              en: "Measuring Pulse & Respiratory Rate"
+            description:
+              mr: "हाताच्या मनगटावर बोटे ठेवून एका मिनिटात नाडीचे ठोके (Pulse) अचूक मोजण्याची पद्धत."
+              hi: "कलाई पर उंगली रखकर एक मिनट में नाड़ी की धड़कन (पल्स) सही से गिनने का तरीका।"
+              en: "Learn how to palpate the radial pulse and calculate heart beats per minute."
+            practical_action:
+              mr: "कुटुंबातील ३ वेगवेगळ्या सदस्यांची नाडी मोजा व वहीत नोंद करा."
+              hi: "परिवार के ३ सदस्यों की नाड़ी मापकर कॉपी में नोट करें।"
+              en: "Practice measuring resting radial pulse on 3 family members and record findings."
+            resource_url: null
+            needs_verification: true
+
+          - id: hc_w1_s2
+            day: 4
+            estimated_minutes: 15
+            icon: Activity
+            title:
+              mr: "डिजिटल थर्मामीटर आणि ताप तपासणे"
+              hi: "डिजिटल थर्मामीटर और बुखार जांचना"
+              en: "Digital Thermometer & Temperature Reading"
+            description:
+              mr: "फॅरेनहाइट (°F) आणि सेल्सिअस (°C) मधील फरक आणि थर्मामीटर निर्जंतुकीकरण."
+              hi: "फारेनहाइट और सेल्सियस में अंतर तथा थर्मामीटर को सैनिटाइज करने का तरीका।"
+              en: "Learn normal body temperature ranges (98.6°F) and thermometer sanitization."
+            practical_action:
+              mr: "घरातील डिजिटल थर्मामीटर वापरून शरीराचे तापमान तपासा."
+              hi: "घर का डिजिटल थर्मामीटर उपयोग कर तापमान जांचें।"
+              en: "Practice safely cleaning and reading an axillary digital thermometer."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 2
+        title:
+          mr: "आठवडा २ - जखम बांधणे व स्वच्छता"
+          hi: "सप्ताह २ - घाव की पट्टी और स्वच्छता"
+          en: "Week 2 - Wound Bandaging & Hygiene"
+        steps:
+          - id: hc_w2_s1
+            day: 8
+            estimated_minutes: 15
+            icon: Shield
+            title:
+              mr: "जखम धुणे आणि अँटिसेप्टिकचा वापर"
+              hi: "घाव धोना और एंटीसेप्टिक का उपयोग"
+              en: "Wound Cleaning & Antiseptic Care"
+            description:
+              mr: "कट किंवा जखम झाल्यावर साबण-पाण्याने स्वच्छ करणे आणि मलम लावण्याची खबरदारी."
+              hi: "कटने या छिलने पर साबुन-पानी से सफाई और एंटीसेप्टिक लगाने का सही तरीका।"
+              en: "Learn sterile wound washing techniques and how to avoid infection."
+            practical_action:
+              mr: "घरातील प्रथमोपचार पेटी (First Aid Box) तपासा आणि सामानाची यादी करा."
+              hi: "घर का फर्स्ट एड बॉक्स जांचें और उपलब्ध सामान की सूची बनाएं।"
+              en: "Inspect your family first aid kit and note down essential missing items."
+            resource_url: null
+            needs_verification: true
+
+          - id: hc_w2_s2
+            day: 12
+            estimated_minutes: 15
+            icon: CheckCircle
+            title:
+              mr: "रोलर बँडेज आणि ट्रायँगुलर पट्टी"
+              hi: "रोलर बैंडेज और त्रिकोणीय पट्टी"
+              en: "Roller Bandage Techniques"
+            description:
+              mr: "मनगट किंवा पायाच्या घोट्याला आधार देण्यासाठी 'फिगर ऑफ एट' (Figure-8) पट्टी बांधणे."
+              hi: "कलाई या टखने के सहारे के लिए 'फिगर ऑफ एट' पट्टी बांधने का तरीका।"
+              en: "Practice applying a supportive figure-of-eight bandage for sprains."
+            practical_action:
+              mr: "कापडी पट्टीने मित्र किंवा भावंडाच्या हाताला आधार देणारी पट्टी बांधून पहा."
+              hi: "सूती पट्टी से साथी के हाथ पर सहारे की पट्टी बांधकर अभ्यास करें।"
+              en: "Practice rolling a clean cotton compression bandage on a forearm."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 3
+        title:
+          mr: "आठवडा ३ - प्राथमिक आरोग्य केंद्र (PHC) यंत्रणा"
+          hi: "सप्ताह ३ - प्राथमिक स्वास्थ्य केंद्र (PHC) प्रणाली"
+          en: "Week 3 - Primary Health Centre (PHC) Structure"
+        steps:
+          - id: hc_w3_s1
+            day: 17
+            estimated_minutes: 15
+            icon: Compass
+            title:
+              mr: "आशा (ASHA) आणि आरोग्यसेविकांचे कार्य"
+              hi: "आशा (ASHA) और स्वास्थ्य कार्यकर्ताओं का कार्य"
+              en: "Role of ASHA & Community Health Officers"
+            description:
+              mr: "गरोदर मातांचे लसीकरण, बालकांचे वजन आणि पोषण अभियानातील गाव पातळीवरील जबाबदाऱ्या."
+              hi: "गर्भवती माताओं का टीकाकरण, बच्चों का वजन और पोषण अभियान में गांव स्तर की जिम्मेदारियां।"
+              en: "Understand maternal health tracking, child immunization days, and nutrition monitoring."
+            practical_action:
+              mr: "गावातील आशा ताई किंवा अंगणवाडी सेविकेशी १५ मिनिटे चर्चा करा."
+              hi: "गांव की आशा दीदी या आंगनवाड़ी कार्यकर्ता से १५ मिनट बातचीत करें।"
+              en: "Speak with your local village ASHA worker about her weekly health routine."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 4
+        title:
+          mr: "आठवडा ४ - सरकारी योजना आणि करिअर संधी"
+          hi: "सप्ताह ४ - सरकारी योजनाएं और करियर अवसर"
+          en: "Week 4 - Government Grants & Nursing Admissions"
+        steps:
+          - id: hc_w4_s1
+            day: 24
+            estimated_minutes: 15
+            icon: Award
+            title:
+              mr: "राष्ट्रीय आरोग्य अभियान (NHM) अनुदान"
+              hi: "राष्ट्रीय स्वास्थ्य मिशन (NHM) अनुदान"
+              en: "National Health Mission Bridging Grant"
+            description:
+              mr: "१० वी व १२ वी नंतर महिला व ग्रामीण तरुणांसाठी मोफत पॅरामेडिकल प्रशिक्षण व विद्यावेतन."
+              hi: "१०वीं और १२वीं के बाद निःशुल्क पैरामेडिकल प्रशिक्षण एवं स्टाइपेंड योजना।"
+              en: "Explore government healthcare assistant subsidies and district hospital training."
+            practical_action:
+              mr: "आधार कार्ड व १० वी गुणपत्रिका एकत्र करून ठेवा."
+              hi: "आधार कार्ड और १०वीं की अंकसूची सुरक्षित रखें।"
+              en: "Prepare school certificates and identity documents for training applications."
+            resource_url: https://nhm.gov.in
+            needs_verification: false
+
+          - id: hc_w4_s2
+            day: 29
+            estimated_minutes: 15
+            icon: BookOpen
+            title:
+              mr: "ANM / GNM नर्सिंग प्रवेश प्रक्रिया"
+              hi: "एएनएम / जीएनएम नर्सिंग प्रवेश प्रक्रिया"
+              en: "ANM / GNM Diploma Nursing Pathway"
+            description:
+              mr: "शासकीय नर्सिंग महाविद्यालयांमधील विनामूल्य शिक्षण आणि शिष्यवृत्तींचे नियम."
+              hi: "सरकारी नर्सिंग कॉलेजों में निःशुल्क शिक्षा और छात्रवृत्ति के नियम।"
+              en: "Review eligibility criteria for state auxiliary nurse midwife diploma courses."
+            practical_action:
+              mr: "जवळच्या शासकीय ग्रामीण रुग्णालयातील नर्सिंग अधीक्षकांशी भेटा."
+              hi: "नज़दीकी सरकारी अस्पताल के नर्सिंग स्टाफ से मिलकर जानकारी लें।"
+              en: "Inquire about admission months at the nearest rural government hospital."
+            resource_url: null
+            needs_verification: true
+
+  months_3_to_6:
+    title:
+      mr: "३ ते ६ महिने - ४५ दिवसांचे रुग्णालय प्रशिक्षण"
+      hi: "३ से ६ महीने - ४५ दिनों का अस्पताल प्रशिक्षण"
+      en: "3-6 Months - 45-Day Hospital Internship"
+    milestones:
+      - id: hc_m3_1
+        title:
+          mr: "एनएचएम पॅरामेडिक / आशा ब्रिजिंग कोर्स"
+          hi: "एनएचएम पैरामेडिक / आशा ब्रिजिंग कोर्स"
+          en: "NHM Community Paramedic Training Module"
+        description:
+          mr: "मोफत पॅरामेडिक प्रशिक्षण आणि जिल्हा सामान्य रुग्णालयात प्रत्यक्ष अनुभव."
+          hi: "निःशुल्क पैरामेडिक प्रशिक्षण और जिला अस्पताल में व्यावहारिक अनुभव।"
+          en: "Complete certified healthcare assistant training with district hospital placement."
+        practical_action:
+          mr: "तालुका आरोग्य अधिकाऱ्याकडे (THO) अर्ज सादर करा."
+          hi: "ब्लॉक स्वास्थ्य अधिकारी (THO) के कार्यालय में आवेदन करें।"
+          en: "Submit candidate form at the Taluka Health Office."
+        resource_url: https://nhm.gov.in
+        needs_verification: false
+
+  years_1_to_2:
+    title:
+      mr: "१ ते २ वर्षे - नोंदणीकृत आरोग्य परिचारिका / प्रयोगशाळा तंत्रज्ञ"
+      hi: "१ से २ वर्ष - पंजीकृत स्वास्थ्य परिचारिका / लैब तकनीशियन"
+      en: "1-2 Years - Registered Health Worker / Lab Technician"
+    milestones:
+      - id: hc_y1_1
+        title:
+          mr: "DMLT (वैद्यकीय प्रयोगशाळा तंत्रज्ञान) किंवा ANM पूर्ण करणे"
+          hi: "डीएमएलटी (लैब तकनीशियन) या एएनएम पूर्ण करना"
+          en: "Complete DMLT (Medical Lab Tech) or ANM Diploma"
+        description:
+          mr: "रक्त तपासणी, मलेरिया-डेंग्यू किट टेस्ट किंवा प्राथमिक आरोग्य केंद्रात कायमस्वरूपी नियुक्ती."
+          hi: "रक्त जांच, मलेरिया-डेंगू किट टेस्ट या प्राथमिक स्वास्थ्य केंद्र में नियुक्ति।"
+          en: "Qualify as certified lab technician for rural pathology and diagnostic centers."
+        practical_action:
+          mr: "राज्य पॅरामेडिकल कौन्सिलकडे नोंदणी करा."
+          hi: "राज्य पैरामेडिकल काउंसिल में पंजीकरण करवाएं।"
+          en: "Register with state paramedical council for formal licensure."
+        resource_url: null
+        needs_verification: true
+
+vocational_alternative:
+  id: alt_pharmacy_assistant
+  title:
+    mr: "ग्रामीण औषधालय व मेडिकल स्टोअर सहाय्यक"
+    hi: "ग्रामीण दवाखाना एवं मेडिकल स्टोर सहायक"
+    en: "Rural Pharmacy Dispensing Assistant"
+  description:
+    mr: "औषधांची साठवणूक, एक्स्पायरी तारीख व्यवस्थापन आणि संगणकीय बिलिंगचे प्रत्यक्ष काम."
+    hi: "दवाओं का रखरखाव, एक्सपायरी तारीख प्रबंधन और कंप्यूटर बिलिंग का व्यावहारिक कार्य।"
+    en: "Manage medicine inventory, expiration tracking, and digital billing at rural medical stores."
+  resource_url: null
+  needs_verification: true

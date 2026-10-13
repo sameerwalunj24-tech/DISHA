@@ -5,7 +5,8 @@ import { StudentHome } from "./components/StudentHome";
 import { FacilitatorModal } from "./components/FacilitatorModal";
 import { DiscoverFlow } from "./components/DiscoverFlow";
 import { OpportunitiesScreen } from "./components/OpportunitiesScreen";
-import { Download, Sparkles, X } from "lucide-react";
+import { MyPathScreen } from "./components/MyPathScreen";
+import { Download, X } from "lucide-react";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -19,6 +20,13 @@ const DishaMain: React.FC = () => {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [selectedScreen, setSelectedScreen] = useState<"home" | "discover" | "pathway" | "opportunities">("home");
+  const [studentId, setStudentId] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem("disha_student_id") || null;
+    } catch {
+      return null;
+    }
+  });
 
   // Track online/offline status
   useEffect(() => {
@@ -103,46 +111,23 @@ const DishaMain: React.FC = () => {
           isOnline={isOnline}
           onBackToHome={() => setSelectedScreen("home")}
           onGoToPathway={() => setSelectedScreen("pathway")}
+          onStudentCreated={(id) => setStudentId(id)}
         />
       ) : selectedScreen === "opportunities" ? (
         <OpportunitiesScreen
           isOnline={isOnline}
-          studentId={null}
+          studentId={studentId}
           onBackToHome={() => setSelectedScreen("home")}
         />
+      ) : selectedScreen === "pathway" ? (
+        <MyPathScreen
+          isOnline={isOnline}
+          studentId={studentId}
+          onBackToHome={() => setSelectedScreen("home")}
+          onGoToOpportunities={() => setSelectedScreen("opportunities")}
+        />
       ) : (
-        <main className="main-container">
-          <div className="greeting-card">
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Sparkles size={22} style={{ color: "#f97316" }} />
-                <h2>
-                  {selectedScreen === "pathway" && t.tiles.pathway.title}
-                </h2>
-              </div>
-              <button
-                onClick={() => setSelectedScreen("home")}
-                style={{
-                  background: "rgba(255,255,255,0.1)",
-                  border: "none",
-                  color: "#ffffff",
-                  padding: "6px 14px",
-                  borderRadius: 9999,
-                  cursor: "pointer",
-                  fontSize: "0.85rem",
-                  fontWeight: 600
-                }}
-              >
-                ← मागे जा (Back)
-              </button>
-            </div>
-            <p style={{ marginTop: 10 }}>
-              {selectedScreen === "pathway" && (
-                "तुमच्यासाठी ३० दिवसांचे टप्पे: १) मूलभूत कौशल्ये, २) प्रात्यक्षिक सराव, ३) पात्रता परीक्षा, ४) नोकरी/अप्रेन्टिसशिप अर्ज."
-              )}
-            </p>
-          </div>
-        </main>
+        <StudentHome onSelectTile={handleTileSelect} />
       )}
 
       <FacilitatorModal

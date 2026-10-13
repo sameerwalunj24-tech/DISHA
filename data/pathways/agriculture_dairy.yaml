@@ -1,0 +1,242 @@
+id: agriculture_dairy
+career_cluster: agriculture_dairy
+title:
+  mr: "सेंद्रिय शेती व आधुनिक दुग्धव्यवसाय (Organic Farming & Modern Dairy)"
+  hi: "जैविक खेती और आधुनिक डेयरी व्यवसाय (Organic Farming & Modern Dairy)"
+  en: "Organic Farming & Modern Dairy Entrepreneurship"
+description:
+  mr: "माती परीक्षण, सेंद्रिय खते, गोपालन, आधुनिक दुग्ध संकलन आणि नाबार्ड योजनांचे मार्गदर्शन."
+  hi: "मृदा परीक्षण, जैविक खाद, पशुपालन, आधुनिक दूध संकलन और नाबार्ड योजनाओं का मार्गदर्शन।"
+  en: "Soil health testing, natural composting, livestock nutrition, automated milk collection, and NABARD schemes."
+tags:
+  - farming
+  - agriculture
+  - dairy
+  - livestock
+  - soil
+  - crop
+  - milk
+  - organic
+  - farm
+  - tractor
+
+stages:
+  next_30_days:
+    title:
+      mr: "पुढील ३० दिवस (दररोज १५ मिनिटे सराव)"
+      hi: "अगले ३० दिन (प्रतिदिन १५ मिनट अभ्यास)"
+      en: "Next 30 Days (~15 mins daily practical steps)"
+    weeks:
+      - week_number: 1
+        title:
+          mr: "आठवडा १ - मातीचे आरोग्य आणि सेंद्रिय खत"
+          hi: "सप्ताह १ - मिट्टी की सेहत और जैविक खाद"
+          en: "Week 1 - Soil Health & Composting"
+        steps:
+          - id: ad_w1_s1
+            day: 1
+            estimated_minutes: 15
+            icon: Sprout
+            title:
+              mr: "मातीचे नमुने कसे गोळा करावेत?"
+              hi: "मिट्टी का नमूना कैसे लें?"
+              en: "How to Collect Soil Samples"
+            description:
+              mr: "शेताच्या वेगवेगळ्या कोपऱ्यांतून 'V' आकाराचा खड्डा करून माती गोळा करण्याची पद्धत."
+              hi: "खेत के विभिन्न कोनों से 'V' आकार का गड्ढा बनाकर मिट्टी एकत्र करने की विधि।"
+              en: "Learn the standard 'V' shape depth sampling technique across farm plots."
+            practical_action:
+              mr: "शेतातून १ किलो मातीचा नमुना गोळा करून सावलीत वाळवा."
+              hi: "खेत से १ किलो मिट्टी का नमूना लेकर छाया में सुखाएं।"
+              en: "Collect a 1 kg composite soil sample and shade-dry it on clean paper."
+            resource_url: null
+            needs_verification: true
+
+          - id: ad_w1_s2
+            day: 4
+            estimated_minutes: 15
+            icon: Leaf
+            title:
+              mr: "जीवामृत आणि गांडूळ खताची ओळख"
+              hi: "जीवामृत और केंचुआ खाद का परिचय"
+              en: "Basics of Jeevamrut & Vermicompost"
+            description:
+              mr: "देशी गाईचे शेण, गोमूत्र, गूळ आणि बेसन वापरून जीवामृत तयार करण्याची सोपी पद्धत."
+              hi: "देसी गाय का गोबर, गोमूत्र, गुड़ और बेसन मिलाकर जीवामृत बनाने की सरल विधि।"
+              en: "Learn how beneficial soil microbes multiply using cow dung, urine, and jaggery."
+            practical_action:
+              mr: "एका बादलीत शेण व गोमूत्र मिसळून लहान प्रमाणात द्रावण तयार करा."
+              hi: "एक बाल्टी में थोड़ा गोबर और गोमूत्र मिलाकर छोटा घोल तैयार करें।"
+              en: "Prepare a small 10-liter test batch of natural microbial bio-enhancer."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 2
+        title:
+          mr: "आठवडा २ - दुग्धव्यवसाय आणि पशु आहार"
+          hi: "सप्ताह २ - डेयरी व्यवसाय और पशु आहार"
+          en: "Week 2 - Dairy & Animal Nutrition"
+        steps:
+          - id: ad_w2_s1
+            day: 8
+            estimated_minutes: 15
+            icon: Heart
+            title:
+              mr: "जनावरांचे संतुलित पोषण आणि सायलेज"
+              hi: "पशुओं का संतुलित आहार और साइलेज"
+              en: "Balanced Cattle Feed & Silage"
+            description:
+              mr: "दुभत्या जनावरांसाठी हिरवा चारा, सुका चारा आणि मिनरल मिक्स्चरचे योग्य प्रमाण."
+              hi: "दुधारू पशुओं के लिए हरा चारा, सूखा चारा और मिनरल मिक्सचर का सही अनुपात।"
+              en: "Understand dry matter intake, green fodder silage, and mineral supplement rations."
+            practical_action:
+              mr: "गोठ्यातील जनावरांचे दैनंदिन खाद्य वजन करून तपासा."
+              hi: "पशुओं के दैनिक चारे की मात्रा का निरीक्षण करें।"
+              en: "Measure and calculate the daily roughage fed to a milch animal."
+            resource_url: null
+            needs_verification: true
+
+          - id: ad_w2_s2
+            day: 12
+            estimated_minutes: 15
+            icon: ShieldCheck
+            title:
+              mr: "जनावरांचे लसीकरण आणि रोगप्रतिबंध"
+              hi: "पशुओं का टीकाकरण और रोग रोकथाम"
+              en: "Vaccination Schedule & Disease Prevention"
+            description:
+              mr: "लाळ-खुरकूत (FMD) आणि लंपी रोगाची लक्षणे आणि वेळेवर लसीकरणाचे महत्त्व."
+              hi: "खुरपका-मुंहपका (FMD) और लम्पी रोग के लक्षण व समय पर टीकाकरण का महत्व।"
+              en: "Learn key symptoms of Foot-and-Mouth disease and annual vaccination schedules."
+            practical_action:
+              mr: "स्थानिक पशुवैद्यकीय दवाखान्याला भेट देऊन लसीकरण पत्रक आणा."
+              hi: "नज़दीकी पशु चिकित्सालय जाकर टीकाकरण चार्ट प्राप्त करें।"
+              en: "Visit the nearest veterinary dispensary to review the vaccination calendar."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 3
+        title:
+          mr: "आठवडा ३ - दूध संकलन आणि फॅट/SNF चाचणी"
+          hi: "सप्ताह ३ - दूध संकलन और फैट/SNF जांच"
+          en: "Week 3 - Milk Testing & FAT/SNF Measurement"
+        steps:
+          - id: ad_w3_s1
+            day: 16
+            estimated_minutes: 15
+            icon: Droplet
+            title:
+              mr: "इलेक्ट्रॉनिक मिल्क टेस्टर कसे चालते?"
+              hi: "इलेक्ट्रॉनिक मिल्क टेस्टर कैसे काम करता है?"
+              en: "How Electronic Milk Analyzers Work"
+            description:
+              mr: "दुधातील फॅट आणि एसएनएफ (SNF) चे मोजमाप करून योग्य दर कसा मिळतो ते शिका."
+              hi: "दूध में फैट और एसएनएफ की जांच से सही मूल्य कैसे तय होता है, समझें।"
+              en: "Understand ultrasonic milk testing for FAT and Solids-Not-Fat (SNF) pricing."
+            practical_action:
+              mr: "गावातील डेअरी केंद्रावर सकाळी जाऊन फॅट टेस्टिंग जवळून पहा."
+              hi: "गांव के दुग्ध संग्रह केंद्र पर जाकर फैट टेस्टिंग मशीन का काम देखें।"
+              en: "Observe morning collection and analyzer testing at the village dairy cooperative."
+            resource_url: null
+            needs_verification: true
+
+      - week_number: 4
+        title:
+          mr: "आठवडा ४ - नाबार्ड व कृषी योजना"
+          hi: "सप्ताह ४ - नाबार्ड और कृषि योजनाएं"
+          en: "Week 4 - NABARD & Agriculture Schemes"
+        steps:
+          - id: ad_w4_s1
+            day: 23
+            estimated_minutes: 15
+            icon: Award
+            title:
+              mr: "नाबार्ड ग्रामीण कृषी फेलोशिप व अनुदान"
+              hi: "नाबार्ड ग्रामीण कृषि फेलोशिप और अनुदान"
+              en: "NABARD Agri-Entrepreneurship Fellowship"
+            description:
+              mr: "तरुण शेतकऱ्यांना आधुनिक कृषी प्रकल्पासाठी मिळणारे मासिक विद्यावेतन आणि मार्गदर्शन."
+              hi: "युवा किसानों को आधुनिक कृषि प्रोजेक्ट हेतु मासिक स्टाइपेंड और मार्गदर्शन।"
+              en: "Learn about NABARD rural youth fellowships providing stipends for farm starts."
+            practical_action:
+              mr: "जमिनीचा ७/१२ उतारा आणि आधार कार्ड तपासून ठेवा."
+              hi: "जमीन का खसरा-खतौनी (७/१२) और आधार कार्ड तैयार रखें।"
+              en: "Verify farm land records (7/12 extract) and eligibility documentation."
+            resource_url: https://www.nabard.org
+            needs_verification: false
+
+          - id: ad_w4_s2
+            day: 29
+            estimated_minutes: 15
+            icon: BookOpen
+            title:
+              mr: "कृषी विज्ञान केंद्रातील (KVK) प्रशिक्षण कार्यक्रम"
+              hi: "कृषि विज्ञान केंद्र (KVK) के प्रशिक्षण कार्यक्रम"
+              en: "Krishi Vigyan Kendra (KVK) Vocational Courses"
+            description:
+              mr: "शेळीपालन, कुक्कुटपालन किंवा प्रक्रिया उद्योगाचे विनामूल्य शासकीय प्रशिक्षण."
+              hi: "बकरी पालन, मुर्गी पालन या खाद्य प्रसंस्करण का निःशुल्क सरकारी प्रशिक्षण।"
+              en: "Explore short-term hands-on farming certificates offered by district KVKs."
+            practical_action:
+              mr: "जिल्ह्यातील कृषी विज्ञान केंद्राचा पत्ता व फोन नंबर शोधा."
+              hi: "जिले के कृषि विज्ञान केंद्र का पता और फोन नंबर खोजें।"
+              en: "Look up contact information for your district Krishi Vigyan Kendra."
+            resource_url: null
+            needs_verification: true
+
+  months_3_to_6:
+    title:
+      mr: "३ ते ६ महिने - प्रत्यक्ष प्रकल्प आणि गट शेती"
+      hi: "३ से ६ महीने - व्यावहारिक प्रोजेक्ट और समूह खेती"
+      en: "3-6 Months - Pilot Project & Farmer Producer Group"
+    milestones:
+      - id: ad_m3_1
+        title:
+          mr: "नाबार्ड कृषी-उद्योजकता फेलोशिप अर्ज"
+          hi: "नाबार्ड कृषि-उद्यमिता फेलोशिप आवेदन"
+          en: "Apply for NABARD Rural Agri Fellowship"
+        description:
+          mr: "दरमहा ₹१५,००० विद्यावेतनासह ३० दिवसांचे प्रत्यक्ष शेती फेलोशिप प्रशिक्षण."
+          hi: "₹१५,०००/माह स्टाइपेंड के साथ ३० दिन की व्यावहारिक कृषि फेलोशिप।"
+          en: "Apply for 30-day field fellowship with Rs 15,000/month stipend and mentor support."
+        practical_action:
+          mr: "जिल्हा नाबार्ड कार्यालयात अर्ज सादर करा."
+          hi: "जिला नाबार्ड कार्यालय में आवेदन पत्र जमा करें।"
+          en: "Submit formal application to the NABARD district development manager."
+        resource_url: https://www.nabard.org
+        needs_verification: false
+
+  years_1_to_2:
+    title:
+      mr: "१ ते २ वर्षे - मूल्यवर्धन आणि स्वतःचा ब्रँड"
+      hi: "१ से २ वर्ष - मूल्य संवर्धन और अपना ब्रांड"
+      en: "1-2 Years - Value Addition & Rural Brand"
+    milestones:
+      - id: ad_y1_1
+        title:
+          mr: "दूध प्रक्रिया किंवा सेंद्रिय शेतमाल थेट विक्री"
+          hi: "दुग्ध प्रसंस्करण या जैविक उत्पाद सीधे बिक्री"
+          en: "Milk Processing (Paneer/Ghee) or Direct Organic Retail"
+        description:
+          mr: "कच्च्या दुधाऐवजी पनीर, खवा, तूप किंवा सेंद्रिय भाजीपाला थेट शहरात पाठवणे."
+          hi: "कच्चे दूध के स्थान पर पनीर, खोया, घी या जैविक सब्जियां सीधे शहरों में बेचना।"
+          en: "Produce value-added dairy products like ghee/paneer to double profit margins."
+        practical_action:
+          mr: "FSSAI नोंदणीसाठी आवश्यक कागदपत्रांची यादी तयार करा."
+          hi: "FSSAI पंजीकरण के लिए आवश्यक दस्तावेजों की सूची बनाएं।"
+          en: "Prepare documentation for basic food safety (FSSAI) micro-license."
+        resource_url: null
+        needs_verification: true
+
+vocational_alternative:
+  id: alt_dairy_mechanization
+  title:
+    mr: "स्वयंचलित दूध काढणी यंत्र व शीतकरण तंत्रज्ञ"
+    hi: "स्वचालित मिल्किंग मशीन एवं चिलिंग प्लांट तकनीशियन"
+    en: "Automated Milking Machine & Bulk Milk Cooler Technician"
+  description:
+    mr: "गावातील डेअरी केंद्रांमधील बीएमसी (BMC) चिलर आणि मिल्किंग मशिन्सची देखभाल."
+    hi: "गांव के बल्क मिल्क कूलर और मिल्किंग मशीनों की तकनीकी देखभाल व सर्विसिंग।"
+    en: "Technical servicing of bulk milk cooling tanks and vacuum milking machines in rural clusters."
+  resource_url: null
+  needs_verification: true
