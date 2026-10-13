@@ -1,5 +1,5 @@
 import React from "react";
-import { X, ShieldCheck, Mic, Lock, AlertTriangle, Users, Award, ExternalLink } from "lucide-react";
+import { X, ShieldCheck, Mic, Lock, AlertTriangle, Users, Award } from "lucide-react";
 import { useI18n } from "../i18n";
 
 interface AboutModalProps {
