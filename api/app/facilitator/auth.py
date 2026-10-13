@@ -17,11 +17,14 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from sqlalchemy.orm import Session
 
+from api.app.config import settings
 from api.app.database import get_db
 from api.app.models import Facilitator
 
-JWT_SECRET = "disha_prototype_facilitator_secret_key_2026"
 security = HTTPBearer(auto_error=False)
+
+def get_jwt_secret() -> str:
+    return settings.JWT_SECRET
 
 # In-memory prototype OTP cache: phone -> {"otp": str, "expires_at": datetime}
 _OTP_CACHE: Dict[str, Dict[str, any]] = {}
@@ -38,7 +41,7 @@ def create_jwt_token(payload: dict, expires_in_hours: int = 72) -> str:
     p_bytes = base64.urlsafe_b64encode(json.dumps(body).encode()).decode().rstrip("=")
     msg = f"{h_bytes}.{p_bytes}".encode()
 
-    sig = hmac.new(JWT_SECRET.encode(), msg, hashlib.sha256).digest()
+    sig = hmac.new(get_jwt_secret().encode(), msg, hashlib.sha256).digest()
     sig_str = base64.urlsafe_b64encode(sig).decode().rstrip("=")
     return f"{h_bytes}.{p_bytes}.{sig_str}"
 
@@ -51,7 +54,7 @@ def decode_jwt_token(token: str) -> dict:
 
     h_bytes, p_bytes, sig_str = parts
     msg = f"{h_bytes}.{p_bytes}".encode()
-    expected_sig = hmac.new(JWT_SECRET.encode(), msg, hashlib.sha256).digest()
+    expected_sig = hmac.new(get_jwt_secret().encode(), msg, hashlib.sha256).digest()
     expected_sig_str = base64.urlsafe_b64encode(expected_sig).decode().rstrip("=")
 
     if not hmac.compare_digest(sig_str, expected_sig_str):
