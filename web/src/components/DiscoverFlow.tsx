@@ -321,7 +321,14 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
                             ✓ अधिकृत (Verified)
                           </span>
                         ) : (
-                          <span style={{ fontSize: "0.68rem", color: "#fdba74", fontWeight: 700 }}>
+                          <span style={{
+                            fontSize: "0.68rem",
+                            color: "#fb923c",
+                            background: "rgba(249,115,22,0.18)",
+                            padding: "2px 6px",
+                            borderRadius: 4,
+                            fontWeight: 700
+                          }}>
                             Sample - unverified
                           </span>
                         )}
@@ -344,7 +351,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
                           display: "inline-block"
                         }}
                       >
-                        अधिकृत पोर्टल पहा (View Source) →
+                        {isVerified ? "अधिकृत पोर्टल पहा →" : "स्रोत पोर्टल पहा (Source Link) →"}
                       </a>
                     </div>
                   );

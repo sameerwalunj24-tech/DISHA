@@ -124,6 +124,10 @@ def generate_student_pathway(
             source_url = opp.get("source_url")
             is_verified = (opp.get("verification_status") == "verified")
 
+            benefit_prefix_mr = "सरकारी लाभ" if is_verified else "संभाव्य लाभ (Sample - unverified)"
+            benefit_prefix_hi = "सरकारी लाभ" if is_verified else "संभावित लाभ (Sample - unverified)"
+            benefit_prefix_en = "Govt benefit" if is_verified else "Estimated benefit (Sample - unverified)"
+
             milestone = {
                 "id": f"opp_milestone_{opp.get('id', 'ext')}",
                 "opportunity_id": opp.get("id"),
@@ -135,9 +139,9 @@ def generate_student_pathway(
                     "en": f"Target Application: {title_str}"
                 },
                 "description": {
-                    "mr": f"सरकारी लाभ: {benefits_str}. अंतिम मुदत: {deadline_str}.",
-                    "hi": f"सरकारी लाभ: {benefits_str}। अंतिम तिथि: {deadline_str}।",
-                    "en": f"Govt benefit: {benefits_str}. Cutoff deadline: {deadline_str}."
+                    "mr": f"{benefit_prefix_mr}: {benefits_str}. अंतिम मुदत: {deadline_str}.",
+                    "hi": f"{benefit_prefix_hi}: {benefits_str}। अंतिम तिथि: {deadline_str}।",
+                    "en": f"{benefit_prefix_en}: {benefits_str}. Cutoff deadline: {deadline_str}."
                 },
                 "practical_action": {
                     "mr": f"कागदपत्रे: {opp.get('documents_needed', 'आधार कार्ड')} गोळा करून ठेवा.",

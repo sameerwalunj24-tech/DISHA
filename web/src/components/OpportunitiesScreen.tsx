@@ -203,14 +203,14 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
           </div>
           <div>
             <h2>
-              {language === "mr" && "सत्यापित संधी आणि शिष्यवृत्ती"}
-              {language === "hi" && "सत्यापित अवसर और छात्रवृत्ति"}
-              {language === "en" && "Verified Opportunities & Schemes"}
+              {language === "mr" && "संधी आणि शिष्यवृत्ती"}
+              {language === "hi" && "अवसर और छात्रवृत्ति"}
+              {language === "en" && "Opportunities & Schemes"}
             </h2>
             <p style={{ color: "#94a3b8", fontSize: "0.85rem" }}>
-              {language === "mr" && "नियम-इंजिनद्वारे निश्चित पात्रता, थेट अधिकृत संकेतस्थळ आणि शेवटची पडताळणी तारीख"}
-              {language === "hi" && "नियम-आधारित पात्रता, सीधा आधिकारिक पोर्टल और अंतिम सत्यापन तिथि"}
-              {language === "en" && "Deterministic eligibility, official source links, and verified dates"}
+              {language === "mr" && "नियम-इंजिनद्वारे निश्चित पात्रता, स्रोत दुवे आणि पडताळणी स्थिती"}
+              {language === "hi" && "नियम-आधारित पात्रता, स्रोत लिंक और सत्यापन स्थिति"}
+              {language === "en" && "Deterministic eligibility, source links, and verification status"}
             </p>
           </div>
         </div>
@@ -457,7 +457,11 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
                     {/* Source Information & Verification Date */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, fontSize: "0.72rem", color: "#64748b", background: "rgba(0,0,0,0.2)", padding: "6px 10px", borderRadius: 8 }}>
                       <span>स्रोत: {item.explanation.source_name}</span>
-                      <span>शेवटची पडताळणी: {item.explanation.last_verified}</span>
+                      <span>
+                        {isVerified 
+                          ? `शेवटची पडताळणी: ${item.explanation.last_verified}` 
+                          : "पडताळणी प्रलंबित (Sample - unverified)"}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -489,7 +493,7 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
                       boxShadow: "0 2px 8px rgba(249,115,22,0.4)"
                     }}
                   >
-                    अधिकृत संकेतस्थळ उघडा
+                    {isVerified ? "अधिकृत संकेतस्थळ उघडा" : "संकेतस्थळ उघडा (Unverified)"}
                     <ExternalLink size={14} />
                   </a>
                 </div>

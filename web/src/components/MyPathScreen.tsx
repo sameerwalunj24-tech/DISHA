@@ -608,26 +608,33 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
                           )}
 
                           {/* Link verification enforcement */}
-                          <div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                             {step.resource_url ? (
-                              <a
-                                href={step.resource_url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{
-                                  display: "inline-flex",
-                                  alignItems: "center",
-                                  gap: 4,
-                                  fontSize: "0.75rem",
-                                  color: "#38bdf8",
-                                  textDecoration: "underline"
-                                }}
-                              >
-                                <ExternalLink size={12} />
-                                {language === "mr" && "अधिकृत पोर्टलवर पहा (Official Portal) ↗"}
-                                {language === "hi" && "आधिकारिक पोर्टल पर देखें ↗"}
-                                {language === "en" && "Visit Official Portal ↗"}
-                              </a>
+                              <>
+                                <a
+                                  href={step.resource_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: "inline-flex",
+                                    alignItems: "center",
+                                    gap: 4,
+                                    fontSize: "0.75rem",
+                                    color: "#38bdf8",
+                                    textDecoration: "underline"
+                                  }}
+                                >
+                                  <ExternalLink size={12} />
+                                  {step.needs_verification
+                                    ? (language === "mr" ? "स्रोत संकेतस्थळ पहा ↗" : language === "hi" ? "स्रोत वेबसाइट देखें ↗" : "Visit Source Website ↗")
+                                    : (language === "mr" ? "पडताळलेले अधिकृत पोर्टल ↗" : language === "hi" ? "सत्यापित आधिकारिक पोर्टल ↗" : "Verified Official Portal ↗")}
+                                </a>
+                                {step.needs_verification && (
+                                  <span style={{ fontSize: "0.68rem", color: "#fb923c", background: "rgba(249,115,22,0.18)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                                    Sample - unverified
+                                  </span>
+                                )}
+                              </>
                             ) : (
                               <span
                                 style={{
@@ -698,10 +705,15 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
                         </h3>
                       </div>
 
-                      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
                         {m.deadline && (
                           <span style={{ fontSize: "0.72rem", background: "rgba(239, 68, 68, 0.2)", color: "#fca5a5", padding: "2px 8px", borderRadius: 9999, fontWeight: 600 }}>
                             📅 {m.deadline}
+                          </span>
+                        )}
+                        {m.needs_verification && (
+                          <span style={{ fontSize: "0.68rem", color: "#fb923c", background: "rgba(249,115,22,0.18)", padding: "2px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            Sample - unverified
                           </span>
                         )}
 
@@ -739,9 +751,9 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
                           style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "#60a5fa", textDecoration: "underline" }}
                         >
                           <ExternalLink size={12} />
-                          {language === "mr" && "अधिकृत पोर्टलवर थेट अर्ज करा ↗"}
-                          {language === "hi" && "आधिकारिक पोर्टल पर सीधे आवेदन करें ↗"}
-                          {language === "en" && "Apply on Official Portal ↗"}
+                          {m.needs_verification
+                            ? (language === "mr" ? "संकेतस्थळावर अर्ज करा ↗" : language === "hi" ? "वेबसाइट पर आवेदन करें ↗" : "Apply on Source Portal ↗")
+                            : (language === "mr" ? "अधिकृत पोर्टलवर थेट अर्ज करा ↗" : language === "hi" ? "आधिकारिक पोर्टल पर सीधे आवेदन करें ↗" : "Apply on Verified Portal ↗")}
                         </a>
                       ) : (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#94a3b8" }}>
@@ -818,17 +830,24 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
                   </p>
                   <div>
                     {m.resource_url ? (
-                      <a
-                        href={m.resource_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "#34d399", textDecoration: "underline" }}
-                      >
-                        <ExternalLink size={12} />
-                        {language === "mr" && "अधिकृत पोर्टल ↗"}
-                        {language === "hi" && "आधिकारिक पोर्टल ↗"}
-                        {language === "en" && "Official Portal ↗"}
-                      </a>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+                        <a
+                          href={m.resource_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.78rem", color: "#34d399", textDecoration: "underline" }}
+                        >
+                          <ExternalLink size={12} />
+                          {m.needs_verification
+                            ? (language === "mr" ? "संकेतस्थळ ↗" : language === "hi" ? "वेबसाइट ↗" : "Source Portal ↗")
+                            : (language === "mr" ? "अधिकृत पोर्टल ↗" : language === "hi" ? "आधिकारिक पोर्टल ↗" : "Official Portal ↗")}
+                        </a>
+                        {m.needs_verification && (
+                          <span style={{ fontSize: "0.68rem", color: "#fb923c", background: "rgba(249,115,22,0.18)", padding: "1px 6px", borderRadius: 4, fontWeight: 700 }}>
+                            Sample - unverified
+                          </span>
+                        )}
+                      </div>
                     ) : (
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: "0.72rem", color: "#94a3b8" }}>
                         <Lock size={11} />
