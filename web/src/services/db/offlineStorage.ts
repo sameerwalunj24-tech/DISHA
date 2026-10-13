@@ -467,3 +467,56 @@ export async function updateSyncItemsStatus(
   }
 }
 
+/**
+ * Clears the previous student's cached profile, matches, and pathway from browser storage
+ * (both IndexedDB and localStorage) during shared-device mode transitions,
+ * strictly preserving the outbox queue and facilitator credentials.
+ */
+export async function clearStudentBrowserSession(_studentId?: string | null): Promise<void> {
+  // 1. Clear IndexedDB stores for learner profile, matches, pathways, progress
+  try {
+    const db = await openDB();
+    const storesToClear = [STORE_PROFILES, STORE_MATCHES, STORE_PATHWAYS, STORE_PATHWAY_PROGRESS];
+    for (const storeName of storesToClear) {
+      if (db.objectStoreNames.contains(storeName)) {
+        await new Promise<void>((resolve, reject) => {
+          const tx = db.transaction(storeName, "readwrite");
+          const store = tx.objectStore(storeName);
+          const req = store.clear();
+          req.onsuccess = () => resolve();
+          req.onerror = () => reject(req.error);
+        });
+      }
+    }
+  } catch (err) {
+    console.warn("[Storage] IndexedDB session clear fallback:", err);
+  }
+
+  // 2. Clear localStorage keys associated with the student session
+  try {
+    localStorage.removeItem("disha_student_id");
+    localStorage.removeItem("disha_joined_cohort");
+    localStorage.removeItem("disha_cached_matches");
+
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (
+        k.startsWith("disha_cached_pathway_") ||
+        k.startsWith("disha_progress_") ||
+        k.startsWith("disha_pending_profile_") ||
+        k.startsWith("disha_recs_")
+      )) {
+        keysToRemove.push(k);
+      }
+    }
+    for (const k of keysToRemove) {
+      localStorage.removeItem(k);
+    }
+  } catch (err) {
+    console.warn("[Storage] localStorage session clear error:", err);
+  }
+}
+
+
+

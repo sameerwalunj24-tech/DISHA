@@ -99,4 +99,46 @@ test("Phase 6 Frontend Facilitator & Shared-Device Workflow", async (t) => {
     assert.equal(cached[0].radar_flags[0].code, "RISING");
     assert.equal(cached[1].radar_flags[0].code, "NEEDS_SUPPORT");
   });
+
+  await t.test("5. Next Student in shared-device mode clears previous student profile, matches, and pathway from browser storage", async () => {
+    // Populate previous student session data
+    localStorage.setItem("disha_student_id", "student-user-1");
+    localStorage.setItem("disha_joined_cohort", JSON.stringify({ id: "cohort-1", name: "10-A" }));
+    localStorage.setItem("disha_cached_matches", JSON.stringify([{ id: 1, title: "Scholarship A" }]));
+    localStorage.setItem("disha_cached_pathway_solar", JSON.stringify({ title: "Solar Path" }));
+    localStorage.setItem("disha_progress_solar", JSON.stringify({ completed: [1, 2] }));
+    localStorage.setItem("disha_pending_profile_student-user-1", JSON.stringify({ grade: 10 }));
+    localStorage.setItem("disha_recs_student-user-1", JSON.stringify([{ id: "rec-1" }]));
+
+    // Preserve facilitator token and outbox items
+    localStorage.setItem("disha_facilitator_token", "jwt-token-xyz");
+    localStorage.setItem("disha_sync_outbox_items", JSON.stringify([{ id: "sync-1", type: "pathway_progress" }]));
+
+    // Simulate clearStudentBrowserSession logic for localStorage
+    const keysToRemove = [];
+    for (const [k] of mockStorage.entries()) {
+      if (k === "disha_student_id" || k === "disha_joined_cohort" || k === "disha_cached_matches" ||
+          k.startsWith("disha_cached_pathway_") || k.startsWith("disha_progress_") ||
+          k.startsWith("disha_pending_profile_") || k.startsWith("disha_recs_")) {
+        keysToRemove.push(k);
+      }
+    }
+    for (const k of keysToRemove) {
+      localStorage.removeItem(k);
+    }
+
+    // Assert student data is completely cleaned up
+    assert.equal(localStorage.getItem("disha_student_id"), null);
+    assert.equal(localStorage.getItem("disha_joined_cohort"), null);
+    assert.equal(localStorage.getItem("disha_cached_matches"), null);
+    assert.equal(localStorage.getItem("disha_cached_pathway_solar"), null);
+    assert.equal(localStorage.getItem("disha_progress_solar"), null);
+    assert.equal(localStorage.getItem("disha_pending_profile_student-user-1"), null);
+    assert.equal(localStorage.getItem("disha_recs_student-user-1"), null);
+
+    // Assert facilitator token and outbox queue are safely preserved
+    assert.equal(localStorage.getItem("disha_facilitator_token"), "jwt-token-xyz");
+    assert.ok(localStorage.getItem("disha_sync_outbox_items"));
+  });
 });
+

@@ -10,6 +10,7 @@ import { MyPathScreen } from "./components/MyPathScreen";
 import { Download, X } from "lucide-react";
 
 import { useSyncStatus } from "./services/sync/useSyncStatus";
+import { clearStudentBrowserSession } from "./services/db/offlineStorage";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -91,12 +92,14 @@ const DishaMain: React.FC = () => {
     setSelectedScreen(tileKey);
   };
 
-  // Next Student handler in Shared-Device Mode: cleans up student state without mixing data
-  const handleNextStudent = () => {
-    setStudentId(null);
+  // Next Student handler in Shared-Device Mode: cleans up student state, cached profile, matches and pathway
+  const handleNextStudent = async () => {
     try {
-      localStorage.removeItem("disha_student_id");
-    } catch {}
+      await clearStudentBrowserSession(studentId);
+    } catch (e) {
+      console.warn("Error clearing student browser session:", e);
+    }
+    setStudentId(null);
     setSelectedScreen("discover");
   };
 
