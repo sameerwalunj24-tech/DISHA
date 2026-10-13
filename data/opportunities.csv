@@ -1,0 +1,11 @@
+id,title,category,provider,min_grade,max_grade,state,gender_eligibility,max_family_income,benefits,source_url,last_verified,is_sample
+1,SAMPLE - PM National Apprenticeship Promotion Scheme (Solar PV Tech),apprenticeship,MSDE Skill India,10,14,All India,ALL,,Rs 8000/month stipend + on-the-job certificate,https://www.apprenticeshipindia.gov.in,2026-10-01,true
+2,SAMPLE - MahaDBT Post-Matric Scholarship for Rural Girls,scholarship,Govt of Maharashtra,11,16,Maharashtra,FEMALE,250000,Full tuition waiver + Rs 12000 maintenance allowance,https://mahadbt.maharashtra.gov.in,2026-09-15,true
+3,SAMPLE - National Means-cum-Merit Scholarship Scheme (NMMSS),scholarship,Ministry of Education,9,12,All India,ALL,350000,Rs 12000 per year from Class 9 to 12,https://scholarships.gov.in,2026-08-20,true
+4,SAMPLE - Rural Electrician & Smart Metering Apprenticeship,vocational,Power Sector Skill Council,10,12,All India,ALL,,Free toolkit + Rs 7500 stipend + NSDC certification,https://www.nsdcindia.org,2026-09-30,true
+5,SAMPLE - Organic Farming & Agri-Entrepreneurship Rural Fellowship,vocational,NABARD,12,16,Maharashtra,ALL,300000,Rs 15000/month + micro-grant for farm start,https://www.nabard.org,2026-10-05,true
+6,SAMPLE - Community Healthcare Worker (ASHA/ANM) Bridging Grant,scheme,National Health Mission,10,14,Maharashtra,FEMALE,200000,Free paramedic training + district hospital placement,https://nhm.gov.in,2026-07-15,true
+7,SAMPLE - PM Vishwakarma Yojana - Rural Artisans & Crafts,scheme,Ministry of MSME,9,16,All India,ALL,,Rs 15000 tool incentive + Rs 3 lakh collateral-free loan,https://pmvishwakarma.gov.in,2026-09-01,true
+8,SAMPLE - Rural Digital Banking Correspondent Trainee Program,vocational,Indian Banks Association,12,16,All India,ALL,,Tablet device + POS terminal + Rs 10000/month base,https://www.iba.org.in,2026-10-02,true
+9,SAMPLE - ITI Diesel Mechanic Apprenticeship (Railways / State Transport),apprenticeship,Ministry of Railways,10,12,All India,ALL,,1 year paid apprenticeship in railway workshop,https://indianrailways.gov.in,2026-08-10,true
+10,SAMPLE - Begum Hazrat Mahal National Scholarship for Meritorious Girls,scholarship,Maulana Azad Education Foundation,9,12,All India,FEMALE,200000,Rs 5000-6000 per year assistance,https://www.bhmns-med.gov.in,2026-06-25,true
