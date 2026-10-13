@@ -10,7 +10,7 @@ import {
 import { useI18n, type Language } from "../i18n";
 import { voiceService } from "../services/voice";
 import { OFFLINE_QUIZ_QUESTIONS, buildProfileFromQuizAnswers, type QuizOption } from "../data/offlineQuizData";
-import { saveOfflineProfile, saveCachedMatches } from "../services/db/offlineStorage";
+import { saveOfflineProfile, saveCachedMatches, enqueueSyncItem } from "../services/db/offlineStorage";
 
 interface DiscoverFlowProps {
   isOnline: boolean;
@@ -64,6 +64,7 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
   const [isListening, setIsListening] = useState<boolean>(false);
   const [partialVoice, setPartialVoice] = useState<string>("");
   const [guardianConsent, setGuardianConsent] = useState<boolean>(false);
+  const [consentError, setConsentError] = useState<boolean>(false);
   const [studentName] = useState<string>("विद्यार्थी (Learner)");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [apiError, setApiError] = useState<string | null>(null);
@@ -155,6 +156,15 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
     const finalAnswer = ansToSubmit || textAnswer;
     if (!finalAnswer.trim() || !currentQuestion) return;
 
+    if (!guardianConsent) {
+      setApiError(
+        language === "mr" ? "कृपया प्रोफाईल सेव्ह करण्यासाठी पालकांची संमती तपासा."
+        : language === "hi" ? "कृपया प्रोफ़ाइल सेव करने के लिए अभिभावक सहमति चेक करें।"
+        : "Please check guardian consent to save profile."
+      );
+      return;
+    }
+
     setIsLoading(true);
     setApiError(null);
     try {
@@ -224,23 +234,47 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
     if (quizStep + 1 < OFFLINE_QUIZ_QUESTIONS.length) {
       setQuizStep(quizStep + 1);
     } else {
-      // Completed all 8 questions offline
-      const builtProfile = buildProfileFromQuizAnswers(updated, language as Language);
-      setCompletedProfile(builtProfile);
-      setSavedLocally(true);
-
-      // Save to IndexedDB
-      await saveOfflineProfile({
-        id: `offline_${Date.now()}`,
-        created_at: new Date().toISOString(),
-        sync_status: "pending_sync",
-        profile_type: "offline_icon_quiz",
-        student_name: studentName,
-        language,
-        guardian_consent: guardianConsent,
-        profile: builtProfile
-      });
+      // Last question reached: require guardian consent
+      if (!guardianConsent) {
+        setConsentError(true);
+        return;
+      }
+      await finalizeOfflineQuiz(updated);
     }
+  };
+
+  const finalizeOfflineQuiz = async (answersToSave?: Record<number, QuizOption>) => {
+    const finalAnswers = answersToSave || quizAnswers;
+    const builtProfile = buildProfileFromQuizAnswers(finalAnswers, language as Language);
+    setCompletedProfile(builtProfile);
+    setSavedLocally(true);
+
+    const localId = `offline_${Date.now()}`;
+    try {
+      localStorage.setItem("disha_student_id", localId);
+      if (onStudentCreated) onStudentCreated(localId);
+    } catch {}
+
+    // Save to local profile store
+    await saveOfflineProfile({
+      id: localId,
+      created_at: new Date().toISOString(),
+      sync_status: "pending_sync",
+      profile_type: "offline_icon_quiz",
+      student_name: studentName,
+      language,
+      guardian_consent: true,
+      profile: builtProfile
+    });
+
+    // PHASE 5: Enqueue into IndexedDB Outbox
+    await enqueueSyncItem("offline_quiz_result", {
+      student_name: studentName,
+      language,
+      guardian_consent: true,
+      profile: builtProfile,
+      answers: finalAnswers
+    });
   };
 
   // Render Completed Profile View
@@ -493,6 +527,65 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
                 </button>
               );
             })}
+          </div>
+
+          {/* DPDP Act Child-Safe Guardian Consent Checkbox */}
+          <div style={{
+            background: "rgba(15,23,42,0.8)",
+            border: guardianConsent ? "1px solid #10b981" : consentError ? "2px solid #ef4444" : "1px solid rgba(249,115,22,0.6)",
+            borderRadius: 12,
+            padding: 12,
+            marginTop: 14
+          }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+              <input
+                type="checkbox"
+                id="guardian-consent-chk-offline"
+                checked={guardianConsent}
+                onChange={(e) => {
+                  const checked = e.target.checked;
+                  setGuardianConsent(checked);
+                  if (checked) {
+                    setConsentError(false);
+                    if (Object.keys(quizAnswers).length >= OFFLINE_QUIZ_QUESTIONS.length) {
+                      finalizeOfflineQuiz();
+                    }
+                  }
+                }}
+                style={{ width: 18, height: 18, accentColor: "#f97316", marginTop: 2, cursor: "pointer", flexShrink: 0 }}
+                aria-required="true"
+              />
+              <label htmlFor="guardian-consent-chk-offline" style={{ fontSize: "0.78rem", color: "#cbd5e1", lineHeight: 1.5, cursor: "pointer" }}>
+                <strong style={{ color: "#fff", display: "flex", alignItems: "center", gap: 4, marginBottom: 4 }}>
+                  <Shield size={13} style={{ color: "#10b981" }} />
+                  {language === "mr" && "पालकांची संमती आवश्यक आहे (Guardian Consent Required)"}
+                  {language === "hi" && "अभिभावक की सहमति आवश्यक है (Guardian Consent Required)"}
+                  {language === "en" && "Guardian Consent Required"}
+                </strong>
+                {language === "mr" && (
+                  <span>
+                    दिशा तुमचे नाव, इयत्ता, जिल्हा, आवडी आणि करिअर ध्येय <strong>फक्त करिअर मार्गदर्शनासाठी</strong> गोळा करते. हे डेटा तृतीय पक्षाला विकले जात नाही.
+                  </span>
+                )}
+                {language === "hi" && (
+                  <span>
+                    दिशा आपका नाम, कक्षा, जिला, रुचियाँ और करियर लक्ष्य <strong>केवल करियर मार्गदर्शन के लिए</strong> एकत्र करती है। यह डेटा किसी तीसरे पक्ष को नहीं बेचा जाता।
+                  </span>
+                )}
+                {language === "en" && (
+                  <span>
+                    Disha collects your name, class, district, interests and career goal <strong>only for career guidance</strong>. This data is never sold to third parties.
+                  </span>
+                )}
+              </label>
+            </div>
+            {consentError && !guardianConsent && (
+              <p style={{ color: "#ef4444", fontSize: "0.78rem", marginTop: 8, marginLeft: 28, fontWeight: 700 }}>
+                {language === "mr" && "⚠ कृपया प्रोफाईल पूर्ण करण्यासाठी व सेव्ह करण्यासाठी पालकांची संमती तपासा."}
+                {language === "hi" && "⚠ कृपया प्रोफ़ाइल पूर्ण और सुरक्षित करने के लिए अभिभावक सहमति चेक करें।"}
+                {language === "en" && "⚠ Please tick guardian consent to save and generate your profile."}
+              </p>
+            )}
           </div>
         </div>
       </main>

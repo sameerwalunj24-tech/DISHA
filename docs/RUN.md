@@ -103,6 +103,51 @@ npm run dev -- --host
 
 ---
 
+## 🔄 How to Test "Offline Sync" (Phase 5 Demo Script)
+
+Disha features a robust offline-first synchronization engine using an IndexedDB outbox queue, last-write-wins conflict resolution, and idempotent batch processing. Sensitive fields (income, caste category) are strictly excluded from the queue.
+
+### Step-by-Step Offline Demo Script:
+
+1. **Simulate Offline Mode:**
+   - Either turn on your device's **Airplane Mode** (disconnect Wi-Fi), **OR**
+   - Tap the **Disha Compass Logo** in the top-left header **5 times**.
+   - An amber notification banner appears: `⚡ डेमो मोड: ऑफलाइन सिम्युलेट केले (Simulated Offline Mode Active)`.
+   - The status chip in the header updates to `Offline` (`ऑफलाइन`).
+
+2. **Complete the Offline Quiz (Generates 1 Outbox Item):**
+   - Tap **करिअर शोधा (Discover Career)**.
+   - The 8-question offline pictorial quiz opens.
+   - Keep the child-safe **पालकांची संमती (Guardian Consent)** checkbox checked.
+   - Tap an icon option for each of the 8 questions.
+   - Upon completing the 8th question, your local career profile is created and queued into the IndexedDB outbox.
+   - **Observe:** The header chip updates immediately to `Offline (1 pending)` / `ऑफलाइन (१ प्रलंबित)`.
+
+3. **Tick 3 Pathway Steps (Generates 3 Outbox Items):**
+   - Tap **माझा ३० दिवसांचा मार्ग पहा (View Pathway) →**.
+   - Under the 30-day practical micro-steps, tick off **3 steps** (e.g. Day 1, Day 2, and Day 3).
+   - With each tick, the outbox queues a `pathway_progress` item.
+   - **Observe:** The header chip increments with every tick:
+     - `Offline (2 pending)`
+     - `Offline (3 pending)`
+     - `Offline (4 pending)` / `ऑफलाइन (४ प्रलंबित)`
+
+4. **Restore Network Connection (Automatic Trigger):**
+   - Turn off Airplane Mode (reconnect Wi-Fi), **OR**
+   - Tap the **Disha Compass Logo** **5 times** again to exit demo mode.
+   - A green toast appears: `🌐 Demo Mode: Online Mode Restored`.
+
+5. **Instant Sync & Verification:**
+   - Within seconds, the sync engine fires automatically, batching all 4 queued writes and sending them via `POST /api/v1/sync`.
+   - The header chip shows `Syncing...` (`सिंक होत आहे...`) and then transitions to **`✓ Synced`** (`सिंक झाले (Synced)`).
+   - The pending count drops to `0`.
+   - The server response returns the permanent student record ID, auto-generates the server pathway, and applies the 3 ticks.
+
+6. **Manual Sync Trigger ("Sync now"):**
+   - If connected and any writes are pending, tapping the amber status chip triggers an immediate sync.
+
+---
+
 ## 📱 How to Open on Your Phone (Same Wi-Fi)
 
 1. Connect both your computer and your phone to the same Wi-Fi network.
@@ -113,10 +158,16 @@ npm run dev -- --host
 
 ## 🧪 Running Automated Tests
 
-Run the full test suite covering health, seed validation, age-gated rules, guardian consent enforcement, sensitive field privacy, pathway template validation, zero invented URLs, milestone deadlines, and progress persistence:
+Run the full backend test suite covering database isolation, fresh schema creation, seed validation, age-gated rules, guardian consent enforcement, sensitive field privacy, pathway templates, zero invented URLs, milestone deadlines, and offline batch sync (idempotency, conflict resolution, partial failure, sensitive fields exclusion, acceptance batch):
 ```bash
 python -m pytest api/tests -v
 ```
+All 33 backend unit tests should pass with `100%` success.
 
-All 26 unit tests should pass with `100%` success.
+Run the frontend outbox tests verifying queueing, sensitive field stripping, and persistence across simulated reload:
+```bash
+cmd /c "npm --prefix web test"
+```
+All frontend outbox unit tests should pass with `100%` success.
+
 

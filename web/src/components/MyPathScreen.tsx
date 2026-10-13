@@ -37,7 +37,8 @@ import {
   getPathwayProgress,
   saveCachedPathway,
   getCachedPathway,
-  getOfflineProfiles
+  getOfflineProfiles,
+  enqueueSyncItem
 } from "../services/db/offlineStorage";
 import { DEFAULT_OFFLINE_PATHWAYS } from "../data/defaultPathways";
 import type {
@@ -200,12 +201,22 @@ export const MyPathScreen: React.FC<MyPathScreenProps> = ({
     const progressKey = studentId || "current_student";
     const status: "pending_sync" = "pending_sync";
     setSyncStatus(status);
+    const nowIso = new Date().toISOString();
 
     await savePathwayProgress({
       pathway_key: progressKey,
       completed_step_ids: Array.from(updated),
       sync_status: status,
-      updated_at: new Date().toISOString()
+      updated_at: nowIso
+    });
+
+    // PHASE 5: Enqueue step tick into IndexedDB Outbox
+    await enqueueSyncItem("pathway_progress", {
+      student_id: studentId,
+      pathway_key: progressKey,
+      completed_step_ids: Array.from(updated),
+      step_id: stepId,
+      is_done: updated.has(stepId)
     });
   };
 

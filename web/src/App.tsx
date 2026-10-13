@@ -8,6 +8,8 @@ import { OpportunitiesScreen } from "./components/OpportunitiesScreen";
 import { MyPathScreen } from "./components/MyPathScreen";
 import { Download, X } from "lucide-react";
 
+import { useSyncStatus } from "./services/sync/useSyncStatus";
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -15,7 +17,7 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DishaMain: React.FC = () => {
   const { t } = useI18n();
-  const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
+  const { isOnline } = useSyncStatus();
   const [isFacilitatorModalOpen, setIsFacilitatorModalOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
@@ -28,18 +30,15 @@ const DishaMain: React.FC = () => {
     }
   });
 
-  // Track online/offline status
+  // Listen for sync service updating student ID after offline upload
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
+    const handleStudentIdUpdate = (e: any) => {
+      const newId = e.detail?.studentId;
+      if (newId) setStudentId(newId);
     };
+
+    window.addEventListener("disha_student_id_updated", handleStudentIdUpdate);
+    return () => window.removeEventListener("disha_student_id_updated", handleStudentIdUpdate);
   }, []);
 
   // Capture PWA installation prompt

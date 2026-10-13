@@ -107,3 +107,15 @@ class Pathway(Base):
     updated_at = Column(DateTime, default=utc_now, onupdate=utc_now, nullable=False)
 
     student = relationship("Student", back_populates="pathways")
+
+
+class SyncLog(Base):
+    __tablename__ = "sync_logs"
+
+    id = Column(String(36), primary_key=True)  # Client outbox item UUID
+    item_type = Column(String(50), nullable=False)
+    student_id = Column(String(36), nullable=True)
+    status = Column(String(20), default="synced", nullable=False)
+    updated_at = Column(DateTime, default=utc_now, nullable=False)
+    applied_at = Column(DateTime, default=utc_now, nullable=False)
+

@@ -145,6 +145,27 @@ body {
   border: 1px solid rgba(249, 115, 22, 0.35);
 }
 
+.status-pill.pending {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  transition: all 0.2s ease;
+}
+
+.status-pill.pending:hover {
+  background: rgba(245, 158, 11, 0.28);
+  border-color: #f59e0b;
+}
+
+@keyframes spin-clockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin {
+  animation: spin-clockwise 1s linear infinite;
+}
+
 .status-dot {
   width: 7px;
   height: 7px;
@@ -159,6 +180,11 @@ body {
 .status-pill.offline .status-dot {
   background: #f97316;
   box-shadow: 0 0 8px #f97316;
+}
+
+.status-pill.pending .status-dot {
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
 }
 
 /* Language Dropdown Selector */

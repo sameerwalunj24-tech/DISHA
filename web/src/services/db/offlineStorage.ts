@@ -1,10 +1,20 @@
 // Disha IndexedDB Offline Storage for profiles & opportunity caching
 const DB_NAME = "disha_offline_db";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 const STORE_PROFILES = "offline_profiles";
 const STORE_MATCHES = "cached_matches";
 const STORE_PATHWAYS = "cached_pathways";
 const STORE_PATHWAY_PROGRESS = "pathway_progress";
+export const STORE_SYNC_OUTBOX = "sync_outbox";
+
+export interface SyncQueueItem {
+  id: string; // uuid
+  type: "offline_quiz_result" | "pathway_progress" | "discovery_answer" | "profile_save";
+  payload: Record<string, any>;
+  updated_at: string;
+  attempts: number;
+  status: "pending" | "synced" | "failed";
+}
 
 export interface OfflineProfileRecord {
   id: string;
@@ -34,6 +44,35 @@ export interface PathwayProgressRecord {
   updated_at: string;
 }
 
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
+
+function sanitizePayload(raw: Record<string, any>): Record<string, any> {
+  const sanitized = { ...raw };
+  const sensitiveKeys = [
+    "family_income", "social_category", "income", "caste",
+    "annual_income", "category", "bank_account", "aadhaar"
+  ];
+  for (const k of sensitiveKeys) {
+    delete sanitized[k];
+  }
+  if (sanitized.profile && typeof sanitized.profile === "object") {
+    sanitized.profile = { ...sanitized.profile };
+    for (const k of sensitiveKeys) {
+      delete sanitized.profile[k];
+    }
+  }
+  return sanitized;
+}
+
 function openDB(): Promise<IDBDatabase> {
   return new Promise((resolve, reject) => {
     if (typeof window === "undefined" || !window.indexedDB) {
@@ -55,6 +94,10 @@ function openDB(): Promise<IDBDatabase> {
       }
       if (!db.objectStoreNames.contains(STORE_PATHWAY_PROGRESS)) {
         db.createObjectStore(STORE_PATHWAY_PROGRESS, { keyPath: "pathway_key" });
+      }
+      if (!db.objectStoreNames.contains(STORE_SYNC_OUTBOX)) {
+        const outboxStore = db.createObjectStore(STORE_SYNC_OUTBOX, { keyPath: "id" });
+        outboxStore.createIndex("status", "status", { unique: false });
       }
     };
 
@@ -261,6 +304,166 @@ export async function getPathwayProgress(key: string = "current_student"): Promi
   } catch (e) {
     const fallback = localStorage.getItem(`disha_progress_${key}`);
     return fallback ? JSON.parse(fallback) : null;
+  }
+}
+
+// ==========================================
+// PHASE 5: OUTBOX SYNC QUEUE OPERATIONS
+// ==========================================
+
+function getLocalAllItems(): SyncQueueItem[] {
+  try {
+    const raw = localStorage.getItem("disha_sync_outbox_items");
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getLocalPendingItems(): SyncQueueItem[] {
+  try {
+    const raw = localStorage.getItem("disha_sync_outbox_items");
+    if (!raw) return [];
+    const items: SyncQueueItem[] = JSON.parse(raw);
+    return items.filter((i) => i.status === "pending");
+  } catch {
+    return [];
+  }
+}
+
+export async function enqueueSyncItem(
+  type: SyncQueueItem["type"],
+  payload: Record<string, any>
+): Promise<SyncQueueItem> {
+  const item: SyncQueueItem = {
+    id: generateUUID(),
+    type,
+    payload: sanitizePayload(payload),
+    updated_at: new Date().toISOString(),
+    attempts: 0,
+    status: "pending"
+  };
+
+  try {
+    const db = await openDB();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_SYNC_OUTBOX, "readwrite");
+      const store = tx.objectStore(STORE_SYNC_OUTBOX);
+      const req = store.put(item);
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  } catch (e) {
+    console.warn("[SyncQueue] IndexedDB write failed, falling back to localStorage", e);
+  }
+
+  // Always mirror to localStorage so outbox survives even if IndexedDB is cleared
+  try {
+    const existingStr = localStorage.getItem("disha_sync_outbox_items") || "[]";
+    const items: SyncQueueItem[] = JSON.parse(existingStr);
+    items.push(item);
+    localStorage.setItem("disha_sync_outbox_items", JSON.stringify(items));
+  } catch (err) {}
+
+  // Dispatch event for UI reactivity
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("disha_sync_outbox_changed", { detail: { item } }));
+  }
+
+  return item;
+}
+
+export async function getPendingSyncItems(): Promise<SyncQueueItem[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_SYNC_OUTBOX, "readonly");
+      const store = tx.objectStore(STORE_SYNC_OUTBOX);
+      const req = store.getAll();
+      req.onsuccess = () => {
+        const all: SyncQueueItem[] = req.result || [];
+        const pending = all.filter((i) => i.status === "pending");
+        resolve(pending);
+      };
+      req.onerror = () => {
+        resolve(getLocalPendingItems());
+      };
+    });
+  } catch {
+    return getLocalPendingItems();
+  }
+}
+
+export async function getAllSyncItems(): Promise<SyncQueueItem[]> {
+  try {
+    const db = await openDB();
+    return new Promise((resolve) => {
+      const tx = db.transaction(STORE_SYNC_OUTBOX, "readonly");
+      const store = tx.objectStore(STORE_SYNC_OUTBOX);
+      const req = store.getAll();
+      req.onsuccess = () => resolve(req.result || []);
+      req.onerror = () => resolve(getLocalAllItems());
+    });
+  } catch {
+    return getLocalAllItems();
+  }
+}
+
+export async function getPendingSyncCount(): Promise<number> {
+  const pending = await getPendingSyncItems();
+  return pending.length;
+}
+
+export async function updateSyncItemsStatus(
+  updates: Array<{ id: string; status: "pending" | "synced" | "failed"; attempts?: number }>
+): Promise<void> {
+  const updateMap = new Map(updates.map((u) => [u.id, u]));
+
+  try {
+    const db = await openDB();
+    await new Promise<void>((resolve, reject) => {
+      const tx = db.transaction(STORE_SYNC_OUTBOX, "readwrite");
+      const store = tx.objectStore(STORE_SYNC_OUTBOX);
+      const getAllReq = store.getAll();
+
+      getAllReq.onsuccess = () => {
+        const items: SyncQueueItem[] = getAllReq.result || [];
+        for (const item of items) {
+          const upd = updateMap.get(item.id);
+          if (upd) {
+            item.status = upd.status;
+            if (upd.attempts !== undefined) {
+              item.attempts = upd.attempts;
+            }
+            store.put(item);
+          }
+        }
+        resolve();
+      };
+      getAllReq.onerror = () => reject(getAllReq.error);
+    });
+  } catch (e) {
+    console.warn("[SyncQueue] Error updating status in IndexedDB:", e);
+  }
+
+  // Mirror to localStorage
+  try {
+    const raw = localStorage.getItem("disha_sync_outbox_items");
+    if (raw) {
+      const items: SyncQueueItem[] = JSON.parse(raw);
+      for (const item of items) {
+        const upd = updateMap.get(item.id);
+        if (upd) {
+          item.status = upd.status;
+          if (upd.attempts !== undefined) item.attempts = upd.attempts;
+        }
+      }
+      localStorage.setItem("disha_sync_outbox_items", JSON.stringify(items));
+    }
+  } catch {}
+
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("disha_sync_outbox_changed", { detail: { updates } }));
   }
 }
 

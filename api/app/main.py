@@ -12,6 +12,7 @@ from api.app.schemas import HealthResponse, OpportunityResponse
 from api.app.discovery.router import router as discovery_router
 from api.app.matching.router import router as matching_router
 from api.app.pathways.router import router as pathways_router
+from api.app.sync.router import router as sync_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -42,6 +43,7 @@ app.add_middleware(
 app.include_router(discovery_router)
 app.include_router(matching_router)
 app.include_router(pathways_router)
+app.include_router(sync_router)
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check(db: Session = Depends(get_db)):
