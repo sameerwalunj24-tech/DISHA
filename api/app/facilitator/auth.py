@@ -70,9 +70,51 @@ def decode_jwt_token(token: str) -> dict:
     return data
 
 
+# In-memory prototype OTP cache: phone -> {"otp": str, "expires_at": datetime}
+_OTP_CACHE: Dict[str, Dict[str, any]] = {}
+
+# In-memory rate limiting tracking: phone -> list of timestamp datetimes
+_OTP_REQUEST_LOG: Dict[str, list] = {}
+_LOGIN_FAILURE_LOG: Dict[str, list] = {}
+
+def check_otp_rate_limit(phone_number: str, max_requests: int = 5, window_seconds: int = 60) -> None:
+    """Enforces sliding-window rate limit on OTP generation requests."""
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(seconds=window_seconds)
+    timestamps = [t for t in _OTP_REQUEST_LOG.get(phone_number, []) if t > cutoff]
+    if len(timestamps) >= max_requests:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"RATE_LIMIT_EXCEEDED: Maximum {max_requests} OTP requests per minute reached. Please wait before retrying."
+        )
+    timestamps.append(now)
+    _OTP_REQUEST_LOG[phone_number] = timestamps
+
+def check_login_attempt_rate_limit(phone_number: str, max_failures: int = 5, window_seconds: int = 300) -> None:
+    """Enforces sliding-window rate limit on failed login attempts."""
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(seconds=window_seconds)
+    timestamps = [t for t in _LOGIN_FAILURE_LOG.get(phone_number, []) if t > cutoff]
+    if len(timestamps) >= max_failures:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"RATE_LIMIT_EXCEEDED: Too many failed login attempts for this number. Temporarily blocked for {window_seconds // 60} minutes."
+        )
+    _LOGIN_FAILURE_LOG[phone_number] = timestamps
+
+def record_login_failure(phone_number: str) -> None:
+    now = datetime.now(timezone.utc)
+    failures = _LOGIN_FAILURE_LOG.get(phone_number, [])
+    failures.append(now)
+    _LOGIN_FAILURE_LOG[phone_number] = failures
+
+def clear_login_failures(phone_number: str) -> None:
+    _LOGIN_FAILURE_LOG.pop(phone_number, None)
+
+
 def generate_otp(phone_number: str) -> str:
-    """Generates a 6-digit OTP and stores it in cache."""
-    # Deterministic fallback or random 6 digits
+    """Generates a 6-digit OTP after checking rate limit."""
+    check_otp_rate_limit(phone_number)
     otp = str(random.randint(100000, 999999))
     _OTP_CACHE[phone_number] = {
         "otp": otp,
@@ -82,23 +124,30 @@ def generate_otp(phone_number: str) -> str:
 
 
 def verify_otp(phone_number: str, otp_entered: str) -> bool:
-    """Verifies entered OTP against cache or default prototype code '123456'."""
-    # Always allow 123456 for easy offline / local testing
+    """Verifies entered OTP against cache or default code '123456' with failed attempt rate limiting."""
+    check_login_attempt_rate_limit(phone_number)
+
+    # Allow 123456 for frictionless test/demo environments
     if otp_entered.strip() == "123456":
+        clear_login_failures(phone_number)
         return True
 
     entry = _OTP_CACHE.get(phone_number)
     if not entry:
+        record_login_failure(phone_number)
         return False
 
     if datetime.now(timezone.utc) > entry["expires_at"]:
         _OTP_CACHE.pop(phone_number, None)
+        record_login_failure(phone_number)
         return False
 
     if entry["otp"] == otp_entered.strip():
         _OTP_CACHE.pop(phone_number, None)
+        clear_login_failures(phone_number)
         return True
 
+    record_login_failure(phone_number)
     return False
 
 

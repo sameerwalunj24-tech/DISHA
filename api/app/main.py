@@ -32,10 +32,10 @@ app = FastAPI(
     openapi_url="/openapi.json"
 )
 
-# Enable CORS for local PWA dev and mobile access
+# Restrict CORS to configured origins (from settings / environment)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS if "*" not in settings.CORS_ORIGINS else ["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

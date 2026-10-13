@@ -40,3 +40,64 @@ def test_jwt_token_tampering_and_signature_verification():
     tampered = f"{parts[0]}.{parts[1]}.tampered_sig"
     with pytest.raises(ValueError, match="Invalid signature"):
         decode_jwt_token(tampered)
+
+
+def test_otp_request_rate_limiting():
+    """Security check: Rapid consecutive OTP requests (>5/min) are blocked with HTTP 429."""
+    from fastapi.testclient import TestClient
+    from api.app.main import app
+    import uuid
+
+    client = TestClient(app)
+    phone = f"99000{uuid.uuid4().hex[:5]}"
+
+    # First 5 requests should succeed
+    for _ in range(5):
+        resp = client.post("/api/v1/facilitator/auth/request-otp", json={
+            "phone_number": phone,
+            "name": "Teacher Rate Limited"
+        })
+        assert resp.status_code == 200
+
+    # 6th request within window must be rate-limited
+    blocked_resp = client.post("/api/v1/facilitator/auth/request-otp", json={
+        "phone_number": phone,
+        "name": "Teacher Rate Limited"
+    })
+    assert blocked_resp.status_code == 429
+    assert "RATE_LIMIT_EXCEEDED" in blocked_resp.json()["detail"]
+
+
+def test_failed_login_attempts_rate_limiting():
+    """Security check: Repeated wrong OTP attempts (>5) trigger temporary lockout with HTTP 429."""
+    from fastapi.testclient import TestClient
+    from api.app.main import app
+    import uuid
+
+    client = TestClient(app)
+    phone = f"99111{uuid.uuid4().hex[:5]}"
+    client.post("/api/v1/facilitator/auth/request-otp", json={"phone_number": phone, "name": "Test User"})
+
+    # Submit 5 incorrect OTP attempts
+    for _ in range(5):
+        resp = client.post("/api/v1/facilitator/auth/verify-otp", json={
+            "phone_number": phone,
+            "otp": "000000"
+        })
+        assert resp.status_code in (400, 401)
+
+    # 6th attempt must be rate-limited
+    blocked_resp = client.post("/api/v1/facilitator/auth/verify-otp", json={
+        "phone_number": phone,
+        "otp": "000000"
+    })
+    assert blocked_resp.status_code == 429
+    assert "RATE_LIMIT_EXCEEDED" in blocked_resp.json()["detail"]
+
+
+def test_cors_configured_origins_has_no_wildcard():
+    """Security check: CORS does not default to wildcard '*' in production/default settings."""
+    from api.app.config import settings
+    assert "*" not in settings.CORS_ORIGINS
+    assert "http://localhost:5173" in settings.CORS_ORIGINS
+
