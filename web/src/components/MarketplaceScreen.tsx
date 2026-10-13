@@ -275,6 +275,9 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
         <p style={{ margin: "4px 0 0 0", fontSize: "0.84rem", color: "#94a3b8" }}>
           स्थानिक शिक्षक व तंत्रज्ञांनी तयार केलेले प्रात्यक्षिक कोर्सेस. एकदा डाऊनलोड केल्यावर पूर्णपणे ऑफलाइन शिकता येते.
         </p>
+        <div style={{ marginTop: 8, padding: "6px 12px", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: 8, fontSize: "0.76rem", color: "#7dd3fc", display: "inline-block" }}>
+          💡 सर्व खरेदी ही सिम्युलेटेड मॉक पेमेंट (Mock Payment) आहे. कोणतेही खरे बँक व्यवहार किंवा पैसे आकारले जात नाहीत. (Simulated mock transactions only).
+        </div>
 
         {/* Tab Switcher */}
         <div style={{ display: "flex", gap: 8, marginTop: 14 }}>
@@ -431,10 +434,10 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
                 <CreditCard size={24} />
               </div>
               <h3 style={{ margin: "4px 0", fontSize: "1.1rem" }}>
-                मॉक पेमेंट (Simulated Payment)
+                मॉक पेमेंट (Mock Payment - Simulated)
               </h3>
               <p style={{ margin: 0, fontSize: "0.78rem", color: "#94a3b8" }}>
-                डेमो मोड: कोणतेही खरे पैसे कापले जाणार नाहीत
+                डेमो मोड: कोणतेही खरे पैसे कापले जाणार नाहीत (Mock Payment Demo)
               </p>
             </div>
 
@@ -445,18 +448,18 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
                 <strong style={{ color: "#fff" }}>{purchasingModule.title}</strong>
               </div>
               <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6, fontSize: "0.85rem" }}>
-                <span style={{ color: "#94a3b8" }}>एकूण किंमत:</span>
+                <span style={{ color: "#94a3b8" }}>एकूण मॉक किंमत (Mock Price):</span>
                 <strong style={{ color: "#f97316", fontSize: "1.05rem" }}>₹{purchasingModule.price_inr}</strong>
               </div>
 
               {purchasingModule.price_inr > 0 && (
                 <div style={{ borderTop: "1px dashed rgba(255,255,255,0.15)", paddingTop: 8, marginTop: 8, fontSize: "0.75rem" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", color: "#94a3b8", marginBottom: 3 }}>
-                    <span>मार्गदर्शक मानधन (88% Payout):</span>
+                    <span>मार्गदर्शक मानधन (88% Mock Payout):</span>
                     <strong style={{ color: "#34d399" }}>₹{(purchasingModule.price_inr * 0.88).toFixed(2)}</strong>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", color: "#94a3b8" }}>
-                    <span>दिशा प्लॅटफॉर्म मेंटेनन्स (12% Fee):</span>
+                    <span>दिशा प्लॅटफॉर्म मेंटेनन्स (12% Mock Fee):</span>
                     <strong style={{ color: "#38bdf8" }}>₹{(purchasingModule.price_inr * 0.12).toFixed(2)}</strong>
                   </div>
                 </div>
@@ -465,7 +468,7 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
 
             {paymentSuccess ? (
               <div style={{ textAlign: "center", padding: 12, background: "rgba(16,185,129,0.15)", borderRadius: 10, color: "#34d399", fontWeight: 700 }}>
-                ✓ पेमेंट यशस्वी! कोर्स ऑफलाइन डाऊनलोड झाला आहे.
+                ✓ मॉक पेमेंट यशस्वी! (Mock Payment Success - Demo Only) कोर्स ऑफलाइन डाऊनलोड झाला आहे.
               </div>
             ) : (
               <div style={{ display: "flex", gap: 10 }}>
@@ -481,7 +484,7 @@ export const MarketplaceScreen: React.FC<MarketplaceScreenProps> = ({
                   className="submit-btn"
                   style={{ flex: 2, padding: 12 }}
                 >
-                  {isProcessingPayment ? "प्रक्रिया सुरू आहे..." : `मॉक पेमेंट करा (Pay ₹${purchasingModule.price_inr}) ✓`}
+                  {isProcessingPayment ? "प्रक्रिया सुरू आहे..." : `मॉक पेमेंट करा (Mock Pay ₹${purchasingModule.price_inr}) ✓`}
                 </button>
               </div>
             )}

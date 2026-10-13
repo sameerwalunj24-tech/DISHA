@@ -855,31 +855,36 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
                   </button>
                 </div>
 
+                {/* Mock Payments Notice */}
+                <div style={{ padding: "8px 12px", background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: 8, fontSize: "0.78rem", color: "#7dd3fc", marginBottom: 12 }}>
+                  💡 मॉक पेमेंट प्रणाली (Mock Payments): सर्व उत्पन्न व आकडेवारी सिम्युलेटेड प्रोटोटाइप आहे. कोणतेही खरे पैसे किंवा बँक खाती जोडलेली नाहीत. (Simulated prototype transactions; no real money).
+                </div>
+
                 {/* KPI Earnings Cards */}
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 16 }}>
                   <div style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
-                    <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>एकूण विक्री (Gross)</span>
+                    <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>एकूण मॉक विक्री (Mock Gross)</span>
                     <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fff", marginTop: 4 }}>
                       ₹{earnings?.gross_revenue_inr || 0}
                     </div>
                   </div>
 
                   <div style={{ background: "rgba(16,185,129,0.15)", border: "1.5px solid rgba(16,185,129,0.4)", borderRadius: 12, padding: 12 }}>
-                    <span style={{ fontSize: "0.72rem", color: "#34d399", fontWeight: 700 }}>तुमचा वाटा (८८% Net)</span>
+                    <span style={{ fontSize: "0.72rem", color: "#34d399", fontWeight: 700 }}>तुमचा मॉक वाटा (८८% Mock Net)</span>
                     <div style={{ fontSize: "1.25rem", fontWeight: 800, color: "#34d399", marginTop: 4 }}>
                       ₹{earnings?.facilitator_share_88pct_inr || 0}
                     </div>
                   </div>
 
                   <div style={{ background: "rgba(56,189,248,0.1)", border: "1px solid rgba(56,189,248,0.3)", borderRadius: 12, padding: 12 }}>
-                    <span style={{ fontSize: "0.72rem", color: "#38bdf8" }}>प्लॅटफॉर्म शुल्क (१२%)</span>
+                    <span style={{ fontSize: "0.72rem", color: "#38bdf8" }}>प्लॅटफॉर्म शुल्क (१२% Mock Fee)</span>
                     <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#38bdf8", marginTop: 4 }}>
                       ₹{earnings?.platform_share_12pct_inr || 0}
                     </div>
                   </div>
 
                   <div style={{ background: "rgba(15,23,42,0.6)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
-                    <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>एकूण नोंदणी</span>
+                    <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>एकूण नोंदणी (Enrollments)</span>
                     <div style={{ fontSize: "1.2rem", fontWeight: 800, color: "#fdba74", marginTop: 4 }}>
                       {earnings?.total_enrollments || 0} विद्यार्थी
                     </div>
@@ -999,7 +1004,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
                           <div>
                             <strong style={{ color: "#fff", fontSize: "0.9rem", display: "block" }}>{mb.title}</strong>
                             <span style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
-                              किंमत: ₹{mb.price_inr} • नोंदणी: {mb.enrollments_count} विद्यार्थी
+                              किंमत: ₹{mb.price_inr} (Mock) • नोंदणी: {mb.enrollments_count} विद्यार्थी
                             </span>
                           </div>
                           <div style={{ textAlign: "right" }}>
@@ -1007,7 +1012,7 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
                               ₹{mb.facilitator_share_88pct_inr}
                             </div>
                             <span style={{ fontSize: "0.7rem", color: "#94a3b8" }}>
-                              ८८% वाटा
+                              ८८% मॉक वाटा
                             </span>
                           </div>
                         </div>
