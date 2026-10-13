@@ -60,12 +60,23 @@ def generate_grounded_explanation(
     opp: Any,
     evaluation: EvaluationSummary,
     student_profile: Dict[str, Any],
-    lang: str = "mr"
+    lang: str = "mr",
+    use_llm: bool = True
 ) -> Dict[str, str]:
     """
-    Generates grounded, deterministic, zero-hallucination explanation.
+    Generates grounded, zero-hallucination explanation.
     Guarantees official source name, exact source URL, and last verified date.
+    When a Gemini LLM adapter is configured with API key, delegates to AI explanation with strict validation and template fallback.
     """
+    if use_llm:
+        try:
+            from api.app.ai import get_llm_adapter
+            adapter = get_llm_adapter()
+            if adapter.provider_name == "gemini":
+                return adapter.generate_explanation(opp, evaluation, student_profile, lang)
+        except Exception:
+            pass
+
     t = TEMPLATES.get(lang, TEMPLATES["mr"])
     grade = student_profile.get("grade") or student_profile.get("grade_level", 10)
     district = student_profile.get("district", "सातारा")

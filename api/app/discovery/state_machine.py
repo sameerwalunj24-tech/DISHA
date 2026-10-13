@@ -156,6 +156,13 @@ async def submit_discovery_answer(
     db.commit()
     db.refresh(student)
 
+    # Privacy-safe impact event tracking (no student names or IDs)
+    try:
+        from api.app.impact.router import record_impact_event
+        record_impact_event(db, "PROFILE_CREATED")
+    except Exception:
+        pass
+
     session.student_id = student.id
 
     return {

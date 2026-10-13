@@ -30,6 +30,9 @@ class OpportunityResponse(BaseModel):
     source_url: str
     last_verified: str
     verification_status: str
+    verified_by: Optional[str] = None
+    verified_on: Optional[str] = None
+    needs_recheck: bool = False
     is_sample: bool
 
 class RuleEvaluation(BaseModel):
@@ -48,6 +51,7 @@ class ScoreBreakdown(BaseModel):
 
 class OpportunityMatchResponse(BaseModel):
     opportunity: OpportunityResponse
+    needs_recheck: bool = False
     overall_eligibility: str  # "ELIGIBLE", "LIKELY", "NOT_ELIGIBLE"
     score: int
     score_breakdown: ScoreBreakdown

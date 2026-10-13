@@ -27,7 +27,9 @@ SAMPLE_OPP = {
     "source_name": "Official Portal",
     "source_url": "https://official.gov.in/solar",
     "last_verified": "2026-10-01",
-    "verification_status": "verified"
+    "verification_status": "verified",
+    "verified_by": "Human Verifier",
+    "verified_on": "2026-10-01"
 }
 
 def test_rule_grade_boundaries():

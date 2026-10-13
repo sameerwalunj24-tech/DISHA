@@ -294,25 +294,86 @@ Disha empowers local teachers and vocational trainers to monetize practical know
 
 ---
 
+## 🛡️ Data Trust Tooling (Phase 8A)
+
+### 1. Opportunity Link Health & HTTPS Checker
+Run the link health audit to verify all catalog source URLs over HTTP:
+```bash
+python api/verify_report.py
+```
+* Checks HTTP response status and follow redirects.
+* Flags non-HTTPS links with `[NON-HTTPS]`.
+* Flags timeouts (>5s), connection failures, or dead links with `[DEAD]`.
+* Use `--skip-network` for fast offline reporting:
+```bash
+python api/verify_report.py --skip-network
+```
+
+### 2. Human Reviewer Verification CLI
+Mark an opportunity row verified **only after manual inspection of the official portal**:
+```bash
+# Record human sign-off
+python api/admin_verify.py --id 1 --verifier "Pooja Deshmukh"
+
+# List verification age and status across catalog
+python api/admin_verify.py --list
+```
+* **90-Day Freshness Policy:** Any verification older than 90 days displays a **"Needs re-check (>90d)"** badge in the UI and immediately loses the +30 points verified ranking bonus until re-verified.
+* See full guidelines and human review checklist in [/docs/DATA_GUIDE.md](file:///d:/CITIBANK%20HACKTHON/docs/DATA_GUIDE.md).
+
+---
+
+## 🤖 Real LLM Path (Gemini Adapter)
+
+When a Gemini API key is configured in `.env`:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_DAILY_CALL_CAP=100
+```
+1. **End-to-End Grounded Explanations:**
+   - Matches generate AI-written, supportive explanations in Marathi, Hindi, or English.
+   - Explanations strictly cite the official source URL and source name.
+2. **Built-in Resilience & Safeguards:**
+   - **Timeout & Retries:** 8.0s timeout with automatic retry on transient network errors.
+   - **Token Caps:** Output constrained to 256 tokens.
+   - **Daily Quota Cap:** Defaults to 100 calls/day. When reached, seamlessly falls back to the deterministic template text without failing.
+   - **SHA-256 Explanation Caching:** Identical student profiles and opportunity queries hit cache instantly with zero extra API calls.
+   - **Anti-Hallucination Validator:** `ExplanationValidator` strictly checks for URL hallucinations. If any invented URL is detected, the AI output is discarded and the system falls back to the safe grounded template.
+   - **Privacy Protection:** Student answers, personal details, and keys are never logged.
+
+---
+
+## 📊 Live Privacy-Safe Impact Metrics
+
+1. **Facilitator Impact View:**
+   - In the Facilitator Portal, tap the **"समुदाय प्रभाव (Impact Metrics)"** tab.
+   - Displays live KPI counts: Profiles Created, Pathways Started, Steps Completed, Opportunities Viewed, Recommendations Made, and Offline Syncs.
+2. **Aggregation JSON Endpoint:**
+   - `GET /api/v1/impact/summary`
+   - **Privacy Masking Rule:** Any small cell count between 1 and 4 is automatically masked as `"<5"` to prevent individual re-identification in rural communities. Counts of 0 or 5+ are displayed transparently.
+
+---
+
 ## 🧪 Running Automated Tests
 
-Run the full backend test suite covering security startup checks, rate limiting, deterministic matching, pathways, offline sync, facilitator portal, talent radar, CSV disclosure control (<5 hidden), marketplace 12/88 split, partner connectors, and demo seeding:
+Run the full backend test suite covering security startup checks, link health checks, admin verification CLI, 90-day verification expiry, Gemini LLM adapter with mock provider/caching/quota, privacy-safe impact metrics with cell masking (<5), and demo reset:
 ```bash
 python -m pytest api/tests -v
 ```
-**Expected Result:** 53 passed in ~3.8s (`100%` success).
+**Expected Result:** 71 passed (`100%` success).
 
-Run the frontend test suite verifying sync outbox queueing, sensitive field stripping, shared-device session clearing, offline roster/recommendation caching, and marketplace 12/88 revenue split:
+Run the frontend test suite verifying sync outbox queueing, sensitive field stripping, shared-device session clearing, offline roster/recommendation caching, and marketplace deterministic 12/88 integer paise split:
 ```bash
 cmd /c "npm --prefix web test"
 ```
-**Expected Result:** 14 passed in ~0.1s (`100%` success).
+**Expected Result:** 15 passed (`100%` success).
 
 Run production bundle build verification:
 ```bash
 cmd /c "npm --prefix web run build"
 ```
 **Expected Result:** TypeScript passes and Vite builds dist bundle successfully.
+
 
 
 

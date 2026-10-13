@@ -29,8 +29,10 @@ interface MatchItem {
     source_url: string;
     last_verified: string;
     verification_status: string;
+    needs_recheck?: boolean;
     is_sample: boolean;
   };
+  needs_recheck?: boolean;
   overall_eligibility: "ELIGIBLE" | "LIKELY" | "NOT_ELIGIBLE";
   score: number;
   score_breakdown: {
@@ -326,6 +328,7 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
           {matches.map((item) => {
             const opp = item.opportunity;
             const isVerified = opp.verification_status === "verified";
+            const needsRecheck = Boolean(item.needs_recheck || opp.needs_recheck);
             const isExpanded = expandedId === opp.id;
 
             // Eligibility Badge configuration
@@ -420,7 +423,24 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
                     </span>
 
                     {/* Verification Status Badge */}
-                    {isVerified ? (
+                    {needsRecheck ? (
+                      <span
+                        style={{
+                          background: "rgba(239,68,68,0.15)",
+                          border: "1px solid rgba(239,68,68,0.4)",
+                          color: "#f87171",
+                          padding: "3px 8px",
+                          borderRadius: 9999,
+                          fontSize: "0.72rem",
+                          fontWeight: 700,
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 4
+                        }}
+                      >
+                        <AlertTriangle size={12} /> Needs re-check (&gt;90d)
+                      </span>
+                    ) : isVerified ? (
                       <span
                         style={{
                           background: "rgba(2,132,199,0.15)",

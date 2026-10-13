@@ -106,3 +106,18 @@ class MockLLMAdapter(BaseLLMAdapter):
             family_livelihood_context=fam_raw,
             confidence_score=0.92
         )
+
+    def generate_explanation(
+        self,
+        opp: Any,
+        evaluation: Any,
+        student_profile: Dict[str, Any],
+        lang: str = "mr"
+    ) -> Dict[str, str]:
+        from api.app.matching.explainer import generate_grounded_explanation
+        return generate_grounded_explanation(
+            opp=opp,
+            evaluation=evaluation,
+            student_profile=student_profile,
+            lang=lang
+        )

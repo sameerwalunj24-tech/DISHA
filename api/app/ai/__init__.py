@@ -6,9 +6,10 @@ from api.app.ai.schemas import StructuredProfile
 
 def get_llm_adapter() -> BaseLLMAdapter:
     gemini_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
-    provider = os.getenv("LLM_PROVIDER", "mock").lower()
+    provider = os.getenv("LLM_PROVIDER", "").lower()
 
-    if gemini_key and provider == "gemini":
+    # When key is set and provider is not forced to mock, or provider is explicitly 'gemini'
+    if gemini_key and (provider == "gemini" or provider != "mock"):
         return GeminiLLMAdapter(api_key=gemini_key)
     return MockLLMAdapter()
 

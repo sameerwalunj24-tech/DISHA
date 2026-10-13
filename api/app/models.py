@@ -206,4 +206,14 @@ class ModuleEnrollment(Base):
     module = relationship("TrainingModule", back_populates="enrollments")
 
 
+class ImpactEvent(Base):
+    __tablename__ = "impact_events"
 
+    # Strictly privacy-safe metrics event record.
+    # NO student names, NO free-text feedback, NO personal identifiers.
+    id = Column(String(36), primary_key=True, default=generate_uuid)
+    event_type = Column(String(50), nullable=False, index=True)
+    # Types: PROFILE_CREATED, PATHWAY_STARTED, STEP_COMPLETED,
+    #        OPP_VIEWED, REC_MADE, SYNC_COMPLETED
+    category = Column(String(50), nullable=True)  # Optional cluster/category code (e.g. vocational, solar)
+    created_at = Column(DateTime, default=utc_now, nullable=False, index=True)

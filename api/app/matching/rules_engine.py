@@ -20,6 +20,7 @@ class RuleResult(BaseModel):
 class EvaluationSummary(BaseModel):
     overall_eligibility: str  # "ELIGIBLE", "LIKELY", "NOT_ELIGIBLE"
     is_expired: bool
+    needs_recheck: bool = False
     passed_rules: List[RuleResult]
     failed_rules: List[RuleResult]
     unknown_rules: List[RuleResult]
@@ -178,9 +179,25 @@ def evaluate_opportunity(
     else:
         score_breakdown["base_eligibility"] = -1000
 
-    # Verification bonus: verified rows always rank above sample_unverified
+    # Verification bonus: verified rows rank above sample_unverified ONLY IF human verified within 90 days
     verif_status = str(getattr(opp, "verification_status", "sample_unverified") if not isinstance(opp, dict) else opp.get("verification_status", "sample_unverified")).lower()
-    if verif_status == "verified":
+    verified_by = getattr(opp, "verified_by", None) if not isinstance(opp, dict) else opp.get("verified_by")
+    verified_on = getattr(opp, "verified_on", None) if not isinstance(opp, dict) else opp.get("verified_on")
+
+    needs_recheck = False
+    is_human_verified = verif_status == "verified" and bool(verified_by) and bool(verified_on)
+
+    if is_human_verified and verified_on:
+        try:
+            v_date = datetime.strptime(str(verified_on).strip(), "%Y-%m-%d").date()
+            days_since = (current_date - v_date).days
+            if days_since > 90:
+                needs_recheck = True
+        except ValueError:
+            pass
+
+    # Rows whose last verification is older than 90 days lose the verified ranking bonus
+    if is_human_verified and not needs_recheck:
         score_breakdown["verification_bonus"] = 30
     else:
         score_breakdown["verification_bonus"] = 0
@@ -219,6 +236,7 @@ def evaluate_opportunity(
     return EvaluationSummary(
         overall_eligibility=overall_status,
         is_expired=is_expired,
+        needs_recheck=needs_recheck,
         passed_rules=passed_rules,
         failed_rules=failed_rules,
         unknown_rules=unknown_rules,

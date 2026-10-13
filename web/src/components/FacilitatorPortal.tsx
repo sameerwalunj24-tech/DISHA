@@ -125,10 +125,12 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
   // Active Radar tooltip
   const [activeReason, setActiveReason] = useState<{ studentName: string; flag: RadarFlag } | null>(null);
 
-  // Phase 7 Marketplace: Tab & Earnings state
-  const [mainTab, setMainTab] = useState<"COHORTS" | "EARNINGS">("COHORTS");
+  // Phase 7 & 8: Tab, Earnings & Impact state
+  const [mainTab, setMainTab] = useState<"COHORTS" | "EARNINGS" | "IMPACT">("COHORTS");
   const [earnings, setEarnings] = useState<any>(null);
   const [isLoadingEarnings, setIsLoadingEarnings] = useState<boolean>(false);
+  const [impactSummary, setImpactSummary] = useState<any>(null);
+  const [isLoadingImpact, setIsLoadingImpact] = useState<boolean>(false);
 
   // Author Module state
   const [showCreateModule, setShowCreateModule] = useState<boolean>(false);
@@ -155,6 +157,21 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
       console.warn("Could not load earnings:", err);
     } finally {
       setIsLoadingEarnings(false);
+    }
+  };
+
+  const loadImpactSummary = async () => {
+    setIsLoadingImpact(true);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/api/v1/impact/summary");
+      if (res.ok) {
+        const data = await res.json();
+        setImpactSummary(data);
+      }
+    } catch (err) {
+      console.warn("Could not load impact summary:", err);
+    } finally {
+      setIsLoadingImpact(false);
     }
   };
 
@@ -821,9 +838,134 @@ export const FacilitatorPortal: React.FC<FacilitatorPortalProps> = ({
               >
                 <DollarSign size={14} /> कोर्सेस व कमाई (88% Revenue Split)
               </button>
+              <button
+                onClick={() => {
+                  setMainTab("IMPACT");
+                  loadImpactSummary();
+                }}
+                style={{
+                  padding: "6px 14px",
+                  borderRadius: 9999,
+                  border: "none",
+                  background: mainTab === "IMPACT" ? "#10b981" : "rgba(255,255,255,0.08)",
+                  color: mainTab === "IMPACT" ? "#000" : "#cbd5e1",
+                  fontWeight: 700,
+                  fontSize: "0.82rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+              >
+                <TrendingUp size={14} /> समुदाय प्रभाव (Impact Metrics)
+              </button>
             </div>
 
-            {mainTab === "EARNINGS" ? (
+            {mainTab === "IMPACT" ? (
+              /* TAB 3: PRIVACY-SAFE COMMUNITY IMPACT METRICS */
+              <div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                  <div>
+                    <h4 style={{ margin: 0, color: "#fff", fontSize: "1rem" }}>
+                      {language === "mr" && "सामुदायिक प्रभाव अहवाल (Community Impact)"}
+                      {language === "hi" && "सामुदायिक प्रभाव रिपोर्ट (Community Impact)"}
+                      {language === "en" && "Community Impact Metrics"}
+                    </h4>
+                    <p style={{ margin: "2px 0 0 0", color: "#94a3b8", fontSize: "0.78rem" }}>
+                      ग्रामीण करिअर मार्गदर्शन व कौशल्य विकास प्रगती
+                    </p>
+                  </div>
+                  <button
+                    onClick={loadImpactSummary}
+                    disabled={isLoadingImpact}
+                    style={{
+                      background: "rgba(16,185,129,0.15)",
+                      border: "1px solid rgba(16,185,129,0.4)",
+                      color: "#34d399",
+                      padding: "6px 12px",
+                      borderRadius: 9999,
+                      cursor: "pointer",
+                      fontSize: "0.78rem",
+                      fontWeight: 700,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 5
+                    }}
+                  >
+                    {isLoadingImpact ? "लोड होत आहे..." : "ताजे आकडे मिळवा ⟳"}
+                  </button>
+                </div>
+
+                {/* Privacy Guarantee Notice */}
+                <div style={{ padding: "10px 14px", background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: 10, fontSize: "0.78rem", color: "#a7f3d0", marginBottom: 16 }}>
+                  🔒 <strong>गोपनीयता हमी (Privacy Guarantee):</strong> विद्यार्थ्यांची नावे, मोबाईल नंबर किंवा खुला मजकूर कधीही गोळा केला जात नाही. विद्यार्थ्यांची ओळख सुरक्षित ठेवण्यासाठी ५ पेक्षा कमी संख्या संरक्षित आहेत (Counts &lt; 5 are masked).
+                </div>
+
+                {isLoadingImpact && !impactSummary ? (
+                  <p style={{ color: "#94a3b8", fontSize: "0.85rem", textAlign: "center", padding: 20 }}>
+                    प्रभाव मेट्रिक्स लोड होत आहेत...
+                  </p>
+                ) : (
+                  <div>
+                    {/* 6 Key Impact Cards */}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: 10, marginBottom: 16 }}>
+                      <div style={{ background: "rgba(15,23,42,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>विद्यार्थी प्रोफाईल</span>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#38bdf8", marginTop: 4 }}>
+                          {impactSummary?.metrics?.profiles_created ?? "0"}
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "#64748b" }}>Profiles Created</span>
+                      </div>
+
+                      <div style={{ background: "rgba(15,23,42,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>करिअर मार्ग सुरू</span>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#a855f7", marginTop: 4 }}>
+                          {impactSummary?.metrics?.pathways_started ?? "0"}
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "#64748b" }}>Pathways Started</span>
+                      </div>
+
+                      <div style={{ background: "rgba(15,23,42,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>प्रात्यक्षिक टप्पे पूर्ण</span>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#34d399", marginTop: 4 }}>
+                          {impactSummary?.metrics?.steps_completed ?? "0"}
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "#64748b" }}>Steps Completed</span>
+                      </div>
+
+                      <div style={{ background: "rgba(15,23,42,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>संधी पाहिल्या</span>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#f97316", marginTop: 4 }}>
+                          {impactSummary?.metrics?.opportunities_viewed ?? "0"}
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "#64748b" }}>Opportunities Viewed</span>
+                      </div>
+
+                      <div style={{ background: "rgba(15,23,42,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>शिक्षकांच्या शिफारसी</span>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#fbbf24", marginTop: 4 }}>
+                          {impactSummary?.metrics?.recommendations_made ?? "0"}
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "#64748b" }}>Recommendations</span>
+                      </div>
+
+                      <div style={{ background: "rgba(15,23,42,0.7)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: 12, padding: 12 }}>
+                        <span style={{ fontSize: "0.72rem", color: "#94a3b8" }}>ऑफलाइन सिंक</span>
+                        <div style={{ fontSize: "1.3rem", fontWeight: 800, color: "#22d3ee", marginTop: 4 }}>
+                          {impactSummary?.metrics?.offline_syncs ?? "0"}
+                        </div>
+                        <span style={{ fontSize: "0.68rem", color: "#64748b" }}>Offline Syncs</span>
+                      </div>
+                    </div>
+
+                    <div style={{ background: "rgba(255,255,255,0.03)", borderRadius: 10, padding: 12, display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "0.8rem", color: "#94a3b8" }}>
+                      <span>एकूण नोंदवलेले सामुदायिक प्रगती प्रसंग (Total Impact Events):</span>
+                      <strong style={{ color: "#fff", fontSize: "1rem" }}>{impactSummary?.metrics?.total_impact_events ?? "0"}</strong>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : mainTab === "EARNINGS" ? (
               /* TAB 2: MARKETPLACE & EARNINGS DASHBOARD */
               <div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>

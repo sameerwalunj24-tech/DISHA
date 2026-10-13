@@ -128,8 +128,12 @@ def _run_matches(
             lang=language
         )
 
+        opp_model = OpportunityResponse.model_validate(opp)
+        opp_model.needs_recheck = evaluation.needs_recheck
+
         match_resp = OpportunityMatchResponse(
-            opportunity=OpportunityResponse.model_validate(opp),
+            opportunity=opp_model,
+            needs_recheck=evaluation.needs_recheck,
             overall_eligibility=evaluation.overall_eligibility,
             score=evaluation.total_score,
             score_breakdown=ScoreBreakdown(
@@ -149,6 +153,14 @@ def _run_matches(
 
     # Sort deterministically: highest score first
     matches.sort(key=lambda m: m.score, reverse=True)
+
+    if matches:
+        try:
+            from api.app.impact.router import record_impact_event
+            record_impact_event(db, "OPP_VIEWED")
+        except Exception:
+            pass
+
     return matches
 
 
@@ -191,8 +203,12 @@ def check_single_eligibility(
         lang=req.language or "mr"
     )
 
+    opp_model = OpportunityResponse.model_validate(opp)
+    opp_model.needs_recheck = evaluation.needs_recheck
+
     return OpportunityMatchResponse(
-        opportunity=OpportunityResponse.model_validate(opp),
+        opportunity=opp_model,
+        needs_recheck=evaluation.needs_recheck,
         overall_eligibility=evaluation.overall_eligibility,
         score=evaluation.total_score,
         score_breakdown=ScoreBreakdown(

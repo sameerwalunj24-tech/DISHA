@@ -385,6 +385,13 @@ async def process_sync_batch(
             ))
             failed += 1
 
+    if processed > 0:
+        try:
+            from api.app.impact.router import record_impact_event
+            record_impact_event(db, "SYNC_COMPLETED")
+        except Exception:
+            pass
+
     return SyncBatchResponse(
         results=results,
         processed_count=processed,

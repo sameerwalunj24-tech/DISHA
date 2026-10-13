@@ -630,6 +630,13 @@ def recommend_opportunity(
     db.commit()
     db.refresh(rec)
 
+    # Privacy-safe impact metric (no names or student ids)
+    try:
+        from api.app.impact.router import record_impact_event
+        record_impact_event(db, "REC_MADE")
+    except Exception:
+        pass
+
     return RecommendationResponse(
         id=rec.id,
         facilitator_id=facilitator.id,

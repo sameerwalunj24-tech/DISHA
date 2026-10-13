@@ -16,6 +16,7 @@ from api.app.sync.router import router as sync_router
 from api.app.facilitator.router import router as facilitator_router
 from api.app.marketplace.router import router as marketplace_router
 from api.app.partner.router import router as partner_router
+from api.app.impact.router import router as impact_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -59,6 +60,7 @@ app.include_router(sync_router)
 app.include_router(facilitator_router)
 app.include_router(marketplace_router)
 app.include_router(partner_router)
+app.include_router(impact_router, prefix="/api/v1")
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check(db: Session = Depends(get_db)):

@@ -105,6 +105,13 @@ def create_student_pathway(
         pathway_id = new_pathway.id
         created_at_str = new_pathway.created_at.isoformat() if new_pathway.created_at else None
 
+    # Privacy-safe impact event tracking
+    try:
+        from api.app.impact.router import record_impact_event
+        record_impact_event(db, "PATHWAY_STARTED", pathway_data.get("career_cluster"))
+    except Exception:
+        pass
+
     return PathwayResponse(
         id=pathway_id,
         student_id=student_id,

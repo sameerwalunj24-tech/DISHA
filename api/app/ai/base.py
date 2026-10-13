@@ -14,3 +14,16 @@ class BaseLLMAdapter(ABC):
         Converts raw question answers into a validated StructuredProfile.
         """
         pass
+
+    @abstractmethod
+    def generate_explanation(
+        self,
+        opp: Any,
+        evaluation: Any,
+        student_profile: Dict[str, Any],
+        lang: str = "mr"
+    ) -> Dict[str, str]:
+        """
+        Generates grounded, validated explanation for an opportunity match.
+        """
+        pass
