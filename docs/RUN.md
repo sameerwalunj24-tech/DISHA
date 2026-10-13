@@ -4,13 +4,28 @@ This guide provides the exact commands to run both the **Backend API** and the *
 
 ---
 
-## Prerequisites
-- **Python 3.10+** (tested on Python 3.14)
-- **Node.js 18+** (tested on Node.js 20+)
+## 🚀 One-Command Local Startup (Recommended)
+
+### Windows:
+Simply run:
+```cmd
+start.bat
+```
+
+### macOS / Linux:
+```bash
+chmod +x start.sh
+./start.sh
+```
+
+### Docker Compose:
+```bash
+docker compose up --build
+```
 
 ---
 
-## 🚀 Running in 2 Simple Commands
+## 🏃 Manual Start in 2 Terminals
 
 Open two separate terminal windows (Command Prompt or PowerShell):
 
@@ -18,7 +33,7 @@ Open two separate terminal windows (Command Prompt or PowerShell):
 ```bash
 # Navigate to the api directory and start the server
 cd api
-python seed.py
+python seed_demo.py
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 * **API Health Check:** [http://localhost:8000/health](http://localhost:8000/health)
@@ -26,6 +41,8 @@ uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 * **Student Matches Endpoint:** `GET /api/v1/students/{id}/matches`
 * **Single Eligibility Check:** `POST /api/v1/eligibility/check`
 * **Opportunities Catalog:** [http://localhost:8000/api/v1/opportunities](http://localhost:8000/api/v1/opportunities)
+* **Marketplace Catalog:** `GET /api/v1/marketplace/modules`
+* **Demo Reset:** `POST /api/v1/demo/reset`
 
 ---
 
@@ -222,26 +239,80 @@ Disha includes a dedicated Facilitator Mode designed for rural school teachers a
 
 ---
 
-## 📱 How to Open on Your Phone (Same Wi-Fi)
+## 🛒 How to Test "Marketplace & 12/88 Revenue Split" (Phase 7 Demo Script)
 
-1. Connect both your computer and your phone to the same Wi-Fi network.
-2. Look at the terminal output from `npm run dev -- --host` for the `Network:` URL (e.g. `http://192.168.1.5:5173`).
-3. Open Chrome on Android, dictate answers with the microphone, and test offline airplane mode.
+Disha empowers local teachers and vocational trainers to monetize practical knowledge while giving students structured micro-courses with an equitable 88% revenue share for facilitators and 12% platform fee.
+
+1. **Facilitator Creates Training Module:**
+   - Log into the Facilitator Portal (phone `9822000000`, OTP displayed on screen).
+   - Switch to the tab **"कोर्सेस व कमाई (88% Revenue Split)"**.
+   - Tap **"+ नवीन कोर्स तयार करा (Author Course)"**.
+   - Enter title (e.g., `सौर ऊर्जा इन्व्हर्टर दुरुस्ती`), language (`mr`), price type (`one_time`), and price (e.g. `₹200`).
+   - Add practical steps and publish.
+2. **Student Browses & Enrolls via Mock Payment:**
+   - From the student home screen, tap the 4th tile: **कौशल्य कोर्सेस (Skill Courses)**.
+   - Tap on the course card to view the fee breakdown modal:
+     - Total Price: `₹200`
+     - Facilitator Direct Earnings (88%): `₹176.00`
+     - Disha Platform Sustainable Fee (12%): `₹24.00`
+   - Tap **"मॉक UPI ने नोंदणी करा (Confirm Mock Payment)"**.
+   - Once enrolled, the course steps are cached in local storage for **100% offline access**.
+3. **Facilitator Earnings Dashboard:**
+   - Return to Facilitator Portal -> **कोर्सेस व कमाई**.
+   - KPI cards reflect: Gross Sales `₹200`, Net Facilitator Payout `₹176.00 (88%)`, Platform Fee `₹24.00 (12%)`, and Enrolled Students `1`.
+
+---
+
+## 🔌 How to Test "Open API & Connector Feeds"
+
+1. **Test Partner API Key Auth & Feed Import:**
+   - Run the sample connector script against your local API:
+     ```bash
+     python connectors/sample_ngo_feed_connector.py \
+       --feed connectors/sample_ngo_feed.json \
+       --api-url http://127.0.0.1:8000 \
+       --api-key disha_partner_test_key_secret_2026
+     ```
+   - Observe stdout:
+     `Imported count: 3`
+     `Verification status: sample_unverified (Human review required)`
+2. **Data Trust Verification:**
+   - Inspect the database or call `/api/v1/opportunities`: the imported NGO opportunities appear in the catalog, but are strictly labeled `"Sample - unverified"`.
+
+---
+
+## 🔁 How to Test "Demo Seed & Instant Reset"
+
+1. **Reset Demo via Script:**
+   ```bash
+   python api/seed_demo.py
+   ```
+   Restores demo facilitator (`Sunita Patil`, phone `9822000000`), cohort `DEMO10`, and 3 students at different stages (Exploration, Mid-way 15 days + recommendation, and Advanced 26 days + course enrolled).
+2. **Reset Demo via Hidden UI Button:**
+   - In the header top bar, tap the dashed orange button **"डेमो रिसेट (Reset Demo)"**.
+   - Confirm the dialog. The entire demo environment is instantly re-seeded via `POST /api/v1/demo/reset`.
 
 ---
 
 ## 🧪 Running Automated Tests
 
-Run the full backend test suite covering database isolation, fresh schema creation, seed validation, age-gated rules, guardian consent enforcement, sensitive field privacy, pathway templates, zero invented URLs, milestone deadlines, offline batch sync, facilitator JWT auth, cohort access control, talent radar engine, and recommendations:
+Run the full backend test suite covering security startup checks, rate limiting, deterministic matching, pathways, offline sync, facilitator portal, talent radar, CSV disclosure control (<5 hidden), marketplace 12/88 split, partner connectors, and demo seeding:
 ```bash
 python -m pytest api/tests -v
 ```
-All 40 backend unit tests should pass with `100%` success.
+**Expected Result:** 53 passed in ~3.8s (`100%` success).
 
-Run the frontend test suite verifying sync outbox queueing, sensitive field stripping, shared-device session isolation, and offline roster/recommendation caching:
+Run the frontend test suite verifying sync outbox queueing, sensitive field stripping, shared-device session clearing, offline roster/recommendation caching, and marketplace 12/88 revenue split:
 ```bash
 cmd /c "npm --prefix web test"
 ```
-All 9 frontend unit tests should pass with `100%` success.
+**Expected Result:** 14 passed in ~0.1s (`100%` success).
+
+Run production bundle build verification:
+```bash
+cmd /c "npm --prefix web run build"
+```
+**Expected Result:** TypeScript passes and Vite builds dist bundle successfully.
+
 
 

@@ -8,6 +8,7 @@ import { DiscoverFlow } from "./components/DiscoverFlow";
 import { OpportunitiesScreen } from "./components/OpportunitiesScreen";
 import { MyPathScreen } from "./components/MyPathScreen";
 import { MarketplaceScreen } from "./components/MarketplaceScreen";
+import { AboutModal } from "./components/AboutModal";
 import { Download, X } from "lucide-react";
 
 import { useSyncStatus } from "./services/sync/useSyncStatus";
@@ -23,6 +24,7 @@ const DishaMain: React.FC = () => {
   const { isOnline } = useSyncStatus();
   const [isFacilitatorPortalOpen, setIsFacilitatorPortalOpen] = useState(false);
   const [isJoinCohortOpen, setIsJoinCohortOpen] = useState(false);
+  const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
   const [selectedScreen, setSelectedScreen] = useState<"home" | "discover" | "pathway" | "opportunities" | "marketplace">("home");
@@ -145,6 +147,7 @@ const DishaMain: React.FC = () => {
         isOnline={isOnline}
         onOpenFacilitatorModal={() => setIsFacilitatorPortalOpen(true)}
         onOpenJoinCohortModal={() => setIsJoinCohortOpen(true)}
+        onOpenAboutModal={() => setIsAboutModalOpen(true)}
       />
 
       {/* Shared-Device Mode Active Banner */}
@@ -292,6 +295,11 @@ const DishaMain: React.FC = () => {
         onClose={() => setIsJoinCohortOpen(false)}
         studentId={studentId}
         onJoinedSuccess={(cohortName) => setJoinedCohortName(cohortName)}
+      />
+
+      <AboutModal
+        isOpen={isAboutModalOpen}
+        onClose={() => setIsAboutModalOpen(false)}
       />
     </>
   );
