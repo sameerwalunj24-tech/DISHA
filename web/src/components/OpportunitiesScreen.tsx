@@ -53,6 +53,17 @@ interface MatchItem {
   };
 }
 
+interface RecommendationItem {
+  id: string;
+  facilitator_id: string;
+  facilitator_name: string;
+  student_id: string;
+  opportunity_id: string;
+  opportunity_title?: string;
+  note?: string;
+  created_at: string;
+}
+
 interface OpportunitiesScreenProps {
   isOnline: boolean;
   studentId?: string | null;
@@ -66,6 +77,7 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
 }) => {
   const { language } = useI18n();
   const [matches, setMatches] = useState<MatchItem[]>([]);
+  const [recommendations, setRecommendations] = useState<RecommendationItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [activeCategory, setActiveCategory] = useState<string>("ALL");
   const [expandedId, setExpandedId] = useState<number | null>(null);
@@ -80,11 +92,17 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
     setIsLoading(true);
 
     if (!isOnline) {
-      // Offline fallback: load cached opportunities from IndexedDB
+      // Offline fallback: load cached opportunities and recommendations
       const cached = await getCachedMatches();
       if (cached && cached.length > 0) {
         setMatches(cached);
         setIsOfflineData(true);
+      }
+      if (studentId) {
+        try {
+          const cachedRecs = localStorage.getItem(`disha_recs_${studentId}`);
+          if (cachedRecs) setRecommendations(JSON.parse(cachedRecs));
+        } catch {}
       }
       setIsLoading(false);
       return;
@@ -94,6 +112,23 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
       let formattedMatches: MatchItem[] = [];
 
       if (studentId) {
+        // Fetch recommendations for this student
+        try {
+          const recRes = await fetch(`http://127.0.0.1:8000/api/v1/students/${studentId}/recommendations`);
+          if (recRes.ok) {
+            const recData = await recRes.json();
+            setRecommendations(recData);
+            try {
+              localStorage.setItem(`disha_recs_${studentId}`, JSON.stringify(recData));
+            } catch {}
+          }
+        } catch (rErr) {
+          try {
+            const cachedRecs = localStorage.getItem(`disha_recs_${studentId}`);
+            if (cachedRecs) setRecommendations(JSON.parse(cachedRecs));
+          } catch {}
+        }
+
         const bodyPayload: Record<string, any> = { language };
         if (optionalIncome) {
           bodyPayload.family_income = parseFloat(optionalIncome);
@@ -314,17 +349,54 @@ export const OpportunitiesScreen: React.FC<OpportunitiesScreenProps> = ({
               BadgeIcon = XCircle;
             }
 
+            // Check if opportunity was recommended by facilitator
+            const rec = recommendations.find(
+              r => String(r.opportunity_id) === String(opp.id) ||
+                   (r.opportunity_title && opp.title.toLowerCase().includes(r.opportunity_title.toLowerCase())) ||
+                   (r.opportunity_title && r.opportunity_title.toLowerCase().includes(opp.title.toLowerCase()))
+            );
+
             return (
               <div
                 key={opp.id}
                 style={{
                   background: "var(--bg-card)",
-                  border: "1.5px solid var(--border-subtle)",
+                  border: rec ? "2px solid #f59e0b" : "1.5px solid var(--border-subtle)",
+                  boxShadow: rec ? "0 0 16px rgba(245, 158, 11, 0.25)" : "none",
                   borderRadius: 18,
                   padding: "16px 18px",
                   transition: "all 0.2s ease"
                 }}
               >
+                {/* Facilitator Recommendation Banner */}
+                {rec && (
+                  <div style={{
+                    background: "rgba(245, 158, 11, 0.14)",
+                    border: "1px solid rgba(245, 158, 11, 0.45)",
+                    borderRadius: 12,
+                    padding: "10px 14px",
+                    marginBottom: 12,
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 10
+                  }}>
+                    <div style={{ background: "#f59e0b", color: "#000", borderRadius: 8, padding: "3px 8px", fontWeight: 800, fontSize: "0.75rem", display: "inline-flex", alignItems: "center", gap: 4 }}>
+                      <Sparkles size={13} />
+                      <span>{language === "mr" ? "शिक्षकांची शिफारस" : language === "hi" ? "शिक्षक की अनुशंसा" : "Teacher Recommendation"}</span>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: "0.82rem", fontWeight: 700, color: "#fde047" }}>
+                        {rec.facilitator_name}
+                      </p>
+                      {rec.note && (
+                        <p style={{ margin: "2px 0 0 0", fontSize: "0.8rem", color: "#fef08a" }}>
+                          "{rec.note}"
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
                 {/* Badges Row */}
                 <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 8 }}>
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>

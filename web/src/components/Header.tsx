@@ -7,9 +7,10 @@ import { useSyncStatus } from "../services/sync/useSyncStatus";
 interface HeaderProps {
   isOnline: boolean;
   onOpenFacilitatorModal: () => void;
+  onOpenJoinCohortModal?: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onOpenFacilitatorModal }) => {
+export const Header: React.FC<HeaderProps> = ({ onOpenFacilitatorModal, onOpenJoinCohortModal }) => {
   const { language, setLanguage, t } = useI18n();
   const { isOnline, isDemoOffline, pendingCount, isSyncing, triggerSync, toggleDemoOffline } = useSyncStatus();
 
@@ -151,6 +152,23 @@ export const Header: React.FC<HeaderProps> = ({ onOpenFacilitatorModal }) => {
               </button>
             ))}
           </div>
+
+          {/* Student Join Cohort Button */}
+          {onOpenJoinCohortModal && (
+            <button
+              className="facilitator-link-btn"
+              onClick={onOpenJoinCohortModal}
+              style={{
+                background: "rgba(14, 165, 233, 0.12)",
+                borderColor: "rgba(14, 165, 233, 0.4)",
+                color: "#38bdf8"
+              }}
+              title={language === "mr" ? "शिक्षकांच्या वर्गात सामील व्हा" : language === "hi" ? "समूह में शामिल हों" : "Join Cohort"}
+            >
+              <Users size={15} />
+              <span>{language === "mr" ? "वर्ग कोड" : language === "hi" ? "समूह कोड" : "Join Cohort"}</span>
+            </button>
+          )}
 
           {/* Facilitator Portal Button */}
           <button

@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Compass, Route, Award, Mic, MicOff, ChevronRight, Volume2, Sparkles } from "lucide-react";
+import { Compass, Route, Award, Mic, MicOff, ChevronRight, Volume2, Sparkles, Users } from "lucide-react";
 import { useI18n } from "../i18n";
 import { voiceService } from "../services/voice";
 
 interface StudentHomeProps {
   onSelectTile: (tileKey: "discover" | "pathway" | "opportunities") => void;
+  onOpenJoinCohort?: () => void;
+  joinedCohortName?: string | null;
 }
 
-export const StudentHome: React.FC<StudentHomeProps> = ({ onSelectTile }) => {
+export const StudentHome: React.FC<StudentHomeProps> = ({ onSelectTile, onOpenJoinCohort, joinedCohortName }) => {
   const { language, t } = useI18n();
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState<string>("");
@@ -60,6 +62,51 @@ export const StudentHome: React.FC<StudentHomeProps> = ({ onSelectTile }) => {
         <h2>{t.greeting}</h2>
         <p>{t.subGreeting}</p>
       </section>
+
+      {/* Cohort Status / Join Card */}
+      <div style={{
+        background: "rgba(14, 165, 233, 0.08)",
+        border: "1px solid rgba(14, 165, 233, 0.25)",
+        borderRadius: 14,
+        padding: "10px 14px",
+        marginBottom: 16,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        gap: 10
+      }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Users size={18} style={{ color: "#38bdf8" }} />
+          <span style={{ fontSize: "0.85rem", color: "#e2e8f0" }}>
+            {joinedCohortName ? (
+              <span><strong>वर्ग:</strong> {joinedCohortName}</span>
+            ) : (
+              <span>
+                {language === "mr" && "शिक्षकांनी दिलेला वर्ग कोड आहे का?"}
+                {language === "hi" && "क्या आपके पास शिक्षक का समूह कोड है?"}
+                {language === "en" && "Have a teacher's class join code?"}
+              </span>
+            )}
+          </span>
+        </div>
+        {!joinedCohortName && onOpenJoinCohort && (
+          <button
+            onClick={onOpenJoinCohort}
+            style={{
+              background: "rgba(14, 165, 233, 0.2)",
+              border: "1px solid #38bdf8",
+              color: "#38bdf8",
+              padding: "5px 12px",
+              borderRadius: 8,
+              fontSize: "0.8rem",
+              fontWeight: 700,
+              cursor: "pointer"
+            }}
+          >
+            {language === "mr" ? "सामील व्हा" : language === "hi" ? "शामिल हों" : "Join Class"}
+          </button>
+        )}
+      </div>
 
       {/* 3 Core Big Tiles */}
       <section className="tiles-grid" aria-label="Main Navigation Tiles">

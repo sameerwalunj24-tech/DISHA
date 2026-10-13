@@ -148,6 +148,80 @@ Disha features a robust offline-first synchronization engine using an IndexedDB 
 
 ---
 
+## 👥 How to Test "Facilitator Mode & Talent Radar" (Phase 6 Demo Script)
+
+Disha includes a dedicated Facilitator Mode designed for rural school teachers and NGO volunteers managing multiple students, featuring a deterministic, explainable **Talent Radar**, shared-device multi-student onboarding, privacy-preserving rosters, and mentor opportunity recommendations.
+
+### Acceptance Demo Script:
+
+1. **Facilitator Login (Phone + Demo OTP):**
+   - Tap the **शिक्षक पोर्टल (Facilitator Portal)** button in the top navigation bar.
+   - Enter your name (e.g., `सुरेश माने`), mobile number (e.g., `9876543210`), and role (`शाळा/कॉलेज शिक्षक`).
+   - Tap **"OTP मिळवा (Send OTP) →"**.
+   - A demonstration OTP is shown directly on the screen (e.g., `123456`) — no external SMS gateway needed.
+   - Tap **"सत्यापित करा व प्रवेश करा (Verify & Login) →"**.
+   - A prototype JWT token is issued, granting access only to your own cohorts.
+
+2. **Create a Cohort & Get Short Join Code:**
+   - Tap **"+ नवीन गट तयार करा (Create Cohort)"**.
+   - Enter group name: `इयत्ता १०वी - तुकडी ब (Class 10-B)`.
+   - Tap **"तयार करा (Create)"**.
+   - The cohort appears with a unique 6-character join code (e.g. `KJ92X1`).
+
+3. **Start Shared-Device Mode:**
+   - In the cohort dashboard, tap **"📱 सामायिक डिव्हाइस सत्र सुरू करा (Start Shared-Device Session)"**.
+   - A persistent dark indigo bar appears across the top of Disha:
+     `📱 सामायिक डिव्हाइस: इयत्ता १०वी - तुकडी ब (KJ92X1)` with a prominent **"पुढील विद्यार्थी (Next Student) →"** button.
+
+4. **Join 3 Students from the Same Phone:**
+   - **Student 1 (Finishes Discover + Ticks Pathway):**
+     - Tap **"वर्ग कोड (Join Cohort)"** in the header or home banner.
+     - Enter join code `KJ92X1` and nickname `रोहन (Roll 14)`.
+     - View plain-language privacy notice in mr/hi/en: *"तुमचे शिक्षक तुमची प्रगती व आवडी पाहू शकतात."*
+     - Complete Discover, keep guardian consent checked, submit.
+     - View 30-day pathway and tick 3 micro-steps.
+   - **Tap "पुढील विद्यार्थी (Next Student) →"**:
+     - Student 1's state is safely saved. The session cleanly resets for the next student without mixing data.
+   - **Student 2 (Finishes Discover):**
+     - Tap **"वर्ग कोड"**, enter code `KJ92X1` and nickname `प्रिया (Roll 22)`.
+     - Complete Discover, keep guardian consent checked, submit.
+   - **Tap "पुढील विद्यार्थी (Next Student) →"**:
+     - Cleanly resets for student 3.
+   - **Student 3 (Enrolled, Discover In-Progress):**
+     - Tap **"वर्ग कोड"**, enter code `KJ92X1` and nickname `अमित (Roll 07)`.
+     - Student 3 joins the cohort without finishing Discover yet.
+
+5. **View Dashboard & Talent Radar Flags with Reasons:**
+   - Tap **"शिक्षक पोर्टल (Facilitator Portal)"** in the header.
+   - Open cohort `इयत्ता १०वी - तुकडी ब`.
+   - **Roster Table (Data Minimisation):**
+     - Shows nicknames (`रोहन (Roll 14)`, `प्रिया (Roll 22)`, `अमित (Roll 07)`), profile status, pathway progress %, and last activity.
+     - Strictly excludes family income and caste category.
+   - **Talent Radar (Deterministic, Positive & Supportive only):**
+     - Student 1: Shows **`RISING` (प्रगतीपथावर)** badge. Click to view reason: *"सातत्यपूर्ण प्रगती: मागील ७ दिवसांत ३ कृती पूर्ण केल्या आहेत."*
+     - Student 2: Shows **`STRONG_FIT` (उत्तम संधी सुसंगत)** badge. Click to view reason: *"निकट मुदत असलेली योजना: पात्रतेशी सुसंगत संधी उपलब्ध."*
+     - Student 3: Shows **`NEEDS_SUPPORT` (मार्गदर्शन आवश्यक)** badge. Click to view reason: *"अजून करिअर शोध अपूर्ण आहे किंवा गेल्या १४ दिवसांत कृती झालेली नाही."*
+     - *Guarantee:* Children are never ranked against each other or labeled as low potential.
+   - **Cohort Summary & Aggregated CSV Export:**
+     - Summarizes top interest clusters and upcoming deadlines relevant to students.
+     - Tap **"CSV डाऊनलोड (Export)"** to download an aggregated CSV with zero personal identifiers.
+
+6. **Recommend Opportunity to Student:**
+   - On Student 1's row, tap **"शिफारस करा (Recommend)"**.
+   - Select opportunity: `सूर्य मित्र सौर ऊर्जा तंत्रज्ञ प्रशिक्षण` (`opp_solar_surya_mitra`).
+   - Enter mentor note: `"तुमच्या प्रात्यक्षिक कौशल्याशी हे जुळते. लगेच अर्ज करा."`.
+   - Tap **"शिफारस पाठवा (Send Recommendation)"**.
+   - The recommendation is recorded (via API or offline outbox).
+
+7. **Student Views Recommendation:**
+   - Tap "सत्र संपवा" or return to Student 1's session.
+   - Navigate to **"संधी व योजना (Opportunities)"**.
+   - The recommended card displays a highlighted golden banner:
+     `⭐ शिक्षकांची शिफारस: सुरेश माने (शिक्षक)`
+     `"तुमच्या प्रात्यक्षिक कौशल्याशी हे जुळते. लगेच अर्ज करा."`
+
+---
+
 ## 📱 How to Open on Your Phone (Same Wi-Fi)
 
 1. Connect both your computer and your phone to the same Wi-Fi network.
@@ -158,16 +232,16 @@ Disha features a robust offline-first synchronization engine using an IndexedDB 
 
 ## 🧪 Running Automated Tests
 
-Run the full backend test suite covering database isolation, fresh schema creation, seed validation, age-gated rules, guardian consent enforcement, sensitive field privacy, pathway templates, zero invented URLs, milestone deadlines, and offline batch sync (idempotency, conflict resolution, partial failure, sensitive fields exclusion, acceptance batch):
+Run the full backend test suite covering database isolation, fresh schema creation, seed validation, age-gated rules, guardian consent enforcement, sensitive field privacy, pathway templates, zero invented URLs, milestone deadlines, offline batch sync, facilitator JWT auth, cohort access control, talent radar engine, and recommendations:
 ```bash
 python -m pytest api/tests -v
 ```
-All 33 backend unit tests should pass with `100%` success.
+All 40 backend unit tests should pass with `100%` success.
 
-Run the frontend outbox tests verifying queueing, sensitive field stripping, and persistence across simulated reload:
+Run the frontend test suite verifying sync outbox queueing, sensitive field stripping, shared-device session isolation, and offline roster/recommendation caching:
 ```bash
 cmd /c "npm --prefix web test"
 ```
-All frontend outbox unit tests should pass with `100%` success.
+All 9 frontend unit tests should pass with `100%` success.
 
 
