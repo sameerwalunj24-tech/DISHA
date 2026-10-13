@@ -55,6 +55,16 @@ class Settings(BaseModel):
     VOICE_ADAPTER: str = os.getenv("VOICE_ADAPTER", "mock")
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "mock")
 
+    # SMS OTP Adapter Configuration
+    SMS_PROVIDER: str = os.getenv("SMS_PROVIDER", "mock")
+    SMS_API_KEY: str | None = os.getenv("SMS_API_KEY", None)
+    SMS_SENDER_ID: str = os.getenv("SMS_SENDER_ID", "DISHAN")
+    SMS_GATEWAY_URL: str | None = os.getenv("SMS_GATEWAY_URL", None)
+
+    # JWT Expiration Configuration (minutes for access token, days for refresh token)
+    JWT_ACCESS_EXPIRY_MINUTES: int = int(os.getenv("JWT_ACCESS_EXPIRY_MINUTES", "1440"))
+    JWT_REFRESH_EXPIRY_DAYS: int = int(os.getenv("JWT_REFRESH_EXPIRY_DAYS", "30"))
+
     # Admin Key for protected maintenance endpoints
     ADMIN_KEY: str = os.getenv("ADMIN_KEY", "disha_admin_secret_key_2026")
     DEMO_FACILITATOR_PHONE: str = os.getenv("DEMO_FACILITATOR_PHONE", "9822000000")

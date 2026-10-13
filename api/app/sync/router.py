@@ -367,6 +367,101 @@ async def process_sync_batch(
                 ))
                 processed += 1
 
+            # Handler E: Offline Voice Notes (transcribe, fill answer, delete audio immediately)
+            elif item.type in ("voice_note", "VOICE_NOTE"):
+                student_id = payload.get("student_id") or last_created_student_id
+                guardian_consent = payload.get("guardian_consent", False)
+                if not guardian_consent and student_id:
+                    existing_st = db.query(Student).filter(Student.id == str(student_id)).first()
+                    if existing_st and existing_st.guardian_consent:
+                        guardian_consent = True
+
+                if not guardian_consent:
+                    results.append(SyncItemResult(
+                        id=item.id,
+                        status="failed",
+                        message="GUARDIAN_CONSENT_REQUIRED: Child-safe policy blocks voice note sync without guardian consent."
+                    ))
+                    failed += 1
+                    continue
+
+                lang = payload.get("language", "mr")
+                mime_type = payload.get("mime_type", "audio/webm")
+                raw_audio_b64 = payload.get("audio_base64", "")
+                student_id = payload.get("student_id") or last_created_student_id
+                student_name = payload.get("student_name", "विद्यार्थी (Learner)")
+
+                # Decode audio bytes
+                audio_bytes = b""
+                if raw_audio_b64:
+                    try:
+                        clean_b64 = raw_audio_b64.split(",", 1)[1] if "," in raw_audio_b64 else raw_audio_b64
+                        audio_bytes = base64.b64decode(clean_b64)
+                    except Exception:
+                        audio_bytes = b""
+
+                # Transcribe with server Speech Provider
+                from api.app.speech import get_speech_provider
+                speech_prov = get_speech_provider()
+                transcript = await speech_prov.speech_to_text(
+                    audio_bytes=audio_bytes,
+                    language=lang,
+                    mime_type=mime_type
+                )
+
+                # PRIVACY CRITICAL: delete raw audio immediately! Never store audio files.
+                del audio_bytes
+                del raw_audio_b64
+                payload.pop("audio_base64", None)
+
+                # Fill in the transcribed answer
+                if student_id:
+                    student = db.query(Student).filter(Student.id == str(student_id)).first()
+                    if student:
+                        current_interests = [i.strip() for i in (student.interests or "").split(",") if i.strip()]
+                        if transcript and transcript not in current_interests:
+                            current_interests.append(transcript[:80])
+                            student.interests = ", ".join(current_interests[:5])
+                            student.updated_at = item_time
+                            db.commit()
+                else:
+                    student = Student(
+                        name=student_name,
+                        preferred_language=lang,
+                        grade=10,
+                        state="Maharashtra",
+                        district="Satara",
+                        guardian_consent=True,
+                        interests=transcript[:100],
+                        skills="Practical Hands-on Workshop",
+                        aspirations="Skilled Livelihood",
+                        created_at=item_time,
+                        updated_at=item_time
+                    )
+                    db.add(student)
+                    db.commit()
+                    db.refresh(student)
+                    student_id = student.id
+                    last_created_student_id = student.id
+
+                sync_log = SyncLog(
+                    id=item.id,
+                    item_type=item.type,
+                    student_id=student_id,
+                    status="synced",
+                    updated_at=item_time
+                )
+                db.add(sync_log)
+                db.commit()
+
+                results.append(SyncItemResult(
+                    id=item.id,
+                    status="synced",
+                    student_id=student_id,
+                    message=f"Voice note transcribed & audio deleted immediately: {transcript}"
+                ))
+                processed += 1
+
             else:
                 # Unknown event type
                 results.append(SyncItemResult(

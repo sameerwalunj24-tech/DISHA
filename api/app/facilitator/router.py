@@ -25,12 +25,15 @@ from api.app.models import (
     Facilitator, Student, Pathway, Opportunity,
     Cohort, CohortMember, Recommendation, utc_now
 )
+import re
 from api.app.facilitator.auth import (
-    generate_otp, verify_otp, create_jwt_token, get_current_facilitator
+    generate_otp, verify_otp, create_jwt_token, create_refresh_token,
+    verify_refresh_token, get_current_facilitator
 )
+from api.app.sms import get_sms_provider
 from api.app.facilitator.radar import evaluate_talent_radar
 from api.app.facilitator.schemas import (
-    OTPRequest, OTPResponse, OTPVerifyRequest, TokenResponse,
+    OTPRequest, OTPResponse, OTPVerifyRequest, RefreshTokenRequest, TokenResponse,
     FacilitatorDTO, CohortCreate, CohortResponse,
     JoinCohortRequest, JoinCohortResponse, RosterMemberDTO,
     CohortSummaryResponse, InterestClusterCount, UpcomingDeadline,
@@ -41,6 +44,17 @@ from api.app.matching.router import _run_matches
 router = APIRouter(prefix="/api/v1", tags=["Facilitator & Talent Radar"])
 
 
+def validate_id_param(val: str, field_name: str = "id") -> str:
+    """Validates alphanumeric / uuid route parameters to prevent injection or malformed input."""
+    clean = val.strip()
+    if not clean or not re.match(r"^[A-Za-z0-9_\-]+$", clean) or len(clean) > 64:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"INVALID_PARAMETER: {field_name} must be alphanumeric with hyphens or underscores (max 64 chars)."
+        )
+    return clean
+
+
 def generate_join_code() -> str:
     """Generates a 6-character short alphanumeric join code (e.g. DSH4A2)."""
     chars = string.ascii_uppercase + "23456789"
@@ -49,7 +63,7 @@ def generate_join_code() -> str:
 
 
 # ==========================================
-# 1. AUTHENTICATION (PHONE + DEV DEMO OTP)
+# 1. AUTHENTICATION (PHONE + DEV DEMO OTP + SMS ADAPTER + REFRESH)
 # ==========================================
 
 @router.post("/facilitator/auth/request-otp", response_model=OTPResponse)
@@ -60,7 +74,8 @@ def request_otp(
 ):
     """
     Prototype-grade OTP login.
-    In dev/demo mode, the OTP is returned directly in the response for on-screen display.
+    Dispatches OTP via SMS Provider (Mock provider by default, Real SMS provider if configured).
+    In dev/demo mode, the OTP is also returned directly in the response for on-screen display.
     In production mode, demo facilitator login is refused and demo_otp is not exposed.
     """
     phone = req.phone_number.strip()
@@ -93,6 +108,10 @@ def request_otp(
 
     otp_code = generate_otp(phone)
 
+    # Dispatch via SMS provider
+    sms_provider = get_sms_provider()
+    sms_provider.send_otp(phone, otp_code, facilitator.name)
+
     if is_demo_allowed(settings.ENVIRONMENT, x_admin_key):
         return OTPResponse(
             phone_number=phone,
@@ -113,7 +132,7 @@ def verify_otp_endpoint(
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
     db: Session = Depends(get_db)
 ):
-    """Verifies OTP and issues a prototype JWT token."""
+    """Verifies OTP and issues access token and refresh token."""
     phone = req.phone_number.strip()
     if phone == settings.DEMO_FACILITATOR_PHONE:
         if not is_demo_allowed(settings.ENVIRONMENT, x_admin_key):
@@ -132,15 +151,74 @@ def verify_otp_endpoint(
     if not facilitator:
         raise HTTPException(status_code=404, detail="Facilitator account not found.")
 
-    token = create_jwt_token({
+    access_token = create_jwt_token({
         "sub": facilitator.id,
         "phone": facilitator.phone_number,
         "role": facilitator.role
-    })
+    }, expires_in_minutes=settings.JWT_ACCESS_EXPIRY_MINUTES, token_type="access")
+
+    refresh_token = create_refresh_token({
+        "sub": facilitator.id,
+        "phone": facilitator.phone_number,
+        "role": facilitator.role
+    }, expires_in_days=settings.JWT_REFRESH_EXPIRY_DAYS)
 
     return TokenResponse(
-        access_token=token,
+        access_token=access_token,
+        refresh_token=refresh_token,
         token_type="bearer",
+        expires_in=settings.JWT_ACCESS_EXPIRY_MINUTES * 60,
+        facilitator=FacilitatorDTO(
+            id=facilitator.id,
+            name=facilitator.name,
+            phone_number=facilitator.phone_number,
+            role=facilitator.role,
+            organization=facilitator.organization,
+            state=facilitator.state,
+            preferred_language=facilitator.preferred_language
+        )
+    )
+
+
+@router.post("/facilitator/auth/refresh", response_model=TokenResponse)
+def refresh_token_endpoint(
+    req: RefreshTokenRequest,
+    db: Session = Depends(get_db)
+):
+    """Exchanges a valid refresh token for a fresh access token and refresh token."""
+    try:
+        payload = verify_refresh_token(req.refresh_token)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=f"INVALID_REFRESH_TOKEN: {str(e)}"
+        )
+
+    facilitator_id = payload.get("sub")
+    facilitator = db.query(Facilitator).filter(Facilitator.id == facilitator_id).first()
+    if not facilitator:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="FACILITATOR_NOT_FOUND: Account associated with token does not exist."
+        )
+
+    new_access = create_jwt_token({
+        "sub": facilitator.id,
+        "phone": facilitator.phone_number,
+        "role": facilitator.role
+    }, expires_in_minutes=settings.JWT_ACCESS_EXPIRY_MINUTES, token_type="access")
+
+    new_refresh = create_refresh_token({
+        "sub": facilitator.id,
+        "phone": facilitator.phone_number,
+        "role": facilitator.role
+    }, expires_in_days=settings.JWT_REFRESH_EXPIRY_DAYS)
+
+    return TokenResponse(
+        access_token=new_access,
+        refresh_token=new_refresh,
+        token_type="bearer",
+        expires_in=settings.JWT_ACCESS_EXPIRY_MINUTES * 60,
         facilitator=FacilitatorDTO(
             id=facilitator.id,
             name=facilitator.name,
@@ -239,7 +317,8 @@ def get_cohort_details(
     db: Session = Depends(get_db)
 ):
     """Access Control: Returns cohort only if owned by the authenticated facilitator."""
-    cohort = db.query(Cohort).filter(Cohort.id == cohort_id).first()
+    clean_id = validate_id_param(cohort_id, "cohort_id")
+    cohort = db.query(Cohort).filter(Cohort.id == clean_id).first()
     if not cohort or cohort.facilitator_id != facilitator.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -337,7 +416,14 @@ def get_cohort_roster(
     - OMIT family_income and social_category entirely.
     - Show nickname/roll number in roster.
     """
-    cohort = db.query(Cohort).filter(Cohort.id == cohort_id).first()
+    clean_id = validate_id_param(cohort_id, "cohort_id")
+    if language not in ("mr", "hi", "en"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="INVALID_LANGUAGE: Language must be one of 'mr', 'hi', or 'en'."
+        )
+
+    cohort = db.query(Cohort).filter(Cohort.id == clean_id).first()
     if not cohort or cohort.facilitator_id != facilitator.id:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -421,7 +507,8 @@ def get_cohort_summary(
     db: Session = Depends(get_db)
 ):
     """Returns aggregated stats: top clusters & upcoming deadlines."""
-    cohort = db.query(Cohort).filter(Cohort.id == cohort_id).first()
+    clean_id = validate_id_param(cohort_id, "cohort_id")
+    cohort = db.query(Cohort).filter(Cohort.id == clean_id).first()
     if not cohort or cohort.facilitator_id != facilitator.id:
         raise HTTPException(status_code=404, detail="Cohort not found or access forbidden.")
 
@@ -500,7 +587,8 @@ def export_cohort_summary_csv(
     STRICT PRIVACY: Excludes all personal identifiers AND hides any count below 5 (<5)
     to prevent individual re-identification in small rural cohorts.
     """
-    cohort = db.query(Cohort).filter(Cohort.id == cohort_id).first()
+    clean_id = validate_id_param(cohort_id, "cohort_id")
+    cohort = db.query(Cohort).filter(Cohort.id == clean_id).first()
     if not cohort or cohort.facilitator_id != facilitator.id:
         raise HTTPException(status_code=404, detail="Cohort not found or access forbidden.")
 
@@ -652,7 +740,8 @@ def recommend_opportunity(
 @router.get("/students/{student_id}/recommendations", response_model=List[RecommendationResponse])
 def get_student_recommendations(student_id: str, db: Session = Depends(get_db)):
     """Returns recommendations made for a student (visible in their opportunities list)."""
-    recs = db.query(Recommendation).filter(Recommendation.student_id == student_id).all()
+    clean_id = validate_id_param(student_id, "student_id")
+    recs = db.query(Recommendation).filter(Recommendation.student_id == clean_id).all()
     results = []
     for r in recs:
         fac = r.facilitator

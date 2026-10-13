@@ -9,7 +9,7 @@ import { OpportunitiesScreen } from "./components/OpportunitiesScreen";
 import { MyPathScreen } from "./components/MyPathScreen";
 import { MarketplaceScreen } from "./components/MarketplaceScreen";
 import { AboutModal } from "./components/AboutModal";
-import { Download, X } from "lucide-react";
+import { Download, X, RefreshCw } from "lucide-react";
 
 import { useSyncStatus } from "./services/sync/useSyncStatus";
 import { clearStudentBrowserSession } from "./services/db/offlineStorage";
@@ -27,6 +27,8 @@ const DishaMain: React.FC = () => {
   const [isAboutModalOpen, setIsAboutModalOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [swUpdateAvailable, setSwUpdateAvailable] = useState(false);
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
   const [selectedScreen, setSelectedScreen] = useState<"home" | "discover" | "pathway" | "opportunities" | "marketplace">("home");
 
   // Shared-Device Mode State
@@ -77,6 +79,27 @@ const DishaMain: React.FC = () => {
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
   }, []);
+
+  // Listen for Service Worker update available
+  useEffect(() => {
+    const handleSwUpdate = (e: any) => {
+      if (e.detail?.waitingWorker) {
+        setWaitingWorker(e.detail.waitingWorker);
+      }
+      setSwUpdateAvailable(true);
+    };
+
+    window.addEventListener("disha_sw_update_available", handleSwUpdate);
+    return () => window.removeEventListener("disha_sw_update_available", handleSwUpdate);
+  }, []);
+
+  const handleApplyUpdate = () => {
+    if (waitingWorker) {
+      waitingWorker.postMessage({ type: "SKIP_WAITING" });
+    } else {
+      window.location.reload();
+    }
+  };
 
   const handleInstallClick = async () => {
     if (installPrompt) {
@@ -211,6 +234,51 @@ const DishaMain: React.FC = () => {
               }}
             >
               सत्र संपवा
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* PWA Update Available Prompt Banner */}
+      {swUpdateAvailable && (
+        <div style={{ padding: "8px 16px 0 16px", maxWidth: 640, margin: "0 auto", width: "100%" }}>
+          <div style={{
+            background: "linear-gradient(135deg, #1e293b, #0f172a)",
+            border: "1px solid #38bdf8",
+            borderRadius: 12,
+            padding: "10px 14px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            boxShadow: "0 4px 12px rgba(56, 189, 248, 0.15)"
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <RefreshCw size={18} color="#38bdf8" />
+              <div>
+                <div style={{ fontSize: "0.85rem", fontWeight: 700, color: "#f8fafc" }}>
+                  नवीन आवृत्ती उपलब्ध आहे / Update Available
+                </div>
+                <div style={{ fontSize: "0.75rem", color: "#94a3b8" }}>
+                  नवीन फीचर्ससाठी ॲप अपडेट करा / Refresh to get the latest updates.
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={handleApplyUpdate}
+              style={{
+                background: "#38bdf8",
+                color: "#0f172a",
+                border: "none",
+                borderRadius: 8,
+                padding: "6px 14px",
+                fontWeight: 700,
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                whiteSpace: "nowrap"
+              }}
+            >
+              रिफ्रेश करा / Refresh
             </button>
           </div>
         </div>

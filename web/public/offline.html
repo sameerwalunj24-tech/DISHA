@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>दिशा (Disha) - ऑफलाइन मोड</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    }
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 20px;
+      padding: 32px 24px;
+      max-width: 480px;
+      width: 100%;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+    }
+    .icon-circle {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: rgba(249, 115, 22, 0.15);
+      border: 2px solid #f97316;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px auto;
+      font-size: 32px;
+    }
+    h1 {
+      font-size: 1.4rem;
+      font-weight: 800;
+      color: #f8fafc;
+      margin-bottom: 8px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(249, 115, 22, 0.2);
+      color: #fdba74;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      margin-bottom: 16px;
+      border: 1px solid rgba(249, 115, 22, 0.3);
+    }
+    .lang-section {
+      margin-bottom: 14px;
+      text-align: left;
+      background: #0f172a;
+      padding: 12px;
+      border-radius: 10px;
+      border-left: 3px solid #f97316;
+    }
+    .lang-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #94a3b8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .lang-text {
+      font-size: 0.85rem;
+      line-height: 1.4;
+      color: #e2e8f0;
+    }
+    .btn {
+      display: inline-block;
+      width: 100%;
+      background: #f97316;
+      color: #ffffff;
+      font-size: 0.95rem;
+      font-weight: 700;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      margin-top: 16px;
+      text-decoration: none;
+      transition: background 0.15s ease;
+    }
+    .btn:hover {
+      background: #ea580c;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon-circle">📡</div>
+    <div class="badge">ऑफलाइन मोड • OFFLINE MODE</div>
+    <h1>तुम्ही सध्या ऑफलाइन आहात</h1>
+
+    <div class="lang-section">
+      <div class="lang-label">मराठी</div>
+      <div class="lang-text">इंटरनेट कनेक्शन उपलब्ध नाही. तरीही तुम्ही सेव्ह केलेल्या योजना आणि तुमचे करिअर पाथवे पाहू शकता. तुमचे रेकॉर्ड केलेले व्हॉईस नोट्स इंटरनेट सुरू झाल्यावर आपोआप पाठवले जातील.</div>
+    </div>
+
+    <div class="lang-section">
+      <div class="lang-label">हिन्दी</div>
+      <div class="lang-text">इंटरनेट उपलब्ध नहीं है। फिर भी आप सहेजे गए करियर मार्गदर्शन का उपयोग कर सकते हैं। आपके वॉयस नोट्स ऑनलाइन आने पर सिंक हो जाएंगे।</div>
+    </div>
+
+    <div class="lang-section">
+      <div class="lang-label">English</div>
+      <div class="lang-text">You are currently offline. Disha continues to work offline. Your voice notes and progress are safely saved on this device and will sync automatically when back online.</div>
+    </div>
+
+    <a href="/" class="btn" onclick="window.location.reload(); return false;">ॲप पुन्हा लोड करा / Reload App</a>
+  </div>
+</body>
+</html>

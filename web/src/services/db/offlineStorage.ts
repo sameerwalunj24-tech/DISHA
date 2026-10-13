@@ -9,7 +9,7 @@ export const STORE_SYNC_OUTBOX = "sync_outbox";
 
 export interface SyncQueueItem {
   id: string; // uuid
-  type: "offline_quiz_result" | "pathway_progress" | "discovery_answer" | "profile_save" | "recommendation";
+  type: "offline_quiz_result" | "pathway_progress" | "discovery_answer" | "profile_save" | "recommendation" | "voice_note";
   payload: Record<string, any>;
   updated_at: string;
   attempts: number;

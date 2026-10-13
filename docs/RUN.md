@@ -354,25 +354,63 @@ GEMINI_DAILY_CALL_CAP=100
 
 ---
 
+## 🎙️ Offline Voice Notes & Speech Adapter (Phase 8B)
+
+1. **Offline Voice Notes:**
+   - In offline mode, students can record spoken answers via the in-browser `MediaRecorder` API.
+   - Requires Guardian Consent (`guardian_consent: true`).
+   - Recorded notes are saved into the IndexedDB outbox (`sync_outbox`) and labeled *"Saved - will be processed when online"*.
+   - Upon sync with the server, the audio is transcribed, student profile interests are updated, and **audio bytes are deleted immediately** from device and server memory.
+
+2. **Multilingual Speech Provider Adapters (Marathi & Hindi):**
+   - Configured via `SPEECH_PROVIDER` in `.env`:
+     - `SPEECH_PROVIDER=mock`: Deterministic offline speech provider (default).
+     - `SPEECH_PROVIDER=sarvam`: Sarvam AI provider (`https://api.sarvam.ai/speech-to-text` model `saaras:v4`, `/text-to-speech` model `bulbul:v4-flash`), requires `SARVAM_API_KEY`.
+     - `SPEECH_PROVIDER=bhashini`: Bhashini ULCA adapter stub. (Requires `BHASHINI_USER_ID`, `BHASHINI_API_KEY`, and `BHASHINI_PIPELINE_ID` from the MeitY portal).
+
+3. **SMS OTP Adapter & JWT Refresh:**
+   - Configured via `SMS_PROVIDER` in `.env` (`mock` or `real`).
+   - Mock default returns OTP on screen in dev/demo environments; in production mode OTPs are dispatched through SMS provider.
+   - Long-lived session refresh via `POST /api/v1/facilitator/auth/refresh`.
+   - Strict input validation enforced across all facilitator routes.
+
+4. **PWA Hardening & Offline Fallback:**
+   - **Service Worker v2:** Cache versioned as `disha-app-shell-v2` with `SKIP_WAITING` listener.
+   - **Update Available Banner:** Detects new builds and prompts user to refresh without manual cache clearing.
+   - **Offline Fallback Page:** Standalone `/offline.html` in Marathi, Hindi, and English.
+   - **Performance Budget Check:** Enforces low-end mobile budgets (<650 kB JS, <30 kB CSS, zero render-blocking external scripts).
+
+5. **Real Device Testing:**
+   - See [DEVICE_TEST.md](DEVICE_TEST.md) for the 7-step field testing checklist on low-end Android phones.
+
+---
+
 ## 🧪 Running Automated Tests
 
-Run the full backend test suite covering security startup checks, link health checks, admin verification CLI, 90-day verification expiry, Gemini LLM adapter with mock provider/caching/quota, privacy-safe impact metrics with cell masking (<5), and demo reset:
+Run the full backend test suite covering security startup checks, link health checks, admin verification CLI, Gemini LLM adapter, privacy-safe impact metrics, SMS adapter, speech adapters, voice notes sync, and JWT refresh:
 ```bash
 python -m pytest api/tests -v
 ```
-**Expected Result:** 71 passed (`100%` success).
+**Expected Result:** 76 passed (`100%` success).
 
-Run the frontend test suite verifying sync outbox queueing, sensitive field stripping, shared-device session clearing, offline roster/recommendation caching, and marketplace deterministic 12/88 integer paise split:
+Run the frontend test suite verifying sync outbox queueing, voice notes outbox, shared-device session clearing, offline caching, and marketplace 12/88 integer paise split:
 ```bash
 cmd /c "npm --prefix web test"
 ```
-**Expected Result:** 15 passed (`100%` success).
+**Expected Result:** 22 passed (`100%` success).
+
+Run performance budget audit:
+```bash
+cmd /c "npm --prefix web run perf:budget"
+```
+**Expected Result:** All performance budgets and non-blocking audits pass.
 
 Run production bundle build verification:
 ```bash
 cmd /c "npm --prefix web run build"
 ```
 **Expected Result:** TypeScript passes and Vite builds dist bundle successfully.
+
 
 
 

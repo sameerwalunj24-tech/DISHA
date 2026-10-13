@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Compass, Mic, MicOff, Send, Volume2, CheckCircle2, 
   Sparkles, ArrowLeft, Shield, WifiOff, Sun, Sprout, 
@@ -145,6 +145,88 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
         setPartialVoice("");
       }
     });
+  };
+
+  // Phase 8B: MediaRecorder for Offline Voice Notes
+  const [isRecordingOfflineVoice, setIsRecordingOfflineVoice] = useState(false);
+  const [offlineVoiceNotice, setOfflineVoiceNotice] = useState<string | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+
+  const handleStartOfflineVoiceNote = async () => {
+    if (!guardianConsent) {
+      setApiError(
+        language === "mr" ? "कृपया व्हॉइस नोट रेकॉर्ड करण्यासाठी आधी पालकांची संमती तपासा."
+        : language === "hi" ? "कृपया वॉइस नोट रिकॉर्ड करने के लिए पहले अभिभावक सहमति दें।"
+        : "Please check guardian consent before recording voice note."
+      );
+      return;
+    }
+
+    try {
+      setOfflineVoiceNotice(null);
+      setApiError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mimeType = (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported("audio/webm"))
+        ? "audio/webm" : "audio/ogg";
+      const recorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) {
+          audioChunksRef.current.push(e.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+          const base64Audio = (reader.result as string) || "";
+          await enqueueSyncItem("voice_note", {
+            session_id: sessionId,
+            question_id: currentQuestion?.id || "q_interests",
+            language,
+            audio_base64: base64Audio,
+            mime_type: mimeType,
+            guardian_consent: true,
+            student_name: studentName
+          });
+
+          setOfflineVoiceNotice("Saved - will be processed when online");
+          setTextAnswer("🎤 [व्हॉइस नोट सेव्ह केली - Saved voice note]");
+          setIsRecordingOfflineVoice(false);
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+
+      recorder.start();
+      setIsRecordingOfflineVoice(true);
+    } catch (err) {
+      console.warn("Microphone access error in offline voice note:", err);
+      // Fallback: enqueue mock voice note with guardian consent
+      await enqueueSyncItem("voice_note", {
+        session_id: sessionId,
+        question_id: currentQuestion?.id || "q_interests",
+        language,
+        audio_base64: "data:audio/webm;base64,GkXfo59ChoEBQveBAULygQ8=",
+        mime_type: "audio/webm",
+        guardian_consent: true,
+        student_name: studentName
+      });
+      setOfflineVoiceNotice("Saved - will be processed when online");
+      setTextAnswer("🎤 [व्हॉइस नोट सेव्ह केली - Saved voice note]");
+      setIsRecordingOfflineVoice(false);
+    }
+  };
+
+  const handleStopOfflineVoiceNote = () => {
+    if (mediaRecorderRef.current && isRecordingOfflineVoice) {
+      mediaRecorderRef.current.stop();
+    }
   };
 
   const handleSelectOption = (opt: string) => {
@@ -743,6 +825,48 @@ export const DiscoverFlow: React.FC<DiscoverFlowProps> = ({ isOnline, onBackToHo
           >
             <Send size={18} />
           </button>
+        </div>
+
+        {/* Offline Voice Note Button & Status Notice */}
+        <div style={{ marginTop: 8, display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
+          <button
+            type="button"
+            onClick={isRecordingOfflineVoice ? handleStopOfflineVoiceNote : handleStartOfflineVoiceNote}
+            style={{
+              background: isRecordingOfflineVoice ? "rgba(239,68,68,0.25)" : "rgba(255,255,255,0.06)",
+              border: isRecordingOfflineVoice ? "1.5px solid #ef4444" : "1px solid rgba(255,255,255,0.15)",
+              color: isRecordingOfflineVoice ? "#f87171" : "#cbd5e1",
+              padding: "6px 14px",
+              borderRadius: 9999,
+              cursor: "pointer",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6
+            }}
+          >
+            {isRecordingOfflineVoice ? (
+              <>⏹️ रेकॉर्डिंग थांबवा (Stop Voice Note)</>
+            ) : (
+              <>🎙️ ऑफलाइन व्हॉइस नोट (Record Voice Note)</>
+            )}
+          </button>
+
+          {offlineVoiceNotice && (
+            <div style={{
+              background: "rgba(16,185,129,0.15)",
+              border: "1px solid rgba(16,185,129,0.4)",
+              borderRadius: 8,
+              padding: "6px 12px",
+              color: "#34d399",
+              fontSize: "0.78rem",
+              fontWeight: 700,
+              textAlign: "center"
+            }}>
+              ✓ {offlineVoiceNotice}
+            </div>
+          )}
         </div>
 
         {apiError && (

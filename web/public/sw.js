@@ -1,24 +1,25 @@
-// Disha PWA Offline Service Worker
-const CACHE_NAME = "disha-app-shell-v1";
+// Disha PWA Offline Service Worker (Version 2)
+const CACHE_NAME = "disha-app-shell-v2";
 const STATIC_ASSETS = [
   "/",
   "/index.html",
+  "/offline.html",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png"
 ];
 
-// Install Event - Pre-cache core app shell
+// Install Event - Pre-cache core app shell & offline fallback
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log("[Service Worker] Pre-caching App Shell...");
+      console.log("[Service Worker v2] Pre-caching App Shell & Offline Fallback...");
       return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - Clean up stale caches
+// Activate Event - Clean up stale caches from previous versions
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keyList) => {
@@ -34,7 +35,15 @@ self.addEventListener("activate", (event) => {
   );
 });
 
-// Fetch Event - Stale-while-revalidate for assets, cache fallback for navigation
+// Message listener for skipWaiting triggered by "Update Available" prompt
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    console.log("[Service Worker] Received SKIP_WAITING signal, activating new version...");
+    self.skipWaiting();
+  }
+});
+
+// Fetch Event - Stale-while-revalidate for assets, cache fallback with offline.html for navigation
 self.addEventListener("fetch", (event) => {
   const request = event.request;
 
@@ -44,14 +53,20 @@ self.addEventListener("fetch", (event) => {
       fetch(request)
         .then((networkResponse) => {
           // Update cache with fresh version
-          const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", clone));
+          if (networkResponse && networkResponse.status === 200) {
+            const clone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put("/", clone));
+          }
           return networkResponse;
         })
         .catch(async () => {
-          // Offline fallback - serve cached index.html
-          const cachedResponse = await caches.match("/");
-          return cachedResponse || caches.match("/index.html");
+          // Offline fallback - serve cached app shell or dedicated offline fallback page
+          const cachedApp = await caches.match("/");
+          if (cachedApp) return cachedApp;
+          const cachedIndex = await caches.match("/index.html");
+          if (cachedIndex) return cachedIndex;
+          const cachedOffline = await caches.match("/offline.html");
+          return cachedOffline || new Response("Offline", { status: 503, statusText: "Offline" });
         })
     );
     return;
@@ -70,7 +85,7 @@ self.addEventListener("fetch", (event) => {
             }
           })
           .catch(() => {
-            // Network failure is fine since cachedResponse is returned
+            // Background update failed due to offline; cachedResponse served successfully
           });
         return cachedResponse;
       }

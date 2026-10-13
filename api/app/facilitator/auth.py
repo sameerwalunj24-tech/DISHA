@@ -30,11 +30,16 @@ def get_jwt_secret() -> str:
 _OTP_CACHE: Dict[str, Dict[str, any]] = {}
 
 
-def create_jwt_token(payload: dict, expires_in_hours: int = 72) -> str:
-    """Creates an HS256 JWT token using Python standard library."""
+def create_jwt_token(payload: dict, expires_in_minutes: int = 1440, token_type: str = "access") -> str:
+    """Creates an HS256 JWT token with expiration and token type."""
     now = datetime.now(timezone.utc)
-    exp = now + timedelta(hours=expires_in_hours)
-    body = {**payload, "exp": int(exp.timestamp()), "iat": int(now.timestamp())}
+    exp = now + timedelta(minutes=expires_in_minutes)
+    body = {
+        **payload,
+        "type": token_type,
+        "exp": int(exp.timestamp()),
+        "iat": int(now.timestamp())
+    }
 
     header = {"alg": "HS256", "typ": "JWT"}
     h_bytes = base64.urlsafe_b64encode(json.dumps(header).encode()).decode().rstrip("=")
@@ -46,8 +51,13 @@ def create_jwt_token(payload: dict, expires_in_hours: int = 72) -> str:
     return f"{h_bytes}.{p_bytes}.{sig_str}"
 
 
+def create_refresh_token(payload: dict, expires_in_days: int = 30) -> str:
+    """Creates a long-lived refresh JWT token."""
+    return create_jwt_token(payload, expires_in_minutes=expires_in_days * 1440, token_type="refresh")
+
+
 def decode_jwt_token(token: str) -> dict:
-    """Decodes and validates HS256 JWT token."""
+    """Decodes and validates HS256 JWT token, verifying signature and expiration."""
     parts = token.split(".")
     if len(parts) != 3:
         raise ValueError("Invalid JWT token structure")
@@ -65,13 +75,17 @@ def decode_jwt_token(token: str) -> dict:
 
     # Check expiration
     if "exp" in data and datetime.now(timezone.utc).timestamp() > data["exp"]:
-        raise ValueError("Token has expired")
+        raise ValueError("TOKEN_EXPIRED: Token has expired")
 
     return data
 
 
-# In-memory prototype OTP cache: phone -> {"otp": str, "expires_at": datetime}
-_OTP_CACHE: Dict[str, Dict[str, any]] = {}
+def verify_refresh_token(token: str) -> dict:
+    """Validates that a token is a valid, unexpired refresh token."""
+    data = decode_jwt_token(token)
+    if data.get("type") != "refresh":
+        raise ValueError("Invalid token type. Expected a refresh token.")
+    return data
 
 # In-memory rate limiting tracking: phone -> list of timestamp datetimes
 _OTP_REQUEST_LOG: Dict[str, list] = {}
@@ -168,9 +182,15 @@ def get_current_facilitator(
         if not facilitator_id:
             raise ValueError("Token payload missing subject")
     except Exception as e:
+        err_msg = str(e)
+        if "TOKEN_EXPIRED" in err_msg:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="TOKEN_EXPIRED: Authentication token has expired. Please refresh your session."
+            )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=f"INVALID_TOKEN: {str(e)}"
+            detail=f"INVALID_TOKEN: {err_msg}"
         )
 
     facilitator = db.query(Facilitator).filter(Facilitator.id == facilitator_id).first()
