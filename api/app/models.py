@@ -64,12 +64,19 @@ class Opportunity(Base):
     provider = Column(String(150), nullable=False)
     min_grade = Column(Integer, default=9, nullable=False)
     max_grade = Column(Integer, default=16, nullable=False)
-    state = Column(String(50), default="All India", nullable=False)
-    gender_eligibility = Column(String(20), default="ALL", nullable=False)  # ALL, FEMALE, MALE
-    max_family_income = Column(Float, nullable=True)
+    states = Column(String(255), default="Maharashtra;All India", nullable=False)
+    income_max = Column(Float, nullable=True)
+    gender = Column(String(20), default="ALL", nullable=False)  # ALL, FEMALE, MALE
+    interest_tags = Column(String(255), default="", nullable=False)
+    mobility = Column(String(50), default="DISTRICT", nullable=False)  # LOCAL, DISTRICT, STATE_WIDE
+    deadline = Column(String(20), nullable=True)  # YYYY-MM-DD or None (rolling)
+    documents_needed = Column(Text, default="", nullable=False)
+    apply_steps = Column(Text, default="", nullable=False)
     benefits = Column(Text, nullable=False)
+    source_name = Column(String(255), default="Official Portal", nullable=False)
     source_url = Column(String(500), nullable=False)
     last_verified = Column(String(20), nullable=False)  # YYYY-MM-DD
+    verification_status = Column(String(50), default="sample_unverified", nullable=False)  # verified, sample_unverified
     is_sample = Column(Boolean, default=True, nullable=False)
     created_at = Column(DateTime, default=utc_now, nullable=False)
 
