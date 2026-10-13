@@ -44,6 +44,13 @@ class Settings(BaseModel):
         for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
         if origin.strip() and origin.strip() != "*"
     ]
+
+    # Partner API Keys for external feeds / connectors
+    PARTNER_API_KEYS: list[str] = [
+        k.strip()
+        for k in os.getenv("PARTNER_API_KEYS", "disha_partner_test_key_secret_2026,partner_key_demo_ngo").split(",")
+        if k.strip()
+    ]
     
     VOICE_ADAPTER: str = os.getenv("VOICE_ADAPTER", "mock")
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "mock")

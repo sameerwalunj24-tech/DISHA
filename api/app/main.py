@@ -15,6 +15,7 @@ from api.app.pathways.router import router as pathways_router
 from api.app.sync.router import router as sync_router
 from api.app.facilitator.router import router as facilitator_router
 from api.app.marketplace.router import router as marketplace_router
+from api.app.partner.router import router as partner_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -25,8 +26,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    version=settings.VERSION,
-    description=settings.DESCRIPTION,
+    version="1.0.0",
+    description=(
+        "Disha - Voice-First Multilingual AI Career & Livelihood Guide for Rural India.\n\n"
+        "Key capabilities:\n"
+        "- Voice-driven discovery & student profiling\n"
+        "- Deterministic rules-based opportunity matching & pathway generator\n"
+        "- Resilient offline sync with IndexedDB outbox\n"
+        "- Facilitator portal, talent radar flags & cohort management\n"
+        "- Marketplace with 12/88 facilitator revenue split\n"
+        "- Partner connectors for NGO and employer opportunity feeds"
+    ),
     lifespan=lifespan,
     docs_url="/docs",
     redoc_url="/redoc",
@@ -48,6 +58,7 @@ app.include_router(pathways_router)
 app.include_router(sync_router)
 app.include_router(facilitator_router)
 app.include_router(marketplace_router)
+app.include_router(partner_router)
 
 @app.get("/health", response_model=HealthResponse, tags=["System"])
 def health_check(db: Session = Depends(get_db)):
