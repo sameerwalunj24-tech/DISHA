@@ -1,0 +1,55 @@
+{
+  "appName": "Disha",
+  "appTagline": "Voice-First Career & Livelihood Guide for Rural Youth",
+  "offlineBadge": "Offline Mode",
+  "onlineBadge": "Online",
+  "facilitatorLogin": "Facilitator Portal",
+  "greeting": "Namaste! What do you want to learn today?",
+  "subGreeting": "Tap a card below or use your voice to get started",
+  "tapToSpeak": "Tap mic and speak in your language",
+  "listening": "Disha is listening... (capturing voice)",
+  "mockSpokenPrefix": "You said: ",
+  "tiles": {
+    "discover": {
+      "title": "Discover Career",
+      "subtitle": "Speak to match your interests & skills",
+      "tag": "Voice Powered"
+    },
+    "pathway": {
+      "title": "My Pathway",
+      "subtitle": "30-day micro-steps & exam roadmap",
+      "tag": "Skill Plan"
+    },
+    "opportunities": {
+      "title": "Opportunities",
+      "subtitle": "Verified scholarships, schemes & apprenticeships",
+      "tag": "Grounded Data"
+    }
+  },
+  "facilitatorModal": {
+    "title": "Facilitator & NGO Portal",
+    "subtitle": "Manage student cohorts and empower rural talent",
+    "phoneLabel": "Mobile Number",
+    "phonePlaceholder": "e.g. 9876543210",
+    "roleLabel": "Your Role",
+    "roles": {
+      "teacher": "School / College Teacher",
+      "ngo": "NGO / Skilling Partner",
+      "volunteer": "Gram Panchayat / Volunteer"
+    },
+    "loginBtn": "Send Verification OTP",
+    "marketplaceNote": "Facilitators can build localized training modules, track student progress, and monetize specialized vocational guidance.",
+    "close": "Close"
+  },
+  "mockPhrases": [
+    "I want to become a solar pump and microgrid technician.",
+    "I completed 10th grade and need post-matric scholarship details.",
+    "I want vocational training in organic dairy farming.",
+    "Tell me about railway and state transport diesel mechanic apprenticeships."
+  ],
+  "pwa": {
+    "installTitle": "Install Disha App",
+    "installDesc": "Add Disha to your home screen for quick offline-ready access",
+    "installBtn": "Install App"
+  }
+}
