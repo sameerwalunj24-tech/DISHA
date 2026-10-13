@@ -29,7 +29,10 @@ wheels/
 .installed.cfg
 *.egg
 *.db
+*.sqlite
 *.sqlite3
+disha.db
+test_*.db
 
 # Node / Frontend
 node_modules/

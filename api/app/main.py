@@ -15,8 +15,9 @@ from api.app.pathways.router import router as pathways_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Initialize database tables on startup
-    Base.metadata.create_all(bind=engine)
+    # Initialize database tables on startup (creates all tables from scratch on fresh clone)
+    from api.app.database import init_db
+    init_db()
     yield
 
 app = FastAPI(
